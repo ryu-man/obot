@@ -245,7 +245,7 @@
 				{/if}
 
 				<div class="iterations-container flex flex-col gap-4">
-					{#if readOnly}
+					{#if readOnly && showOutput}
 						<!-- Display the iterations header only in case of task run -->
 						<div class="iterations-header flex justify-between">
 							<div class="flex items-baseline gap-4 opacity-50">
