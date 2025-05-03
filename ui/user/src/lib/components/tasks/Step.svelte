@@ -51,7 +51,8 @@
 		readOnly
 	}: Props = $props();
 
-	let running = $derived(stepMessages?.get(step.id)?.inProgress ?? false);
+	let isRunning = $derived(stepMessages?.get(step.id)?.inProgress ?? false);
+	let isRunnedBefore = $derived(!!stepMessages?.get(step.id)?.lastRunID);
 	let stale: boolean = $derived(parentStale || !parentMatches());
 	let toDelete = $state<boolean>();
 	let showOutput = $state(true);
@@ -65,6 +66,7 @@
 	let loopDataMessages = $derived(stepMessages?.get(step.id + '{loopdata}')?.messages ?? []);
 
 	let currentIteration = $state(0);
+	let followIteration = $state(true);
 
 	type IterationMessages = Messages[];
 
@@ -112,8 +114,16 @@
 		}
 	});
 
+	$effect(() => {
+		// Check if task is running
+		if (isRunning && followIteration) {
+			// Always navigation to the last iteration
+			currentIteration = iterationMessages.length - 1;
+		}
+	});
+
 	function parentMatches() {
-		if (running) {
+		if (isRunning) {
 			return true;
 		}
 		if (index === 0) {
@@ -163,7 +173,7 @@
 	}
 
 	async function doRun() {
-		if (running || pending) {
+		if (isRunning || pending) {
 			if (runID) {
 				await ChatService.abort(project.assistantID, project.id, {
 					taskID: task.id,
@@ -172,17 +182,28 @@
 			}
 			return;
 		}
-		if (running || pending || !step.step || step.step?.trim() === '') {
+		if (isRunning || pending || !step.step || step.step?.trim() === '') {
 			return;
 		}
+
+		// By default follow iteration when step is running
+		followIteration = true;
+
 		await run?.(step);
 	}
 
 	function onclickNextIteration() {
+		followIteration = false;
 		currentIteration = Math.min(iterationMessages.length - 1, currentIteration + 1);
+
+		// When user navigate back to the last iteration; activate following
+		if (currentIteration === iterationMessages.length - 1) {
+			followIteration = true;
+		}
 	}
 
 	function onclickPreviousIteration() {
+		followIteration = false;
 		currentIteration = Math.max(0, currentIteration - 1);
 	}
 </script>
@@ -227,8 +248,8 @@
 				{#if loopDataMessages.length > 0 && showOutput}
 					<div
 						class="relative my-3 -ml-4 flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 transition-transform dark:bg-black"
-						class:border-2={running}
-						class:border-blue={running}
+						class:border-2={isRunning}
+						class:border-blue={isRunning}
 						transition:slide
 					>
 						{#each loopDataMessages as msg}
@@ -245,7 +266,7 @@
 				{/if}
 
 				<div class="iterations-container flex flex-col gap-4">
-					{#if readOnly && showOutput}
+					{#if (isRunning || isRunnedBefore || readOnly) && showOutput}
 						<!-- Display the iterations header only in case of task run -->
 						<div class="iterations-header flex justify-between">
 							<div class="flex items-baseline gap-4 opacity-50">
@@ -311,8 +332,8 @@
 								{#if stepMessages.messages?.length > 0 && showOutput}
 									<div
 										class="relative my-3 -ml-4 flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 transition-transform dark:bg-black"
-										class:border-2={running}
-										class:border-blue={running}
+										class:border-2={isRunning}
+										class:border-blue={isRunning}
 										transition:slide
 									>
 										{#each stepMessages.messages as msg}
@@ -359,7 +380,7 @@
 					class="icon-button"
 					data-testid="step-run-btn"
 					onclick={doRun}
-					use:tooltip={running
+					use:tooltip={isRunning
 						? 'Abort'
 						: pending
 							? 'Running...'
@@ -367,7 +388,7 @@
 								? 'Re-run Step'
 								: 'Run Step'}
 				>
-					{#if running}
+					{#if isRunning}
 						<OctagonX class="size-4" />
 					{:else if pending}
 						<LoaderCircle class="size-4 animate-spin" />
@@ -416,8 +437,8 @@
 	{#if !isLoopStep && messages.length > 0 && showOutput}
 		<div
 			class="relative my-3 -ml-4 flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 transition-transform dark:bg-black"
-			class:border-2={running}
-			class:border-blue={running}
+			class:border-2={isRunning}
+			class:border-blue={isRunning}
 			transition:slide
 		>
 			{#each messages as msg}
