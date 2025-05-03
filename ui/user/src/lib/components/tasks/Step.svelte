@@ -8,8 +8,15 @@
 		type TaskStep
 	} from '$lib/services';
 	import Message from '$lib/components/messages/Message.svelte';
-	import { Eye, EyeClosed, Plus, Trash2 } from 'lucide-svelte/icons';
-	import { LoaderCircle, OctagonX, Play, RefreshCcw } from 'lucide-svelte';
+	import { Eye, EyeClosed, Plus, Trash2, Repeat } from 'lucide-svelte/icons';
+	import {
+		LoaderCircle,
+		OctagonX,
+		Play,
+		RefreshCcw,
+		ChevronLeft,
+		ChevronRight
+	} from 'lucide-svelte';
 	import { tick } from 'svelte';
 	import { autoHeight } from '$lib/actions/textarea.js';
 	import Confirm from '$lib/components/Confirm.svelte';
@@ -44,11 +51,60 @@
 		readOnly
 	}: Props = $props();
 
-	let messages = $derived(stepMessages?.get(step.id)?.messages ?? []);
 	let running = $derived(stepMessages?.get(step.id)?.inProgress ?? false);
 	let stale: boolean = $derived(parentStale || !parentMatches());
 	let toDelete = $state<boolean>();
 	let showOutput = $state(true);
+
+	// Check whether the current step has looping steps (sub steps)
+	// It should have the
+	let isLoopStep = $derived((step?.loop?.length ?? 0) > 0);
+
+	let messages = $derived(stepMessages?.get(step.id)?.messages ?? []);
+
+	let loopDataMessages = $derived(stepMessages?.get(step.id + '{loopdata}')?.messages ?? []);
+
+	let currentIteration = $state(0);
+
+	type IterationMessages = Messages[];
+
+	// Convert the steps messages map to an array of messages where each index represent the number of iteration
+	let iterationMessages: IterationMessages[] = $derived.by(() => {
+		// Convert the keys into an array
+		const keys = stepMessages?.keys().toArray() ?? [];
+
+		// Define a regex pattern to extract iterations data
+		const pattern = new RegExp(`^${step.id}{element=(\\d+)}`);
+
+		// Initialize the iterations array
+		const iterations: IterationMessages[] = [];
+
+		keys
+			// Filter out not matched items
+			.filter((key) => pattern.test(key))
+
+			.forEach((key) => {
+				// Get the iteration number as a string
+				const iterationAsString = key.match(pattern)?.at(1);
+
+				if (iterationAsString === undefined) {
+					return;
+				}
+
+				// Convert the iteration number to an integer
+				const iteration = parseInt(iterationAsString);
+
+				// Push the step messages to the same iteration array
+				const steps = iterations.at(iteration) ?? [];
+				const messages = stepMessages?.get(key);
+
+				steps.push(messages!);
+
+				iterations[iteration] = steps;
+			});
+
+		return iterations;
+	});
 
 	$effect(() => {
 		if (parentShowOutput !== undefined) {
@@ -72,6 +128,14 @@
 		return lastRun?.runID === currentRun?.parentRunID;
 	}
 
+	async function toggleLoop() {
+		if (isLoopStep) {
+			step.loop = undefined;
+		} else {
+			step.loop = [''];
+		}
+	}
+
 	async function deleteStep() {
 		task.steps = task.steps.filter((s) => s.id !== step.id);
 	}
@@ -80,6 +144,7 @@
 		const newStep = createStep();
 		task.steps.splice(index + 1, 0, newStep);
 		await tick();
+
 		document.getElementById('step' + newStep.id)?.focus();
 	}
 
@@ -112,6 +177,14 @@
 		}
 		await run?.(step);
 	}
+
+	function onclickNextIteration() {
+		currentIteration = Math.min(iterationMessages.length - 1, currentIteration + 1);
+	}
+
+	function onclickPreviousIteration() {
+		currentIteration = Math.max(0, currentIteration - 1);
+	}
 </script>
 
 {#snippet outputVisibilityButton()}
@@ -135,21 +208,153 @@
 {/snippet}
 
 <li class="ms-4">
-	<div class="flex items-center justify-between gap-6">
-		<textarea
-			{onkeydown}
-			rows="1"
-			placeholder="Instructions..."
-			use:autoHeight
-			id={'step' + step.id}
-			bind:value={step.step}
-			class="ghost-input border-surface2 ml-1 grow resize-none"
-			disabled={readOnly}
-		></textarea>
-		<div class="flex">
-			{#if readOnly}
-				{@render outputVisibilityButton()}
-			{:else}
+	<div class="flex items-start justify-between gap-6">
+		<div class="flex grow flex-col gap-2">
+			<div class="flex items-center gap-2">
+				<textarea
+					{onkeydown}
+					rows="1"
+					placeholder={isLoopStep ? 'Description of the data to loop over...' : 'Instructions...'}
+					use:autoHeight
+					id={'step' + step.id}
+					bind:value={step.step}
+					class="ghost-input border-surface2 ml-1 grow resize-none"
+					disabled={readOnly}
+				></textarea>
+			</div>
+
+			{#if isLoopStep}
+				{#if loopDataMessages.length > 0 && showOutput}
+					<div
+						class="relative my-3 -ml-4 flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 transition-transform dark:bg-black"
+						class:border-2={running}
+						class:border-blue={running}
+						transition:slide
+					>
+						{#each loopDataMessages as msg}
+							{#if !msg.sent}
+								<Message {msg} {project} disableMessageToEditor />
+							{/if}
+						{/each}
+						{#if stale}
+							<div
+								class="absolute inset-0 h-full w-full rounded-3xl bg-white opacity-80 dark:bg-black"
+							></div>
+						{/if}
+					</div>
+				{/if}
+
+				<div class="iterations-container flex flex-col gap-4">
+					{#if readOnly}
+						<!-- Display the iterations header only in case of task run -->
+						<div class="iterations-header flex justify-between">
+							<div class="flex items-baseline gap-4 opacity-50">
+								<div>Iterations:</div>
+
+								<div class="text-sm">
+									<span>{currentIteration + 1}</span>
+									<span class="opacity-50">/ {iterationMessages.length}</span>
+								</div>
+							</div>
+
+							<div class="flex gap-2">
+								<button
+									class="flex aspect-square h-8 items-center justify-center rounded-md bg-black transition-colors duration-200 hover:bg-black/90 active:bg-black/80"
+									disabled={currentIteration <= 0}
+									onclick={onclickPreviousIteration}
+								>
+									<ChevronLeft class="h-5 opacity-50" />
+								</button>
+
+								<button
+									class="flex aspect-square h-8 items-center justify-center rounded-md bg-black transition-colors duration-200 hover:bg-black/90 active:bg-black/80"
+									disabled={currentIteration >= iterationMessages.length - 1}
+									onclick={onclickNextIteration}
+								>
+									<ChevronRight class="h-5 opacity-50" />
+								</button>
+							</div>
+						</div>
+					{/if}
+
+					<div class="iterations-body flex flex-col gap-2 pl-6">
+						{#each step.loop! as _, i}
+							<!-- Get the current iteration steps messages array -->
+							{@const messages = iterationMessages[currentIteration] ?? []}
+
+							<!-- Get the current step messages array -->
+							{@const stepMessages = messages[i] ?? []}
+
+							<div class="iteration-step flex flex-col gap-2">
+								<div class="flex items-center gap-2">
+									<textarea
+										{onkeydown}
+										rows="1"
+										placeholder="Instructions..."
+										use:autoHeight
+										bind:value={step.loop![i]}
+										class="ghost-input border-surface2 grow resize-none"
+										disabled={readOnly}
+									></textarea>
+
+									{#if !readOnly}
+										<button
+											class="icon-button"
+											onclick={() => step.loop!.splice(i, 1)}
+											use:tooltip={'Remove step from loop'}
+										>
+											<Trash2 class="size-4" />
+										</button>
+									{/if}
+								</div>
+
+								{#if stepMessages.messages?.length > 0 && showOutput}
+									<div
+										class="relative my-3 -ml-4 flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 transition-transform dark:bg-black"
+										class:border-2={running}
+										class:border-blue={running}
+										transition:slide
+									>
+										{#each stepMessages.messages as msg}
+											{#if !msg.sent}
+												<Message {msg} {project} disableMessageToEditor />
+											{/if}
+										{/each}
+										{#if stale}
+											<div
+												class="absolute inset-0 h-full w-full rounded-3xl bg-white opacity-80 dark:bg-black"
+											></div>
+										{/if}
+									</div>
+								{/if}
+							</div>
+						{/each}
+						{#if !readOnly}
+							<button
+								class="icon-button self-start"
+								onclick={() => step.loop!.push('')}
+								use:tooltip={'Add step to loop'}
+							>
+								<Plus class="size-4" />
+							</button>
+						{/if}
+					</div>
+				</div>
+			{/if}
+		</div>
+
+		<div class="flex items-start">
+			{#if !readOnly}
+				<button
+					class="icon-button"
+					class:text-blue={isLoopStep}
+					data-testid="step-loop-btn"
+					onclick={toggleLoop}
+					use:tooltip={isLoopStep ? 'Convert to regular step' : 'Convert to loop step'}
+				>
+					<Repeat class="size-4" />
+				</button>
+
 				<button
 					class="icon-button"
 					data-testid="step-run-btn"
@@ -205,28 +410,29 @@
 			{/if}
 		</div>
 	</div>
-	{#if messages.length > 0}
-		{#if showOutput}
-			<div
-				class="relative my-3 -ml-4 flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 transition-transform dark:bg-black"
-				class:border-2={running}
-				class:border-blue={running}
-				transition:slide
-			>
-				{#each messages as msg}
-					{#if !msg.sent}
-						<Message {msg} {project} disableMessageToEditor />
-					{/if}
-				{/each}
-				{#if stale}
-					<div
-						class="absolute inset-0 h-full w-full rounded-3xl bg-white opacity-80 dark:bg-black"
-					></div>
-				{/if}
-			</div>
-		{/if}
-	{/if}
 </li>
+
+{#if messages.length > 0}
+	{#if !isLoopStep && messages.length > 0 && showOutput}
+		<div
+			class="relative my-3 -ml-4 flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 transition-transform dark:bg-black"
+			class:border-2={running}
+			class:border-blue={running}
+			transition:slide
+		>
+			{#each messages as msg}
+				{#if !msg.sent}
+					<Message {msg} {project} disableMessageToEditor />
+				{/if}
+			{/each}
+			{#if stale}
+				<div
+					class="absolute inset-0 h-full w-full rounded-3xl bg-white opacity-80 dark:bg-black"
+				></div>
+			{/if}
+		</div>
+	{/if}
+{/if}
 
 {#if task.steps.length > index + 1}
 	{#key task.steps[index + 1].id}

@@ -150,24 +150,34 @@ export class Thread {
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	onMessages(m: Messages) {}
+	onMessages(m: Messages) { }
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	onStepMessages(stepID: string, m: Messages) {}
+	onStepMessages(stepID: string, m: Messages) { }
 
 	#handleSteps() {
 		const newMessages = new Map<string, Progress[]>();
 		let stepID: string | undefined;
+		let fullStepID: string | undefined;
 		for (const progress of this.#progresses) {
 			if (progress.step?.id) {
 				stepID = progress.step?.id.split('{')[0];
+				fullStepID = progress.step?.id;
 				newMessages.delete(stepID);
+				newMessages.delete(fullStepID);
 			}
 			if (stepID) {
 				if (!newMessages.has(stepID)) {
 					newMessages.set(stepID, []);
 				}
 				newMessages.get(stepID)?.push(progress);
+
+				if (fullStepID && fullStepID !== stepID) {
+					if (!newMessages.has(fullStepID)) {
+						newMessages.set(fullStepID, []);
+					}
+					newMessages.get(fullStepID)?.push(progress);
+				}
 			}
 		}
 
