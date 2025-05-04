@@ -434,26 +434,24 @@
 	</div>
 </li>
 
-{#if messages.length > 0}
-	{#if !isLoopStep && messages.length > 0 && showOutput}
-		<div
-			class="relative my-3 -ml-4 flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 transition-transform dark:bg-black"
-			class:border-2={isRunning}
-			class:border-blue={isRunning}
-			transition:slide
-		>
-			{#each messages as msg}
-				{#if !msg.sent}
-					<Message {msg} {project} disableMessageToEditor />
-				{/if}
-			{/each}
-			{#if stale}
-				<div
-					class="absolute inset-0 h-full w-full rounded-3xl bg-white opacity-80 dark:bg-black"
-				></div>
+{#if !isLoopStep && messages.length > 0 && showOutput}
+	<div
+		class="relative my-3 -ml-4 flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 transition-transform dark:bg-black"
+		class:border-2={isRunning}
+		class:border-blue={isRunning}
+		transition:slide
+	>
+		{#each messages as msg}
+			{#if !msg.sent}
+				<Message {msg} {project} disableMessageToEditor />
 			{/if}
-		</div>
-	{/if}
+		{/each}
+		{#if stale}
+			<div
+				class="absolute inset-0 h-full w-full rounded-3xl bg-white opacity-80 dark:bg-black"
+			></div>
+		{/if}
+	</div>
 {/if}
 
 {#if task.steps.length > index + 1}
