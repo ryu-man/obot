@@ -247,6 +247,7 @@
 
 			{#if isLoopStep}
 				{#if loopDataMessages.length > 0 && showOutput}
+					<!-- Show step message -->
 					<div
 						class="relative my-3 -ml-4 flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 transition-transform dark:bg-black"
 						class:border-2={isRunning}
@@ -268,7 +269,7 @@
 
 				<div class="iterations-container flex flex-col gap-4">
 					{#if (isRunning || isRunnedBefore || readOnly) && iterations.length && showOutput}
-						<!-- Display the iterations header only in case of task run -->
+						<!-- Display the iterations header only in case of task is running or was runned before or in read-only mode -->
 						<div class="iterations-header flex justify-between">
 							<div class="flex items-baseline gap-4 opacity-50">
 								<div>Iterations:</div>
@@ -279,6 +280,7 @@
 								</div>
 							</div>
 
+							<!-- Show iterations navigation button -->
 							<div class="flex gap-2">
 								<button
 									class="flex aspect-square h-8 items-center justify-center rounded-md bg-black transition-colors duration-200 hover:bg-black/90 active:bg-black/80"
@@ -434,6 +436,7 @@
 	</div>
 </li>
 
+<!-- This code section is responsible for showing messages in a !loop task -->
 {#if !isLoopStep && messages.length > 0 && showOutput}
 	<div
 		class="relative my-3 -ml-4 flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 transition-transform dark:bg-black"
@@ -472,6 +475,7 @@
 	{/key}
 {/if}
 
+<!-- This code section show dialog to confirm task delete -->
 <Confirm
 	show={toDelete !== undefined}
 	msg={`Are you sure you want to delete this step`}
