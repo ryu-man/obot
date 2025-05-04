@@ -66,12 +66,12 @@
 	let loopDataMessages = $derived(stepMessages?.get(step.id + '{loopdata}')?.messages ?? []);
 
 	let currentIteration = $state(0);
-	let followIteration = $state(true);
+	let shouldFollowIteration = $state(true);
 
-	type IterationMessages = Messages[];
+	type Iteration = Messages[];
 
 	// Convert the steps messages map to an array of messages where each index represent the number of iteration
-	let iterationMessages: IterationMessages[] = $derived.by(() => {
+	let iterations: Iteration[] = $derived.by(() => {
 		// Convert the keys into an array
 		const keys = stepMessages?.keys().toArray() ?? [];
 
@@ -79,7 +79,7 @@
 		const pattern = new RegExp(`^${step.id}{element=(\\d+)}`);
 
 		// Initialize the iterations array
-		const iterations: IterationMessages[] = [];
+		const iterations: Iteration[] = [];
 
 		keys
 			// Filter out not matched items
@@ -116,9 +116,10 @@
 
 	$effect(() => {
 		// Check if task is running
-		if (isRunning && followIteration) {
+		// If following iteration is true; then automatically navigate to the last iteration
+		if (isRunning && shouldFollowIteration) {
 			// Always navigation to the last iteration
-			currentIteration = iterationMessages.length - 1;
+			currentIteration = iterations.length - 1;
 		}
 	});
 
@@ -187,23 +188,23 @@
 		}
 
 		// By default follow iteration when step is running
-		followIteration = true;
+		shouldFollowIteration = true;
 
 		await run?.(step);
 	}
 
 	function onclickNextIteration() {
-		followIteration = false;
-		currentIteration = Math.min(iterationMessages.length - 1, currentIteration + 1);
+		shouldFollowIteration = false;
+		currentIteration = Math.min(iterations.length - 1, currentIteration + 1);
 
 		// When user navigate back to the last iteration; activate following
-		if (currentIteration === iterationMessages.length - 1) {
-			followIteration = true;
+		if (currentIteration === iterations.length - 1) {
+			shouldFollowIteration = true;
 		}
 	}
 
 	function onclickPreviousIteration() {
-		followIteration = false;
+		shouldFollowIteration = false;
 		currentIteration = Math.max(0, currentIteration - 1);
 	}
 </script>
@@ -266,7 +267,7 @@
 				{/if}
 
 				<div class="iterations-container flex flex-col gap-4">
-					{#if (isRunning || isRunnedBefore || readOnly) && showOutput}
+					{#if (isRunning || isRunnedBefore || readOnly) && iterations.length && showOutput}
 						<!-- Display the iterations header only in case of task run -->
 						<div class="iterations-header flex justify-between">
 							<div class="flex items-baseline gap-4 opacity-50">
@@ -274,7 +275,7 @@
 
 								<div class="text-sm">
 									<span>{currentIteration + 1}</span>
-									<span class="opacity-50">/ {iterationMessages.length}</span>
+									<span class="opacity-50">/ {iterations.length}</span>
 								</div>
 							</div>
 
@@ -289,7 +290,7 @@
 
 								<button
 									class="flex aspect-square h-8 items-center justify-center rounded-md bg-black transition-colors duration-200 hover:bg-black/90 active:bg-black/80"
-									disabled={currentIteration >= iterationMessages.length - 1}
+									disabled={currentIteration >= iterations.length - 1}
 									onclick={onclickNextIteration}
 								>
 									<ChevronRight class="h-5 opacity-50" />
@@ -301,7 +302,7 @@
 					<div class="iterations-body flex flex-col gap-2 pl-6">
 						{#each step.loop! as _, i}
 							<!-- Get the current iteration steps messages array -->
-							{@const messages = iterationMessages[currentIteration] ?? []}
+							{@const messages = iterations[currentIteration] ?? []}
 
 							<!-- Get the current step messages array -->
 							{@const stepMessages = messages[i] ?? []}
