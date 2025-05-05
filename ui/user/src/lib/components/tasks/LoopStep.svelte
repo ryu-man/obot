@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Messages, Project, TaskStep } from '$lib/services';
+	import type { Messages, Project } from '$lib/services';
 	import Message from '$lib/components/messages/Message.svelte';
 	import { Trash2 } from 'lucide-svelte/icons';
 	import { autoHeight } from '$lib/actions/textarea.js';
@@ -8,7 +8,6 @@
 	import { animateHeight } from '$lib/actions/size.svelte';
 
 	type Props = {
-		step: TaskStep;
 		value: string;
 		messages: Messages;
 		project: Project;
@@ -25,7 +24,6 @@
 	let {
 		value = $bindable(),
 		messages,
-		step,
 		project,
 		isLoopStepRunning = false,
 		isStepRunning = false,
@@ -70,8 +68,8 @@
 				<div
 					class="messages-list flex w-full flex-col gap-4"
 					use:animateHeight={{
-                        isActive: () => isStepRunning && shouldShowOutput
-                    }}
+						isActive: () => isStepRunning && shouldShowOutput
+					}}
 				>
 					{#each messages.messages as msg}
 						{#if !msg.sent}

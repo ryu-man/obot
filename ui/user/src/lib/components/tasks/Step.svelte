@@ -335,7 +335,6 @@
 
 							<LoopStep
 								bind:value={step.loop![i]}
-								{step}
 								{project}
 								messages={stepMessages}
 								isReadOnly={readOnly}
