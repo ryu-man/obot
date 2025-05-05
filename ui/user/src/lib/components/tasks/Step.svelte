@@ -209,26 +209,6 @@
 	}
 </script>
 
-{#snippet outputVisibilityButton()}
-	<div class="size-10">
-		{#if messages.length > 0}
-			<button
-				class="icon-button"
-				data-testid="step-toggle-output-btn"
-				onclick={() => (showOutput = !showOutput)}
-				use:tooltip={'Toggle Output Visibility'}
-				transition:fade={{ duration: 200 }}
-			>
-				{#if showOutput}
-					<Eye class="size-4" />
-				{:else}
-					<EyeClosed class="size-4" />
-				{/if}
-			</button>
-		{/if}
-	</div>
-{/snippet}
-
 <li class="ms-4">
 	<div class="flex items-start justify-between gap-6">
 		<div class="flex grow flex-col gap-2">
@@ -429,7 +409,6 @@
 							</button>
 						{/if}
 					</div>
-					{@render outputVisibilityButton()}
 				</div>
 			{/if}
 		</div>
