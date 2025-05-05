@@ -457,6 +457,8 @@
 	</div>
 {/if}
 
+<!-- This code section shows other task steps recursively; -->
+<!-- REFACTOR: This should be moved out to the steps component and render steps in an each loop, Step.svelte should only be responsibe for displaying a single step -->
 {#if task.steps.length > index + 1}
 	{#key task.steps[index + 1].id}
 		<Self
@@ -476,6 +478,7 @@
 {/if}
 
 <!-- This code section show dialog to confirm task delete -->
+<!-- REFACTOR: Move out to the Steps.svelte component; having one dialog shared with many steps is better than each steps has its own dialog-->
 <Confirm
 	show={toDelete !== undefined}
 	msg={`Are you sure you want to delete this step`}
