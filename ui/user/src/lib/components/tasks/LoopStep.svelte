@@ -6,6 +6,7 @@
 	import { tooltip } from '$lib/actions/tooltip.svelte';
 	import type { KeyboardEventHandler } from 'svelte/elements';
 	import { animateHeight } from '$lib/actions/size.svelte';
+	import { slide } from 'svelte/transition';
 
 	type Props = {
 		value: string;
@@ -63,6 +64,7 @@
 			class="relative my-3 -ml-4 box-content flex min-h-[96px] flex-col gap-4 rounded-lg bg-white p-5 transition-all duration-100 dark:bg-black"
 			class:border-2={isStepRunning && isLoopStepRunning}
 			class:border-blue={isStepRunning && isLoopStepRunning}
+			transition:slide
 		>
 			{#if messages.messages?.length > 0}
 				<div

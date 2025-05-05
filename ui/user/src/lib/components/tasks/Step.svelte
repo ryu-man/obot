@@ -262,6 +262,7 @@
 						class="relative my-3 -ml-4 box-content flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 transition-transform dark:bg-black"
 						class:border-2={isRunning}
 						class:border-blue={isRunning}
+						transition:slide
 					>
 						<div
 							class="message-container flex w-full flex-col gap-4"
