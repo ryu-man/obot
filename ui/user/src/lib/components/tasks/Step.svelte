@@ -22,6 +22,7 @@
 	import { fade, slide } from 'svelte/transition';
 	import { tooltip } from '$lib/actions/tooltip.svelte';
 	import LoopStep from './LoopStep.svelte';
+	import { animateHeight } from '$lib/actions/size.svelte';
 
 	interface Props {
 		parentStale?: boolean;
@@ -264,6 +265,9 @@
 					>
 						<div
 							class="message-container flex w-full flex-col gap-4"
+							use:animateHeight={{
+								isActive: () => isRunning && showOutput
+							}}
 						>
 							{#each loopDataMessages as msg}
 								{#if !msg.sent}

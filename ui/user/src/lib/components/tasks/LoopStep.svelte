@@ -5,6 +5,7 @@
 	import { autoHeight } from '$lib/actions/textarea.js';
 	import { tooltip } from '$lib/actions/tooltip.svelte';
 	import type { KeyboardEventHandler } from 'svelte/elements';
+	import { animateHeight } from '$lib/actions/size.svelte';
 
 	type Props = {
 		step: TaskStep;
@@ -68,6 +69,9 @@
 			{#if messages.messages?.length > 0}
 				<div
 					class="messages-list flex w-full flex-col gap-4"
+					use:animateHeight={{
+                        isActive: () => isStepRunning && shouldShowOutput
+                    }}
 				>
 					{#each messages.messages as msg}
 						{#if !msg.sent}
