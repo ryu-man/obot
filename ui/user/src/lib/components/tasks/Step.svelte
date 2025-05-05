@@ -207,19 +207,19 @@
 			.map((key) => key.match(pattern))
 			.map((match) => {
 				const iteration = parseInt(match?.at(1) ?? '0');
-				const step = parseInt(match?.at(2) ?? '0');
+				const loopStep = parseInt(match?.at(2) ?? '0');
 
 				return {
 					iteration,
-					step
+					loopStep
 				};
 			})
 			.reduce(
 				(acc, val) => ({
 					iteration: Math.max(acc.iteration, val.iteration),
-					step: val.step
+					loopStep: val.loopStep
 				}),
-				{ iteration: -1, step: -1 }
+				{ iteration: -1, loopStep: -1 }
 			);
 	}
 
@@ -342,7 +342,7 @@
 								isLoopStepRunning={isRunning &&
 									taskRunStepLoopProgress &&
 									taskRunStepLoopProgress.iteration === iterations.length - 1 &&
-									taskRunStepLoopProgress.step === i}
+									taskRunStepLoopProgress.loopStep === i}
 								isStepRunning={isRunning}
 								isStepRunned={isRunnedBefore}
 								shouldShowOutput={showOutput}
