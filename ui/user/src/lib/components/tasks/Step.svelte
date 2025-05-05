@@ -256,7 +256,15 @@
 
 								<div class="text-sm">
 									<span>{currentIteration + 1}</span>
-									<span class="opacity-50">/ {iterations.length}</span>
+
+									<span class="opacity-50">
+										<span>/</span>
+										{#if isRunning}
+											<span>X</span>
+										{:else}
+											<span>{iterations.length}</span>
+										{/if}
+									</span>
 								</div>
 							</div>
 
