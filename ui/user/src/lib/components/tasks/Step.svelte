@@ -190,7 +190,7 @@
 		// By default follow iteration when step is running
 		shouldFollowIteration = true;
 
-		await run?.(step);
+		await run?.($state.snapshot(step));
 	}
 
 	function onclickNextIteration() {
