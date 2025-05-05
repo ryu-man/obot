@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Self from './Step.svelte';
 	import {
 		ChatService,
 		type Messages,
@@ -8,7 +7,7 @@
 		type TaskStep
 	} from '$lib/services';
 	import Message from '$lib/components/messages/Message.svelte';
-	import { Eye, EyeClosed, Plus, Trash2, Repeat } from 'lucide-svelte/icons';
+	import { Plus, Trash2, Repeat } from 'lucide-svelte/icons';
 	import {
 		LoaderCircle,
 		OctagonX,
@@ -22,6 +21,7 @@
 	import Confirm from '$lib/components/Confirm.svelte';
 	import { fade, slide } from 'svelte/transition';
 	import { tooltip } from '$lib/actions/tooltip.svelte';
+	import LoopStep from './LoopStep.svelte';
 
 	interface Props {
 		parentStale?: boolean;
@@ -67,6 +67,10 @@
 
 	let currentIteration = $state(0);
 	let shouldFollowIteration = $state(true);
+
+	const taskRunStepLoopProgress = $derived(
+		getTaskRunProgress(step.id, stepMessages?.keys().toArray() ?? [])
+	);
 
 	type Iteration = Messages[];
 
@@ -193,6 +197,31 @@
 		await run?.($state.snapshot(step));
 	}
 
+	function getTaskRunProgress(stepId: string, messageIds: string[]) {
+		// Define a regex pattern to extract iterations data
+		const pattern = new RegExp(`^${stepId}{element=(\\d+)}{step=(\\d+)}`);
+
+		return messageIds
+			.filter((key) => pattern.test(key))
+			.map((key) => key.match(pattern))
+			.map((match) => {
+				const iteration = parseInt(match?.at(1) ?? '0');
+				const step = parseInt(match?.at(2) ?? '0');
+
+				return {
+					iteration,
+					step
+				};
+			})
+			.reduce(
+				(acc, val) => ({
+					iteration: Math.max(acc.iteration, val.iteration),
+					step: val.step
+				}),
+				{ iteration: -1, step: -1 }
+			);
+	}
+
 	function onclickNextIteration() {
 		shouldFollowIteration = false;
 		currentIteration = Math.min(iterations.length - 1, currentIteration + 1);
@@ -229,16 +258,19 @@
 				{#if loopDataMessages.length > 0 && showOutput}
 					<!-- Show step message -->
 					<div
-						class="relative my-3 -ml-4 flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 transition-transform dark:bg-black"
+						class="relative my-3 -ml-4 box-content flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 transition-transform dark:bg-black"
 						class:border-2={isRunning}
 						class:border-blue={isRunning}
-						transition:slide
 					>
-						{#each loopDataMessages as msg}
-							{#if !msg.sent}
-								<Message {msg} {project} disableMessageToEditor />
-							{/if}
-						{/each}
+						<div
+							class="message-container flex w-full flex-col gap-4"
+						>
+							{#each loopDataMessages as msg}
+								{#if !msg.sent}
+									<Message {msg} {project} disableMessageToEditor />
+								{/if}
+							{/each}
+						</div>
 						{#if stale}
 							<div
 								class="absolute inset-0 h-full w-full rounded-3xl bg-white opacity-80 dark:bg-black"
@@ -297,50 +329,25 @@
 							<!-- Get the current step messages array -->
 							{@const stepMessages = messages[i] ?? []}
 
-							<div class="iteration-step flex flex-col gap-2">
-								<div class="flex items-center gap-2">
-									<textarea
-										{onkeydown}
-										rows="1"
-										placeholder="Instructions..."
-										use:autoHeight
-										bind:value={step.loop![i]}
-										class="ghost-input border-surface2 grow resize-none"
-										disabled={readOnly}
-									></textarea>
-
-									{#if !readOnly}
-										<button
-											class="icon-button"
-											onclick={() => step.loop!.splice(i, 1)}
-											use:tooltip={'Remove step from loop'}
-										>
-											<Trash2 class="size-4" />
-										</button>
-									{/if}
-								</div>
-
-								{#if stepMessages.messages?.length > 0 && showOutput}
-									<div
-										class="relative my-3 -ml-4 flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 transition-transform dark:bg-black"
-										class:border-2={isRunning}
-										class:border-blue={isRunning}
-										transition:slide
-									>
-										{#each stepMessages.messages as msg}
-											{#if !msg.sent}
-												<Message {msg} {project} disableMessageToEditor />
-											{/if}
-										{/each}
-										{#if stale}
-											<div
-												class="absolute inset-0 h-full w-full rounded-3xl bg-white opacity-80 dark:bg-black"
-											></div>
-										{/if}
-									</div>
-								{/if}
-							</div>
+							<LoopStep
+								bind:value={step.loop![i]}
+								{step}
+								{project}
+								messages={stepMessages}
+								isReadOnly={readOnly}
+								isLoopStepRunning={isRunning &&
+									taskRunStepLoopProgress &&
+									taskRunStepLoopProgress.iteration === iterations.length - 1 &&
+									taskRunStepLoopProgress.step === i}
+								isStepRunning={isRunning}
+								isStepRunned={isRunnedBefore}
+								shouldShowOutput={showOutput}
+								{stale}
+								{onkeydown}
+								ondelete={() => step.loop!.splice(i, 1)}
+							/>
 						{/each}
+
 						{#if !readOnly}
 							<button
 								class="icon-button self-start"
@@ -446,23 +453,23 @@
 
 <!-- This code section shows other task steps recursively; -->
 <!-- REFACTOR: This should be moved out to the steps component and render steps in an each loop, Step.svelte should only be responsibe for displaying a single step -->
-{#if task.steps.length > index + 1}
+<!-- {#if task.steps.length > index + 1}
 	{#key task.steps[index + 1].id}
-		<Self
-			{run}
-			{runID}
-			{pending}
-			{task}
-			index={index + 1}
-			bind:step={task.steps[index + 1]}
-			{stepMessages}
-			parentStale={stale}
-			{project}
-			showOutput={parentShowOutput}
-			{readOnly}
-		/>
+	<Self
+		{run}
+		{runID}
+		{pending}
+		{task}
+		index={index + 1}
+		bind:step={task.steps[index + 1]}
+		{stepMessages}
+		parentStale={stale}
+		{project}
+		showOutput={parentShowOutput}
+		{readOnly}
+	/>
 	{/key}
-{/if}
+{/if} -->
 
 <!-- This code section show dialog to confirm task delete -->
 <!-- REFACTOR: Move out to the Steps.svelte component; having one dialog shared with many steps is better than each steps has its own dialog-->

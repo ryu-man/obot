@@ -31,6 +31,8 @@
 		error,
 		readOnly
 	}: Props = $props();
+
+	const steps = $derived(task?.steps ?? []);
 </script>
 
 <div class="dark:bg-surface1 dark:border-surface3 rounded-lg bg-white p-5 shadow-sm dark:border">
@@ -52,7 +54,7 @@
 
 	<ol class="list-decimal pt-2 opacity-100">
 		{#if task.steps.length > 0}
-			{#key task.steps[0].id}
+			{#each steps as step (step.id)}
 				<Step
 					{run}
 					{runID}
@@ -65,7 +67,7 @@
 					showOutput={showAllOutput}
 					{readOnly}
 				/>
-			{/key}
+			{/each}
 		{/if}
 	</ol>
 
