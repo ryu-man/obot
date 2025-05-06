@@ -22,7 +22,7 @@
 	import { fade, slide } from 'svelte/transition';
 	import { tooltip } from '$lib/actions/tooltip.svelte';
 	import LoopStep from './LoopStep.svelte';
-	import { animateHeight } from '$lib/actions/size.svelte';
+	import { transitionParentHeight } from '$lib/actions/size.svelte';
 
 	interface Props {
 		parentStale?: boolean;
@@ -204,8 +204,8 @@
 
 		return messageIds
 			.filter((key) => pattern.test(key))
-			.map((key) => key.match(pattern))
-			.map((match) => {
+			.map((key) => {
+				const match = key.match(pattern);
 				const iteration = parseInt(match?.at(1) ?? '0');
 				const loopStep = parseInt(match?.at(2) ?? '0');
 
@@ -259,16 +259,14 @@
 				{#if loopDataMessages.length > 0 && showOutput}
 					<!-- Show step message -->
 					<div
-						class="relative my-3 -ml-4 box-content flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 transition-transform dark:bg-black"
+						class="transition-height relative my-3 -ml-4 box-content flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 dark:bg-black"
 						class:border-2={isRunning}
 						class:border-blue={isRunning}
 						transition:slide
 					>
 						<div
 							class="message-container flex w-full flex-col gap-4"
-							use:animateHeight={{
-								isActive: () => isRunning && showOutput
-							}}
+							use:transitionParentHeight={() => (isRunning && showOutput) || loopDataMessages}
 						>
 							{#each loopDataMessages as msg}
 								{#if !msg.sent}
@@ -437,16 +435,14 @@
 <!-- This code section is responsible for showing messages in a !loop task -->
 {#if !isLoopStep && messages.length > 0 && showOutput}
 	<div
-		class="relative my-3 box-content flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 transition-transform dark:bg-black"
+		class="transition-height relative my-3 box-content flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 dark:bg-black"
 		class:border-2={isRunning}
 		class:border-blue={isRunning}
 		transition:slide
 	>
 		<div
 			class="messages-container flex w-full flex-col gap-4"
-			use:animateHeight={{
-				isActive: () => isRunning
-			}}
+			use:transitionParentHeight={() => isRunning || messages}
 		>
 			{#each messages as msg}
 				{#if !msg.sent}

@@ -1,47 +1,36 @@
-import gsap from "gsap";
+export function transitionParentHeight(node: HTMLElement, fn: () => any) {
+    const onsizechange = () => {
 
-export type AnimateHeightActionProps = {
-    isActive?: () => boolean,
-    vars?: Pick<gsap.TweenVars, 'duration' | 'delay' | 'ease'>
-}
-
-export function animateHeight(node: HTMLElement, { isActive, vars }: AnimateHeightActionProps) {
-    let currentTween: gsap.core.Tween | undefined = undefined;
-
-    $effect(() => {
-
-        const { ease = undefined, delay = 0, duration = .2 } = vars ?? {};
-
-        const onsizechange = () => {
-            // Debounce the resize calculation
-            currentTween?.kill?.();
+        // Debounce the resize calculation
+        requestAnimationFrame(() => {
             if (!node.parentElement) {
                 return
             }
+            node.parentElement!.style.height = node.scrollHeight + 'px';
+        })
+    }
 
+    onsizechange();
 
+    const observer = new ResizeObserver(onsizechange);
 
-
-            if (isActive && isActive()) {
-                currentTween = gsap.to(node.parentElement, { height: node.scrollHeight, duration, delay, ease });
-
-            } else {
-                gsap.to(node.parentElement, { height: 'auto', duration, delay, ease });
-            }
-        }
+    $effect(() => {
+        // Recalculate the parent height programmatically
+        fn();
 
         onsizechange();
-
-        const observer = new ResizeObserver(onsizechange);
-
 
         observer.observe(node)
 
         return () => {
-            currentTween?.kill?.();
             observer.disconnect()
 
-            gsap.to(node.parentElement, { height: 'auto', duration, delay, ease });
+            if (node.parentElement) {
+                // Use the computed style to get the pixel value of the min-height; 
+                const style = getComputedStyle(node.parentElement);
+
+                node.parentElement!.style.height = style.minHeight;
+            }
         }
     })
 
