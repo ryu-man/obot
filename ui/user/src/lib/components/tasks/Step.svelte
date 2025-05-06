@@ -305,7 +305,7 @@
 							<!-- Show iterations navigation button -->
 							<div class="flex gap-2">
 								<button
-									class="flex aspect-square h-8 items-center justify-center rounded-md bg-black transition-colors duration-200 hover:bg-black/90 active:bg-black/80"
+									class="bg-surface2 text-on-surface2 hover:bg-surface3/50 active:bg-surface3/80 flex aspect-square h-8 items-center justify-center rounded-md transition-colors duration-200"
 									disabled={currentIteration <= 0}
 									onclick={onclickPreviousIteration}
 								>
@@ -313,7 +313,7 @@
 								</button>
 
 								<button
-									class="flex aspect-square h-8 items-center justify-center rounded-md bg-black transition-colors duration-200 hover:bg-black/90 active:bg-black/80"
+									class="bg-surface2 text-on-surface2 hover:bg-surface3/50 active:bg-surface3/80 flex aspect-square h-8 items-center justify-center rounded-md transition-colors duration-200"
 									disabled={currentIteration >= iterations.length - 1}
 									onclick={onclickNextIteration}
 								>
