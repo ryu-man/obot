@@ -302,24 +302,27 @@
 								</div>
 							</div>
 
-							<!-- Show iterations navigation button -->
-							<div class="flex gap-2">
-								<button
-									class="bg-surface2 text-on-surface2 hover:bg-surface3/50 active:bg-surface3/80 flex aspect-square h-8 items-center justify-center rounded-md transition-colors duration-200"
-									disabled={currentIteration <= 0}
-									onclick={onclickPreviousIteration}
-								>
-									<ChevronLeft class="h-5 opacity-50" />
-								</button>
+							<!-- Show navigation button only when there are more than one iteration -->
+							{#if iterations.length > 1}
+								<!-- Show iterations navigation button -->
+								<div class="flex gap-2" transition:fade={{ duration: 100 }}>
+									<button
+										class="bg-surface2 text-on-surface2 hover:bg-surface3/50 active:bg-surface3/80 flex aspect-square h-8 items-center justify-center rounded-md transition-colors duration-200"
+										disabled={currentIteration <= 0}
+										onclick={onclickPreviousIteration}
+									>
+										<ChevronLeft class="h-5 opacity-50" />
+									</button>
 
-								<button
-									class="bg-surface2 text-on-surface2 hover:bg-surface3/50 active:bg-surface3/80 flex aspect-square h-8 items-center justify-center rounded-md transition-colors duration-200"
-									disabled={currentIteration >= iterations.length - 1}
-									onclick={onclickNextIteration}
-								>
-									<ChevronRight class="h-5 opacity-50" />
-								</button>
-							</div>
+									<button
+										class="bg-surface2 text-on-surface2 hover:bg-surface3/50 active:bg-surface3/80 flex aspect-square h-8 items-center justify-center rounded-md transition-colors duration-200"
+										disabled={currentIteration >= iterations.length - 1}
+										onclick={onclickNextIteration}
+									>
+										<ChevronRight class="h-5 opacity-50" />
+									</button>
+								</div>
+							{/if}
 						</div>
 					{/if}
 
