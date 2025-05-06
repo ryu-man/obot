@@ -462,26 +462,6 @@
 	</div>
 {/if}
 
-<!-- This code section shows other task steps recursively; -->
-<!-- REFACTOR: This should be moved out to the steps component and render steps in an each loop, Step.svelte should only be responsibe for displaying a single step -->
-<!-- {#if task.steps.length > index + 1}
-	{#key task.steps[index + 1].id}
-	<Self
-		{run}
-		{runID}
-		{pending}
-		{task}
-		index={index + 1}
-		bind:step={task.steps[index + 1]}
-		{stepMessages}
-		parentStale={stale}
-		{project}
-		showOutput={parentShowOutput}
-		{readOnly}
-	/>
-	{/key}
-{/if} -->
-
 <!-- This code section show dialog to confirm task delete -->
 <!-- REFACTOR: Move out to the Steps.svelte component; having one dialog shared with many steps is better than each steps has its own dialog-->
 <Confirm
