@@ -194,7 +194,8 @@
 
 	.transition-height {
 		transition-property: height, transform, translate;
-    	transition-duration: var(--tw-duration, var(--default-transition-duration));
+    	transition-duration: var(--tw-duration, 100ms);
+    	transition-timing-function: var(--tw-timing-function, linear);
 
 		will-change: height, transform, translate;
 		transform: translateZ(1);
