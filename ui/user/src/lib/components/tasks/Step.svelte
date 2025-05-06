@@ -202,25 +202,24 @@
 		// Define a regex pattern to extract iterations data
 		const pattern = new RegExp(`^${stepId}{element=(\\d+)}{step=(\\d+)}`);
 
-		return messageIds
-			.filter((key) => pattern.test(key))
-			.map((key) => {
-				const match = key.match(pattern);
-				const iteration = parseInt(match?.at(1) ?? '0');
-				const loopStep = parseInt(match?.at(2) ?? '0');
+		let acc = { iteration: -1, loopStep: -1 };
 
-				return {
-					iteration,
-					loopStep
-				};
-			})
-			.reduce(
-				(acc, val) => ({
-					iteration: Math.max(acc.iteration, val.iteration),
-					loopStep: val.loopStep
-				}),
-				{ iteration: -1, loopStep: -1 }
-			);
+		for (const key of messageIds) {
+			if (!pattern.test(key)) {
+				continue;
+			}
+
+			const match = key.match(pattern);
+			const iteration = parseInt(match?.at(1) ?? '0');
+			const loopStep = parseInt(match?.at(2) ?? '0');
+
+			acc = {
+				iteration: Math.max(acc.iteration, iteration),
+				loopStep: loopStep
+			};
+		}
+
+		return acc;
 	}
 
 	function onclickNextIteration() {
