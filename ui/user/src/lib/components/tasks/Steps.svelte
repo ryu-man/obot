@@ -60,7 +60,7 @@
 					{runID}
 					bind:task
 					bind:step={task.steps[i]}
-					index={0}
+					index={i}
 					{stepMessages}
 					{pending}
 					{project}
