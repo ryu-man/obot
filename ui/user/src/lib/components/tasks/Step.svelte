@@ -16,7 +16,7 @@
 		ChevronLeft,
 		ChevronRight
 	} from 'lucide-svelte';
-	import { tick } from 'svelte';
+	import { tick, untrack } from 'svelte';
 	import { autoHeight } from '$lib/actions/textarea.js';
 	import Confirm from '$lib/components/Confirm.svelte';
 	import { fade, slide } from 'svelte/transition';
@@ -52,11 +52,49 @@
 		readOnly
 	}: Props = $props();
 
-	let isRunning = $derived(stepMessages?.get(step.id)?.inProgress ?? false);
+	// let isRunning = $derived(stepMessages?.get(step.id)?.inProgress ?? false);
 	let isRunnedBefore = $derived(!!stepMessages?.get(step.id)?.lastRunID);
 	let stale: boolean = $derived(parentStale || !parentMatches());
 	let toDelete = $state<boolean>();
 	let showOutput = $state(true);
+
+	let isRunning = $state(stepMessages?.get(step.id)?.inProgress ?? false);
+
+	let timeoutId: number | undefined = undefined;
+	// save how many step.inProgress === false we got
+	let inProgressFalseCount = $state(0);
+	$effect(() => {
+		const s = stepMessages?.get(step.id);
+
+		untrack(() => {
+			clearTimeout(timeoutId);
+
+			// check if inProgress is false
+			if (!s?.inProgress) {
+				// increment the counter
+				inProgressFalseCount++;
+
+				// check if we got 2 false responses
+				if (inProgressFalseCount > 2) {
+					// set as not running
+					isRunning = false;
+
+					inProgressFalseCount = 0;
+				}
+
+				// in case we got the last message and 1 false inProgress; set a timeout function to update isRunning after some time
+				timeoutId = setTimeout(() => {
+					isRunning = false;
+					inProgressFalseCount = 0;
+				}, 1000);
+			} else {
+				// set task as running
+				isRunning = true;
+
+				inProgressFalseCount = 0;
+			}
+		});
+	});
 
 	// Check whether the current step has looping steps (sub steps)
 	// It should have the
