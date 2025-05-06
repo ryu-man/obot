@@ -341,7 +341,7 @@
 								isReadOnly={readOnly}
 								isLoopStepRunning={isRunning &&
 									taskRunStepLoopProgress &&
-									taskRunStepLoopProgress.iteration === iterations.length - 1 &&
+									taskRunStepLoopProgress.iteration === currentIteration &&
 									taskRunStepLoopProgress.loopStep === i}
 								isStepRunning={isRunning}
 								isStepRunned={isRunnedBefore}
