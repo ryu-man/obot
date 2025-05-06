@@ -192,6 +192,10 @@
 		line-height: inherit;
 	}
 
+	.scrollbar-gutter-stable {
+		scrollbar-gutter: stable;
+	}
+
 	.transition-height {
 		transition-property: height, transform, translate;
     	transition-duration: var(--tw-duration, 100ms);
