@@ -61,29 +61,28 @@
 
 	{#if (isStepRunning || isStepRunned) && shouldShowOutput}
 		<div
-			class="transition-height relative my-3 -ml-4 box-content flex min-h-[40px] flex-col gap-4 overflow-hidden rounded-lg bg-white p-5 transition-all duration-100 dark:bg-black"
+			class="transition-height relative my-3 -ml-4 box-content flex min-h-[40px] flex-col gap-4 overflow-hidden rounded-lg bg-white p-5 duration-200 dark:bg-black"
 			class:outline-2={isStepRunning && isLoopStepRunning}
 			class:outline-blue={isStepRunning && isLoopStepRunning}
 			transition:slide
 		>
-			{#if messages.messages?.length > 0}
-				<div
-					class="messages-list flex w-full flex-col gap-4"
-					use:transitionParentHeight={() =>
-						(isStepRunning && shouldShowOutput) || messages.messages}
-				>
+			<div
+				class="messages-list flex h-fit w-full flex-col gap-4"
+				use:transitionParentHeight={() => (isStepRunning && shouldShowOutput) || messages.messages}
+			>
+				{#if messages.messages?.length > 0}
 					{#each messages.messages as msg}
 						{#if !msg.sent}
 							<Message {msg} {project} disableMessageToEditor />
 						{/if}
 					{/each}
-				</div>
-
-				{#if stale}
-					<div
-						class="absolute inset-0 h-full w-full rounded-3xl bg-white opacity-80 dark:bg-black"
-					></div>
 				{/if}
+			</div>
+
+			{#if stale}
+				<div
+					class="absolute inset-0 h-full w-full rounded-3xl bg-white opacity-80 dark:bg-black"
+				></div>
 			{/if}
 		</div>
 	{/if}
