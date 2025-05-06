@@ -54,12 +54,12 @@
 
 	<ol class="list-decimal pt-2 opacity-100">
 		{#if task.steps.length > 0}
-			{#each steps as step (step.id)}
+			{#each steps as step, i (step.id)}
 				<Step
 					{run}
 					{runID}
 					bind:task
-					bind:step={task.steps[0]}
+					bind:step={task.steps[i]}
 					index={0}
 					{stepMessages}
 					{pending}
