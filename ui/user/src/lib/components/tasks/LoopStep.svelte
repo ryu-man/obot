@@ -61,7 +61,7 @@
 
 	{#if (isStepRunning || isStepRunned) && shouldShowOutput}
 		<div
-			class="transition-height relative my-3 -ml-4 box-content flex min-h-[96px] flex-col gap-4 rounded-lg bg-white p-5 transition-all duration-100 dark:bg-black"
+			class="transition-height relative my-3 -ml-4 box-content flex min-h-[96px] flex-col gap-4 overflow-hidden rounded-lg bg-white p-5 transition-all duration-100 dark:bg-black"
 			class:border-2={isStepRunning && isLoopStepRunning}
 			class:border-blue={isStepRunning && isLoopStepRunning}
 			transition:slide
@@ -69,7 +69,8 @@
 			{#if messages.messages?.length > 0}
 				<div
 					class="messages-list flex w-full flex-col gap-4"
-					use:transitionParentHeight={() => (isStepRunning && shouldShowOutput) || messages.messages}
+					use:transitionParentHeight={() =>
+						(isStepRunning && shouldShowOutput) || messages.messages}
 				>
 					{#each messages.messages as msg}
 						{#if !msg.sent}

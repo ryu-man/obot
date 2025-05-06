@@ -258,7 +258,7 @@
 				{#if loopDataMessages.length > 0 && showOutput}
 					<!-- Show step message -->
 					<div
-						class="transition-height relative my-3 -ml-4 box-content flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 dark:bg-black"
+						class="transition-height relative my-3 -ml-4 box-content flex min-h-[150px] flex-col gap-4 overflow-hidden rounded-lg bg-white p-5 dark:bg-black"
 						class:border-2={isRunning}
 						class:border-blue={isRunning}
 						transition:slide
@@ -437,7 +437,7 @@
 <!-- This code section is responsible for showing messages in a !loop task -->
 {#if !isLoopStep && messages.length > 0 && showOutput}
 	<div
-		class="transition-height relative my-3 box-content flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 dark:bg-black"
+		class="transition-height relative my-3 box-content flex min-h-[150px] flex-col gap-4 overflow-hidden rounded-lg bg-white p-5 dark:bg-black"
 		class:border-2={isRunning}
 		class:border-blue={isRunning}
 		transition:slide
