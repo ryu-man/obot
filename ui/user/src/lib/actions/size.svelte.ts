@@ -14,7 +14,7 @@ export function animateHeight(node: HTMLElement, { isActive, vars }: AnimateHeig
 
         const onsizechange = () => {
             // Debounce the resize calculation
-            currentTween?.pause?.();
+            currentTween?.kill?.();
             if (!node.parentElement) {
                 return
             }
@@ -23,7 +23,7 @@ export function animateHeight(node: HTMLElement, { isActive, vars }: AnimateHeig
 
 
             if (isActive && isActive()) {
-                currentTween = gsap.to(node.parentElement, { height: node.scrollHeight, duration, delay, ease })
+                currentTween = gsap.to(node.parentElement, { height: node.scrollHeight, duration, delay, ease });
 
             } else {
                 gsap.to(node.parentElement, { height: 'auto', duration, delay, ease });
@@ -38,7 +38,7 @@ export function animateHeight(node: HTMLElement, { isActive, vars }: AnimateHeig
         observer.observe(node)
 
         return () => {
-            currentTween?.pause?.();
+            currentTween?.kill?.();
             observer.disconnect()
 
             gsap.to(node.parentElement, { height: 'auto', duration, delay, ease });
