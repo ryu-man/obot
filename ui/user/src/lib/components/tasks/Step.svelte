@@ -437,16 +437,23 @@
 <!-- This code section is responsible for showing messages in a !loop task -->
 {#if !isLoopStep && messages.length > 0 && showOutput}
 	<div
-		class="relative my-3 -ml-4 flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 transition-transform dark:bg-black"
+		class="relative my-3 box-content flex min-h-[150px] flex-col gap-4 rounded-lg bg-white p-5 transition-transform dark:bg-black"
 		class:border-2={isRunning}
 		class:border-blue={isRunning}
 		transition:slide
 	>
-		{#each messages as msg}
-			{#if !msg.sent}
-				<Message {msg} {project} disableMessageToEditor />
-			{/if}
-		{/each}
+		<div
+			class="messages-container flex w-full flex-col gap-4"
+			use:animateHeight={{
+				isActive: () => isRunning
+			}}
+		>
+			{#each messages as msg}
+				{#if !msg.sent}
+					<Message {msg} {project} disableMessageToEditor />
+				{/if}
+			{/each}
+		</div>
 		{#if stale}
 			<div
 				class="absolute inset-0 h-full w-full rounded-3xl bg-white opacity-80 dark:bg-black"
