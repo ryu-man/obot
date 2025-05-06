@@ -61,7 +61,7 @@
 
 	{#if (isStepRunning || isStepRunned) && shouldShowOutput}
 		<div
-			class="transition-height relative my-3 -ml-4 box-content flex min-h-[96px] flex-col gap-4 overflow-hidden rounded-lg bg-white p-5 transition-all duration-100 dark:bg-black"
+			class="transition-height relative my-3 -ml-4 box-content flex min-h-[40px] flex-col gap-4 overflow-hidden rounded-lg bg-white p-5 transition-all duration-100 dark:bg-black"
 			class:outline-2={isStepRunning && isLoopStepRunning}
 			class:outline-blue={isStepRunning && isLoopStepRunning}
 			transition:slide
