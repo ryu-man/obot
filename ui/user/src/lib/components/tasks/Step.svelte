@@ -313,8 +313,8 @@
 										isStepRunned={isRunnedBefore}
 										shouldShowOutput={showOutput}
 										{stale}
-										{onkeydown}
-										ondelete={() => step.loop!.splice(j, 1)}
+										onKeydown={onkeydown}
+										onDelete={() => step.loop!.splice(j, 1)}
 									/>
 								{/each}
 							</div>
@@ -344,21 +344,12 @@
 									isStepRunned={false}
 									shouldShowOutput={showOutput}
 									{stale}
-									{onkeydown}
-									ondelete={() => step.loop!.splice(i, 1)}
+									onKeydown={onkeydown}
+									onDelete={() => step.loop!.splice(i, 1)}
+									onAdd={() => step.loop!.splice(i + 1, 0, '')}
 								/>
 							{/each}
 						</div>
-					{/if}
-
-					{#if !readOnly}
-						<button
-							class="icon-button self-start"
-							onclick={() => step.loop!.push('')}
-							use:tooltip={'Add step to loop'}
-						>
-							<Plus class="size-4" />
-						</button>
 					{/if}
 				</div>
 			{/if}

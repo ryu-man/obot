@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Messages, Project } from '$lib/services';
 	import Message from '$lib/components/messages/Message.svelte';
-	import { Trash2 } from 'lucide-svelte/icons';
+	import { Trash2, Plus } from 'lucide-svelte/icons';
 	import { autoHeight } from '$lib/actions/textarea.js';
 	import { tooltip } from '$lib/actions/tooltip.svelte';
 	import type { KeyboardEventHandler } from 'svelte/elements';
@@ -18,8 +18,9 @@
 		isReadOnly?: boolean;
 		shouldShowOutput?: boolean;
 		stale?: boolean;
-		onkeydown?: KeyboardEventHandler<HTMLTextAreaElement>;
-		ondelete?: () => void;
+		onKeydown?: KeyboardEventHandler<HTMLTextAreaElement>;
+		onDelete?: () => void;
+		onAdd?: () => void;
 	};
 
 	let {
@@ -32,8 +33,9 @@
 		isReadOnly = false,
 		shouldShowOutput = false,
 		stale = false,
-		onkeydown = undefined,
-		ondelete = undefined
+		onKeydown = undefined,
+		onDelete = undefined,
+		onAdd = undefined
 	}: Props = $props();
 </script>
 
@@ -49,13 +51,19 @@
 			placeholder="Instructions..."
 			class="ghost-input border-surface2 h-auto grow resize-none"
 			disabled={isReadOnly}
-			{onkeydown}
+			onkeydown={onKeydown}
 		></textarea>
 
 		{#if !isReadOnly}
-			<button class="icon-button" onclick={ondelete} use:tooltip={'Remove step from loop'}>
-				<Trash2 class="size-4" />
-			</button>
+			<div class="flex items-center">
+				<button class="icon-button" onclick={onDelete} use:tooltip={'Remove step from loop'}>
+					<Trash2 class="size-4" />
+				</button>
+
+				<button class="icon-button self-start" onclick={onAdd} use:tooltip={'Add step to loop'}>
+					<Plus class="size-4" />
+				</button>
+			</div>
 		{/if}
 	</div>
 
