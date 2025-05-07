@@ -299,7 +299,7 @@
 	>
 		{#if clearable}
 			<button
-				class="absolute right-0 top-0 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+				class="absolute top-0 right-0 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
 				aria-label="Clear message"
 				onclick={() => (msg.ignore = true)}
 			>
@@ -338,11 +338,11 @@
 				</div>
 			</div>
 			<div class="relative">
-				<div class="font-body text-md whitespace-pre-wrap p-5 text-gray-700 dark:text-gray-300">
+				<div class="font-body text-md p-5 whitespace-pre-wrap text-gray-700 dark:text-gray-300">
 					{msg.file.content.split('\n').splice(0, 6).join('\n')}
 				</div>
 				<div
-					class="bg-linear-to-b absolute bottom-0 z-20 h-24 w-full rounded-3xl from-transparent to-white dark:to-black"
+					class="absolute bottom-0 z-20 h-24 w-full rounded-3xl bg-linear-to-b from-transparent to-white dark:to-black"
 				></div>
 			</div>
 		</button>
@@ -353,7 +353,7 @@
 	{#if msg.explain}
 		<div
 			role="none"
-			class="-m-6 -mb-4 mt-2 flex flex-col
+			class="-m-6 mt-2 -mb-4 flex flex-col
 		 divide-y divide-gray-300
 		 rounded-3xl border
 		 border-gray-300 bg-white
@@ -373,7 +373,7 @@
 					}}>{msg.explain.filename}</button
 				>
 			</div>
-			<div class="font-body text-md whitespace-pre-wrap p-5 text-gray-700 dark:text-gray-300">
+			<div class="font-body text-md p-5 whitespace-pre-wrap text-gray-700 dark:text-gray-300">
 				{msg.explain.selection}
 			</div>
 		</div>
@@ -385,7 +385,7 @@
 		<p class="p-0 text-xs font-semibold">{title}</p>
 		<pre
 			transition:slide={{ duration: 300 }}
-			class="default-scrollbar-thin bg-surface1 max-h-[300px] w-fit max-w-full overflow-auto whitespace-pre-wrap break-all rounded-lg px-4 py-2 text-xs text-black dark:text-white">{@html formatJson(
+			class="default-scrollbar-thin bg-surface1 max-h-[300px] w-fit max-w-full overflow-auto rounded-lg px-4 py-2 text-xs break-all whitespace-pre-wrap text-black dark:text-white">{@html formatJson(
 				stringifiedJson ?? ''
 			)}</pre>
 	</div>
@@ -514,7 +514,7 @@
 							</div>
 						{:else}
 							<input
-								class="outline-hidden rounded-lg bg-white p-2 dark:bg-gray-900"
+								class="rounded-lg bg-white p-2 outline-hidden dark:bg-gray-900"
 								type={field.sensitive ? 'password' : 'text'}
 								name={field.name}
 								bind:value={promptCredentials[field.name]}
@@ -603,7 +603,7 @@
 				{/if}
 
 				{#if !msg.sent && msg.done && !msg.toolCall && msg.time && content && !animating && content.length > 0}
-					<div class="-ml-1 mt-2 flex gap-2">
+					<div class="mt-2 -ml-1 flex gap-2">
 						<div>
 							<button
 								use:tooltip={'Copy message to clipboard'}

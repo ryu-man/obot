@@ -1,34 +1,32 @@
 export function transitionParentHeight(node: HTMLElement, fn: () => unknown) {
-    const onsizechange = () => {
+	const onsizechange = () => {
+		// Debounce the resize calculation
+		requestAnimationFrame(() => {
+			if (!node.parentElement) {
+				return;
+			}
+			node.parentElement!.style.height = node.scrollHeight + 'px';
+		});
+	};
 
-        // Debounce the resize calculation
-        requestAnimationFrame(() => {
-            if (!node.parentElement) {
-                return
-            }
-            node.parentElement!.style.height = node.scrollHeight + 'px';
-        })
-    }
+	onsizechange();
 
-    onsizechange();
+	const observer = new ResizeObserver(onsizechange);
 
-    const observer = new ResizeObserver(onsizechange);
+	$effect(() => {
+		// Recalculate the parent height programmatically
+		fn();
 
-    $effect(() => {
-        // Recalculate the parent height programmatically
-        fn();
+		onsizechange();
 
-        onsizechange();
+		observer.observe(node);
 
-        observer.observe(node)
+		return () => {
+			observer.disconnect();
 
-        return () => {
-            observer.disconnect()
-
-            if (node.parentElement) {
-                node.parentElement!.style.height = 'auto';
-            }
-        }
-    })
-
+			if (node.parentElement) {
+				node.parentElement!.style.height = 'auto';
+			}
+		};
+	});
 }

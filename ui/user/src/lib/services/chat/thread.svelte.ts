@@ -150,10 +150,10 @@ export class Thread {
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	onMessages(m: Messages) { }
+	onMessages(m: Messages) {}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	onStepMessages(stepID: string, m: Messages) { }
+	onStepMessages(stepID: string, m: Messages) {}
 
 	#handleSteps() {
 		const newMessages = new Map<string, Progress[]>();
