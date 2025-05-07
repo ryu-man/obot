@@ -320,75 +320,74 @@
 				{/if}
 
 				<div class="iterations-container flex flex-col gap-4">
-					{#if (isRunning || isRunnedBefore || readOnly) && iterations.length && showOutput}
-						<!-- Display the iterations header only in case of task is running or was runned before or in read-only mode -->
-						<div class="iterations-header flex justify-between">
-							<div class="flex items-baseline gap-4 opacity-50">
-								<div>Iterations:</div>
+					<div class="iterations-body flex flex-col gap-6 pl-6">
+						{#if iterations.length && (isRunning || isRunnedBefore)}
+							{#each iterations as iteration, i}
+								<!-- Get the current iteration steps messages array -->
+								{@const messages = iteration ?? []}
 
-								<div class="text-sm">
-									<span>{currentIteration + 1}</span>
+								<div class="iteration flex flex-col">
+									<div class="flex py-2">
+										<div class="text-lg font-semibold">
+											<span>Iteration</span>
+											<span>{i + 1}</span>
+										</div>
+									</div>
 
-									<span class="opacity-50">
-										<span>/</span>
-										{#if isRunning}
-											<span>X</span>
-										{:else}
-											<span>{iterations.length}</span>
-										{/if}
-									</span>
+									{#each step.loop! as _, j}
+										<!-- Get the current step messages array -->
+										{@const stepMessages = messages[j] ?? []}
+
+										<LoopStep
+											bind:value={step.loop![j]}
+											{project}
+											messages={stepMessages}
+											isReadOnly={readOnly}
+											isLoopStepRunning={isRunning &&
+												taskRunStepLoopProgress &&
+												taskRunStepLoopProgress.iteration === i &&
+												taskRunStepLoopProgress.loopStep === j}
+											isStepRunning={isRunning}
+											isStepRunned={isRunnedBefore}
+											shouldShowOutput={showOutput}
+											{stale}
+											{onkeydown}
+											ondelete={() => step.loop!.splice(j, 1)}
+										/>
+									{/each}
 								</div>
+							{/each}
+						{:else}
+							<div class="flex flex-col gap-2">
+								{#if isRunning || isRunnedBefore}
+									<div class="flex h-11 rounded-lg py-2">
+										<div class="text-lg font-semibold opacity-30">Waiting for iteration data...</div>
+									</div>
+								{/if}
+
+								{#each step.loop! as _, i}
+									<!-- Get the current iteration steps messages array -->
+									{@const messages = iterations[currentIteration] ?? []}
+
+									<!-- Get the current step messages array -->
+									{@const stepMessages = messages[i] ?? []}
+
+									<LoopStep
+										bind:value={step.loop![i]}
+										{project}
+										messages={stepMessages}
+										isReadOnly={readOnly}
+										isLoopStepRunning={false}
+										isStepRunning={false}
+										isStepRunned={false}
+										shouldShowOutput={showOutput}
+										{stale}
+										{onkeydown}
+										ondelete={() => step.loop!.splice(i, 1)}
+									/>
+								{/each}
 							</div>
-
-							<!-- Show navigation button only when there are more than one iteration -->
-							{#if iterations.length > 1}
-								<!-- Show iterations navigation button -->
-								<div class="flex gap-2" transition:fade={{ duration: 100 }}>
-									<button
-										class="bg-surface2 text-on-surface2 hover:bg-surface3/50 active:bg-surface3/80 flex aspect-square h-8 items-center justify-center rounded-md transition-colors duration-200"
-										disabled={currentIteration <= 0}
-										onclick={onclickPreviousIteration}
-									>
-										<ChevronLeft class="h-5 opacity-50" />
-									</button>
-
-									<button
-										class="bg-surface2 text-on-surface2 hover:bg-surface3/50 active:bg-surface3/80 flex aspect-square h-8 items-center justify-center rounded-md transition-colors duration-200"
-										disabled={currentIteration >= iterations.length - 1}
-										onclick={onclickNextIteration}
-									>
-										<ChevronRight class="h-5 opacity-50" />
-									</button>
-								</div>
-							{/if}
-						</div>
-					{/if}
-
-					<div class="iterations-body flex flex-col gap-2 pl-6">
-						{#each step.loop! as _, i}
-							<!-- Get the current iteration steps messages array -->
-							{@const messages = iterations[currentIteration] ?? []}
-
-							<!-- Get the current step messages array -->
-							{@const stepMessages = messages[i] ?? []}
-
-							<LoopStep
-								bind:value={step.loop![i]}
-								{project}
-								messages={stepMessages}
-								isReadOnly={readOnly}
-								isLoopStepRunning={isRunning &&
-									taskRunStepLoopProgress &&
-									taskRunStepLoopProgress.iteration === currentIteration &&
-									taskRunStepLoopProgress.loopStep === i}
-								isStepRunning={isRunning}
-								isStepRunned={isRunnedBefore}
-								shouldShowOutput={showOutput}
-								{stale}
-								{onkeydown}
-								ondelete={() => step.loop!.splice(i, 1)}
-							/>
-						{/each}
+						{/if}
 
 						{#if !readOnly}
 							<button

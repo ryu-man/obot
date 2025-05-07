@@ -61,7 +61,7 @@
 
 	{#if (isStepRunning || isStepRunned) && shouldShowOutput}
 		<div
-			class="transition-height relative my-3 -ml-4 box-content flex min-h-[40px] flex-col gap-4 overflow-hidden rounded-lg bg-white p-5 duration-200 dark:bg-black"
+			class="transition-height relative box-content flex min-h-[40px] flex-col gap-4 overflow-hidden rounded-lg bg-white p-5 duration-200 dark:bg-black"
 			class:outline-2={isStepRunning && isLoopStepRunning}
 			class:outline-blue={isStepRunning && isLoopStepRunning}
 			transition:slide
@@ -74,13 +74,7 @@
 					{#each messages.messages as msg}
 						{#if !msg.sent}
 							<!-- automatically exapnd the message content when loop step is running -->
-							<Message
-								{msg}
-								{project}
-								expandable
-								expanded={isLoopStepRunning}
-								disableMessageToEditor
-							/>
+							<Message {msg} {project} expandable expanded disableMessageToEditor />
 						{/if}
 					{/each}
 				{/if}
