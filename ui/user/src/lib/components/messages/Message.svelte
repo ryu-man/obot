@@ -489,7 +489,7 @@
 			{@html toHTMLFromMarkdown(animatedText)}
 		</div>
 
-		{#if expandable && messageContentClientHeight > messageContentCollapsedHeight}
+		{#if expandable && messageContentClientHeight > messageContentCollapsedHeight*1.5}
 			<div class="mt-1 flex">
 				<button
 					class="text-gray cursor-pointer text-xs underline"
