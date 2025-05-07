@@ -27,6 +27,8 @@
 		onSendCredentialsCancel?: (id: string) => void;
 		disableMessageToEditor?: boolean;
 		clearable?: boolean;
+		expandable?: boolean;
+		expanded?: boolean;
 	}
 
 	let {
@@ -37,7 +39,9 @@
 		onSendCredentials = ChatService.sendCredentials,
 		onSendCredentialsCancel,
 		disableMessageToEditor,
-		clearable = false
+		clearable = false,
+		expandable = false,
+		expanded = true
 	}: Props = $props();
 
 	let content = $derived(
@@ -66,6 +70,10 @@
 	let animating = $state(false);
 	let showToolInputDetails = $state(false);
 	let showToolOutputDetails = $state(false);
+
+	let messageContentClampLines = $state(2);
+	let messageContentClientHeight = $state(0);
+	let messageContentCollapsedHeight = $state(24 * 2);
 
 	// Check if this is an Memory tool message
 	let isMemoryTool = $derived(
@@ -242,6 +250,37 @@
 
 	const projectTools = getProjectTools();
 	let memoriesDialog = $state<ReturnType<typeof MemoriesDialog>>();
+
+	// This action function return a truncated element's real height
+	function getElementRealHeight(node: HTMLElement, { callback = (h) => {}, trigger = () => {} }) {
+		$effect(() => {
+			trigger();
+
+			const clone = node.cloneNode(true) as HTMLElement;
+
+			clone.style.whiteSpace = 'normal'; // Undo nowrap for single-line
+			clone.style.overflow = 'visible'; // Show all content
+			clone.style.textOverflow = 'clip'; // Remove ellipsis
+			clone.style.display = '-webkit-box'; // Reset multi-line truncation
+			clone.style.webkitLineClamp = 'none'; // Remove line clamp
+			clone.style.webkitBoxOrient = 'vertical';
+			clone.style.width = `${node.offsetWidth}px`; // Match original width
+			clone.style.height = 'auto'; // Allow natural height
+			clone.style.position = 'absolute'; // Keep it off-screen
+			clone.style.visibility = 'hidden'; // Hide from view
+
+			// Append clone to the DOM to measure it
+			document.body.appendChild(clone);
+
+			// Get the full height
+			const realHeight = clone.offsetHeight;
+
+			// Clean up by removing the clone
+			document.body.removeChild(clone);
+
+			callback(realHeight);
+		});
+	}
 </script>
 
 {#snippet time()}
@@ -297,7 +336,7 @@
 	>
 		{#if clearable}
 			<button
-				class="absolute top-0 right-0 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+				class="absolute right-0 top-0 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
 				aria-label="Clear message"
 				onclick={() => (msg.ignore = true)}
 			>
@@ -336,11 +375,11 @@
 				</div>
 			</div>
 			<div class="relative">
-				<div class="font-body text-md p-5 whitespace-pre-wrap text-gray-700 dark:text-gray-300">
+				<div class="font-body text-md whitespace-pre-wrap p-5 text-gray-700 dark:text-gray-300">
 					{msg.file.content.split('\n').splice(0, 6).join('\n')}
 				</div>
 				<div
-					class="absolute bottom-0 z-20 h-24 w-full rounded-3xl bg-linear-to-b from-transparent to-white dark:to-black"
+					class="bg-linear-to-b absolute bottom-0 z-20 h-24 w-full rounded-3xl from-transparent to-white dark:to-black"
 				></div>
 			</div>
 		</button>
@@ -351,7 +390,7 @@
 	{#if msg.explain}
 		<div
 			role="none"
-			class="-m-6 mt-2 -mb-4 flex flex-col
+			class="-m-6 -mb-4 mt-2 flex flex-col
 		 divide-y divide-gray-300
 		 rounded-3xl border
 		 border-gray-300 bg-white
@@ -371,7 +410,7 @@
 					}}>{msg.explain.filename}</button
 				>
 			</div>
-			<div class="font-body text-md p-5 whitespace-pre-wrap text-gray-700 dark:text-gray-300">
+			<div class="font-body text-md whitespace-pre-wrap p-5 text-gray-700 dark:text-gray-300">
 				{msg.explain.selection}
 			</div>
 		</div>
@@ -383,7 +422,7 @@
 		<p class="p-0 text-xs font-semibold">{title}</p>
 		<pre
 			transition:slide={{ duration: 300 }}
-			class="default-scrollbar-thin bg-surface1 max-h-[300px] w-fit max-w-full overflow-auto rounded-lg px-4 py-2 text-xs break-all whitespace-pre-wrap text-black dark:text-white">{@html formatJson(
+			class="default-scrollbar-thin bg-surface1 max-h-[300px] w-fit max-w-full overflow-auto whitespace-pre-wrap break-all rounded-lg px-4 py-2 text-xs text-black dark:text-white">{@html formatJson(
 				stringifiedJson ?? ''
 			)}</pre>
 	</div>
@@ -398,7 +437,10 @@
 				return null;
 			}
 		})()}
-		<div transition:slide={{ duration: 300, easing: linear }} class="mb-4 flex w-full flex-col justify-start gap-4">
+		<div
+			transition:slide={{ duration: 300, easing: linear }}
+			class="mb-4 flex w-full flex-col justify-start gap-4"
+		>
 			{#if parsedInput}
 				{@render toolDetails(msg.toolCall.input, 'Input')}
 			{/if}
@@ -434,9 +476,29 @@
 		{/each}
 		{@render explain()}
 	{:else}
-		<div transition:fade={{ duration: 1000 }}>
+		<div
+			use:getElementRealHeight={{
+				trigger: () => animatedText,
+				callback: (height) => (messageContentClientHeight = height)
+			}}
+			class="message-content leading-6"
+			data-expanded={expanded}
+			style:--message-content-clamp-lines={messageContentClampLines}
+			transition:fade={{ duration: 1000 }}
+		>
 			{@html toHTMLFromMarkdown(animatedText)}
 		</div>
+
+		{#if expandable && messageContentClientHeight > messageContentCollapsedHeight}
+			<div class="mt-1 flex">
+				<button
+					class="text-gray cursor-pointer text-xs underline"
+					onclick={() => (expanded = !expanded)}
+				>
+					{expanded ? 'Collapse' : 'Expand'}
+				</button>
+			</div>
+		{/if}
 	{/if}
 {/snippet}
 
@@ -509,7 +571,7 @@
 							</div>
 						{:else}
 							<input
-								class="rounded-lg bg-white p-2 outline-hidden dark:bg-gray-900"
+								class="outline-hidden rounded-lg bg-white p-2 dark:bg-gray-900"
 								type={field.sensitive ? 'password' : 'text'}
 								name={field.name}
 								bind:value={promptCredentials[field.name]}
@@ -598,7 +660,7 @@
 				{/if}
 
 				{#if !msg.sent && msg.done && !msg.toolCall && msg.time && content && !animating && content.length > 0}
-					<div class="mt-2 -ml-1 flex gap-2">
+					<div class="-ml-1 mt-2 flex gap-2">
 						<div>
 							<button
 								use:tooltip={'Copy message to clipboard'}
@@ -807,6 +869,17 @@
 			50% {
 				opacity: 0.5;
 			}
+		}
+	}
+
+	.message-content {
+		&[data-expanded='false'] {
+			display: -webkit-box;
+			-webkit-line-clamp: var(--message-content-clamp-lines);
+			-webkit-box-orient: vertical;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			height: var(--tw-leading, 24px) * var(--message-content-clamp-lines, 1);
 		}
 	}
 </style>
