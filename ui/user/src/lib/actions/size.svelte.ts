@@ -26,10 +26,7 @@ export function transitionParentHeight(node: HTMLElement, fn: () => any) {
             observer.disconnect()
 
             if (node.parentElement) {
-                // Use the computed style to get the pixel value of the min-height; 
-                const style = getComputedStyle(node.parentElement);
-
-                node.parentElement!.style.height = style.minHeight;
+                node.parentElement!.style.height = 'auto';
             }
         }
     })
