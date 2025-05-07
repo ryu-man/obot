@@ -320,7 +320,7 @@
 				{/if}
 
 				<div class="iterations-container flex flex-col gap-4">
-					<div class="iterations-body flex flex-col gap-6 pl-6">
+					<div class="iterations-body flex flex-col gap-6">
 						{#if iterations.length && (isRunning || isRunnedBefore)}
 							{#each iterations as iteration, i}
 								<!-- Get the current iteration steps messages array -->
