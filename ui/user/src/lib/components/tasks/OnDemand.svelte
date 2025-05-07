@@ -67,7 +67,7 @@
 						<td class="w-1/2 pr-4 align-bottom">
 							<textarea
 								use:autoHeight
-								bind:value={onDemand.params[order[i]]}
+								bind:value={onDemand!.params![order[i]]}
 								class="text-input w-full resize-none py-2.5 align-bottom"
 								disabled={readOnly}
 								placeholder="Add a good description"
