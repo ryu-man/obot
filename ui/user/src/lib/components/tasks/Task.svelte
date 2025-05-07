@@ -157,7 +157,6 @@
 		stepMessages.clear();
 		thread.onStepMessages = (stepID, messages) => {
 			stepMessages.set(stepID, messages);
-			console.table(stepID, messages.inProgress, messages.messages);
 		};
 		thread.onMessages = (messages) => {
 			allMessages = messages;
