@@ -39,9 +39,7 @@
 		onSendCredentials = ChatService.sendCredentials,
 		onSendCredentialsCancel,
 		disableMessageToEditor,
-		clearable = false,
-		expandable = false,
-		expanded = true
+		clearable = false
 	}: Props = $props();
 
 	let content = $derived(
@@ -70,10 +68,6 @@
 	let animating = $state(false);
 	let showToolInputDetails = $state(false);
 	let showToolOutputDetails = $state(false);
-
-	let messageContentClampLines = $state(2);
-	let messageContentClientHeight = $state(0);
-	let messageContentCollapsedHeight = $state(24 * 2);
 
 	// Check if this is an Memory tool message
 	let isMemoryTool = $derived(
@@ -250,37 +244,6 @@
 
 	const projectTools = getProjectTools();
 	let memoriesDialog = $state<ReturnType<typeof MemoriesDialog>>();
-
-	// This action function return a truncated element's real height
-	function getElementRealHeight(node: HTMLElement, { callback = (h) => {}, trigger = () => {} }) {
-		$effect(() => {
-			trigger();
-
-			const clone = node.cloneNode(true) as HTMLElement;
-
-			clone.style.whiteSpace = 'normal'; // Undo nowrap for single-line
-			clone.style.overflow = 'visible'; // Show all content
-			clone.style.textOverflow = 'clip'; // Remove ellipsis
-			clone.style.display = '-webkit-box'; // Reset multi-line truncation
-			clone.style.webkitLineClamp = 'none'; // Remove line clamp
-			clone.style.webkitBoxOrient = 'vertical';
-			clone.style.width = `${node.offsetWidth}px`; // Match original width
-			clone.style.height = 'auto'; // Allow natural height
-			clone.style.position = 'absolute'; // Keep it off-screen
-			clone.style.visibility = 'hidden'; // Hide from view
-
-			// Append clone to the DOM to measure it
-			document.body.appendChild(clone);
-
-			// Get the full height
-			const realHeight = clone.offsetHeight;
-
-			// Clean up by removing the clone
-			document.body.removeChild(clone);
-
-			callback(realHeight);
-		});
-	}
 </script>
 
 {#snippet time()}
@@ -476,29 +439,9 @@
 		{/each}
 		{@render explain()}
 	{:else}
-		<div
-			use:getElementRealHeight={{
-				trigger: () => animatedText,
-				callback: (height) => (messageContentClientHeight = height)
-			}}
-			class="message-content leading-6"
-			data-expanded={expanded}
-			style:--message-content-clamp-lines={messageContentClampLines}
-			transition:fade={{ duration: 1000 }}
-		>
+		<div class="message-content leading-6" transition:fade={{ duration: 1000 }}>
 			{@html toHTMLFromMarkdown(animatedText)}
 		</div>
-
-		{#if expandable && messageContentClientHeight > messageContentCollapsedHeight*1.5}
-			<div class="mt-1 flex">
-				<button
-					class="text-gray cursor-pointer text-xs underline"
-					onclick={() => (expanded = !expanded)}
-				>
-					{expanded ? 'Collapse' : 'Expand'}
-				</button>
-			</div>
-		{/if}
 	{/if}
 {/snippet}
 
@@ -869,17 +812,6 @@
 			50% {
 				opacity: 0.5;
 			}
-		}
-	}
-
-	.message-content {
-		&[data-expanded='false'] {
-			display: -webkit-box;
-			-webkit-line-clamp: var(--message-content-clamp-lines);
-			-webkit-box-orient: vertical;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			height: var(--tw-leading, 24px) * var(--message-content-clamp-lines, 1);
 		}
 	}
 </style>

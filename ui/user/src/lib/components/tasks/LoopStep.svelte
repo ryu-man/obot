@@ -74,7 +74,7 @@
 					{#each messages.messages as msg}
 						{#if !msg.sent}
 							<!-- automatically exapnd the message content when loop step is running -->
-							<Message {msg} {project} expandable expanded disableMessageToEditor />
+							<Message {msg} {project} disableMessageToEditor />
 						{/if}
 					{/each}
 				{/if}
