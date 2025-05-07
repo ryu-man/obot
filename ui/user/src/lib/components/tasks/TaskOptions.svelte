@@ -10,15 +10,10 @@
 
 	let { task = $bindable(), readOnly }: Props = $props();
 
-	let options = $derived.by(() => {
-		const options: Record<string, string> = {
-			schedule: 'on interval'
-		};
-
-		// assigned later so it's rendered last
-		options['onDemand'] = 'on demand';
-		return options;
-	});
+	let options = {
+		schedule: 'on interval',
+		onDemand: 'on demand'
+	};
 
 	type TriggerType = 'schedule' | 'onDemand';
 
