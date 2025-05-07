@@ -74,10 +74,10 @@
 	class="dark:bg-surface1 dark:border-surface3 flex grow flex-col overflow-visible rounded-lg bg-white p-5 shadow-sm dark:border"
 >
 	<div class="border-surface3 mb-4 flex flex-col gap-4 border-b pb-4">
-		<div class="flex items-center justify-between gap-4">
+		<div class="flex flex-col justify-start lg:flex-row lg:items-center lg:justify-between gap-4 w-full">
 			<h3 class="text-lg font-semibold">How do you want to run this task?</h3>
 			<Dropdown
-				class="bg-surface2 md:min-w-sm"
+				class="bg-surface2 xl:min-w-sm"
 				selected={selectedTrigger()}
 				values={options}
 				onSelected={selected}
