@@ -17,7 +17,7 @@
 	import { tooltip } from '$lib/actions/tooltip.svelte';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { fade, slide } from 'svelte/transition';
-	import Type from './Type.svelte';
+	import TaskOptions from './TaskOptions.svelte';
 	import { twMerge } from 'tailwind-merge';
 	import ChatInput from '../messages/Input.svelte';
 	import Input from './Input.svelte';
@@ -256,7 +256,7 @@
 
 <div class="flex h-full w-full grow flex-col">
 	<div
-		class="sticky top-0 left-0 z-40 flex h-0 flex-col items-center justify-center bg-white px-4 opacity-0 transition-all duration-200 md:px-8 dark:bg-black"
+		class="sticky left-0 top-0 z-40 flex h-0 flex-col items-center justify-center bg-white px-4 opacity-0 transition-all duration-200 md:px-8 dark:bg-black"
 		class:opacity-100={!isTaskInfoVisible}
 		class:h-16={!isTaskInfoVisible}
 	>
@@ -280,7 +280,7 @@
 			class="relative flex w-full flex-col gap-4"
 		>
 			<div class="w-full self-center md:max-w-[1200px]">
-				<div class="mt-8 mb-4 flex w-full justify-between gap-8 pb-0">
+				<div class="mb-4 mt-8 flex w-full justify-between gap-8 pb-0">
 					<div class="border-blue flex grow flex-col gap-1 border-l-4 pl-4">
 						<strong class="text-blue text-xs">TASK</strong>
 
@@ -340,6 +340,8 @@
 					class="flex w-full flex-col gap-4 rounded-xl bg-gray-50 p-4 shadow-inner md:max-w-[1200px] dark:bg-black"
 				>
 					<div class="flex flex-col gap-4">
+						<TaskOptions bind:task {readOnly} {project} />
+
 						<Steps
 							bind:task
 							bind:showAllOutput
@@ -353,25 +355,10 @@
 							{readOnly}
 						/>
 					</div>
-
-					{#if showAdvancedOptions}
-						<div transition:fade>
-							<Type bind:task {readOnly} {project} />
-						</div>
-					{/if}
 				</div>
 			</div>
 
 			<div class="grow"></div>
-
-			<div class="flex w-full items-center justify-between gap-4 self-center p-4 md:max-w-[1200px]">
-				<button
-					class="button-text p-0"
-					onclick={() => (showAdvancedOptions = !showAdvancedOptions)}
-				>
-					{showAdvancedOptions ? 'Collapse Advanced Options...' : 'Show Advanced Options...'}
-				</button>
-			</div>
 
 			<div
 				class="sticky bottom-0 flex items-center justify-center bg-white px-6 opacity-0 transition-opacity dark:bg-black"
@@ -414,7 +401,7 @@
 		<dialog
 			bind:this={inputDialog}
 			use:clickOutside={() => inputDialog?.close()}
-			class="max-w-full md:min-w-md"
+			class="md:min-w-md max-w-full"
 			class:p-4={!responsive.isMobile}
 			class:mobile-screen-dialog={responsive.isMobile}
 		>

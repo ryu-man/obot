@@ -15,16 +15,17 @@
 
 	let options = $derived.by(() => {
 		const options: Record<string, string> = {
-			onDemand: 'on demand',
 			schedule: 'on interval',
-			webhook: 'on webhook'
 		};
-		if (version.current.emailDomain) {
-			options['email'] = 'on email';
-		}
-		if (project.capabilities?.onSlackMessage) {
-			options['slack'] = 'on slack';
-		}
+
+		// if (version.current.emailDomain) {
+		// 	options['email'] = 'on email';
+		// }
+
+		// if (project.capabilities?.onSlackMessage) {
+		// 	options['slack'] = 'on slack';
+		// }
+
 		// assigned later so it's rendered last
 		options['onDemand'] = 'on demand';
 		return options;
@@ -96,7 +97,7 @@
 </script>
 
 <div
-	class="dark:bg-surface1 dark:border-surface3 flex grow flex-col overflow-visible rounded-2xl bg-white p-5 shadow-sm dark:border"
+	class="dark:bg-surface1 dark:border-surface3 flex grow flex-col overflow-visible rounded-lg bg-white p-5 shadow-sm dark:border"
 >
 	<div class="border-surface3 mb-4 flex items-center justify-between gap-4 border-b pb-4">
 		<h3 class="text-lg font-semibold">Trigger Type</h3>
