@@ -85,7 +85,7 @@
 											delete onDemand.params[key];
 										}
 
-										order = order.filter((k, j) => k === key && j !== i);
+										order = order.filter((k) => k !== key);
 									}}
 									use:tooltip={'Remove Argument'}
 								>
