@@ -15,21 +15,17 @@
 
 	let options = $derived.by(() => {
 		const options: Record<string, string> = {
-			schedule: 'on interval',
+			schedule: 'on interval'
 		};
-
-		// if (version.current.emailDomain) {
-		// 	options['email'] = 'on email';
-		// }
-
-		// if (project.capabilities?.onSlackMessage) {
-		// 	options['slack'] = 'on slack';
-		// }
 
 		// assigned later so it's rendered last
 		options['onDemand'] = 'on demand';
 		return options;
 	});
+
+	type TriggerType = 'schedule' | 'onDemand';
+	
+	let triggerType: TriggerType = $derived(task?.schedule ? 'schedule' : 'onDemand');
 
 	function selectedTrigger(): string {
 		if (task?.schedule) {
@@ -51,6 +47,7 @@
 		if (!task) {
 			return;
 		}
+
 		if (value === 'schedule') {
 			task.schedule = {
 				interval: 'daily',
@@ -65,20 +62,7 @@
 			task.onDemand = undefined;
 			task.onSlackMessage = undefined;
 		}
-		if (value === 'webhook') {
-			task.schedule = undefined;
-			task.webhook = {};
-			task.email = undefined;
-			task.onDemand = undefined;
-			task.onSlackMessage = undefined;
-		}
-		if (value === 'email') {
-			task.schedule = undefined;
-			task.webhook = undefined;
-			task.onDemand = undefined;
-			task.email = {};
-			task.onSlackMessage = undefined;
-		}
+
 		if (value === 'onDemand') {
 			task.schedule = undefined;
 			task.webhook = undefined;
@@ -86,28 +70,34 @@
 			task.onDemand = undefined;
 			task.onSlackMessage = undefined;
 		}
-		if (value === 'slack') {
-			task.schedule = undefined;
-			task.webhook = undefined;
-			task.email = undefined;
-			task.onDemand = undefined;
-			task.onSlackMessage = {};
-		}
 	}
 </script>
 
 <div
 	class="dark:bg-surface1 dark:border-surface3 flex grow flex-col overflow-visible rounded-lg bg-white p-5 shadow-sm dark:border"
 >
-	<div class="border-surface3 mb-4 flex items-center justify-between gap-4 border-b pb-4">
-		<h3 class="text-lg font-semibold">Trigger Type</h3>
-		<Dropdown
-			class="bg-surface2 md:min-w-sm"
-			selected={selectedTrigger()}
-			values={options}
-			onSelected={selected}
-			disabled={readOnly}
-		/>
+	<div class="border-surface3 mb-4 flex flex-col gap-4 border-b pb-4">
+		<div class="flex items-center justify-between gap-4">
+			<h3 class="text-lg font-semibold">How do you want to run this task?</h3>
+			<Dropdown
+				class="bg-surface2 md:min-w-sm"
+				selected={selectedTrigger()}
+				values={options}
+				onSelected={selected}
+				disabled={readOnly}
+			/>
+		</div>
+		<p class="text-gray text-sm">
+			{#if triggerType === 'onDemand'}
+				On demands tasks can be ran manually from the UI or invoked by your agent from chat threads
+				or even other tasks. Just tell it to invoke them by name like this: “Call the Webpage
+				Summarizer task.”
+			{:else}
+				Scheduled tasks will be ran autonomously on your specified interval. Like on demand tasks,
+				they can also be invoked from the UI or by your agent, but you cannot add arguments to a
+				scheduled task.
+			{/if}
+		</p>
 	</div>
 
 	{#if task}

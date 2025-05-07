@@ -12,6 +12,8 @@
 	let { onDemand = $bindable(), readOnly }: Props = $props();
 	let order = $state<string[]>([]);
 
+	let hasParams = $derived(!!Object.keys(onDemand?.params ?? {}).length);
+
 	$effect(() => {
 		for (const key in onDemand?.params ?? {}) {
 			if (!order.includes(key)) {
@@ -24,12 +26,17 @@
 <div class="flex flex-col gap-4">
 	<h4 class="text-base font-medium">Arguments</h4>
 	<p class="text-gray text-sm">
-		Reference these values in your steps using <span class="font-mono text-black dark:text-white"
-			>$VAR</span
-		> syntax
+		If your task has arguments, you’ll be prompted to enter them when running the task manually from
+		the UI and if the task is invoked from a chat thread or another task, the agent will supply the
+		arguments based on its current context and instructions.
+	</p>
+	<p class="text-gray text-sm">
+		You can reference these arguments in your steps using
+		<span class="font-mono text-black dark:text-white">$name</span> syntax, like “Crawl $website and
+		find pages it links to.”
 	</p>
 
-	{#if onDemand?.params}
+	{#if hasParams}
 		<table class="w-full text-left">
 			<thead class="text-sm">
 				<tr>
