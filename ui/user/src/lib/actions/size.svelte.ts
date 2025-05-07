@@ -1,4 +1,4 @@
-export function transitionParentHeight(node: HTMLElement, fn: () => any) {
+export function transitionParentHeight(node: HTMLElement, fn: () => unknown) {
     const onsizechange = () => {
 
         // Debounce the resize calculation
