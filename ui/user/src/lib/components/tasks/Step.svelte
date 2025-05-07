@@ -8,14 +8,7 @@
 	} from '$lib/services';
 	import Message from '$lib/components/messages/Message.svelte';
 	import { Plus, Trash2, Repeat } from 'lucide-svelte/icons';
-	import {
-		LoaderCircle,
-		OctagonX,
-		Play,
-		RefreshCcw,
-		ChevronLeft,
-		ChevronRight
-	} from 'lucide-svelte';
+	import { LoaderCircle, OctagonX, Play, RefreshCcw } from 'lucide-svelte';
 	import { tick, untrack } from 'svelte';
 	import { autoHeight } from '$lib/actions/textarea.js';
 	import Confirm from '$lib/components/Confirm.svelte';
@@ -104,9 +97,6 @@
 
 	let loopDataMessages = $derived(stepMessages?.get(step.id + '{loopdata}')?.messages ?? []);
 
-	let currentIteration = $state(0);
-	let shouldFollowIteration = $state(true);
-
 	const taskRunStepLoopProgress = $derived(
 		getTaskRunProgress(step.id, stepMessages?.keys().toArray() ?? [])
 	);
@@ -154,15 +144,6 @@
 	$effect(() => {
 		if (parentShowOutput !== undefined) {
 			showOutput = parentShowOutput;
-		}
-	});
-
-	$effect(() => {
-		// Check if task is running
-		// If following iteration is true; then automatically navigate to the last iteration
-		if (isRunning && shouldFollowIteration) {
-			// Always navigation to the last iteration
-			currentIteration = iterations.length - 1;
 		}
 	});
 
@@ -230,9 +211,6 @@
 			return;
 		}
 
-		// By default follow iteration when step is running
-		shouldFollowIteration = true;
-
 		await run?.($state.snapshot(step));
 	}
 
@@ -258,21 +236,6 @@
 		}
 
 		return acc;
-	}
-
-	function onclickNextIteration() {
-		shouldFollowIteration = false;
-		currentIteration = Math.min(iterations.length - 1, currentIteration + 1);
-
-		// When user navigate back to the last iteration; activate following
-		if (currentIteration === iterations.length - 1) {
-			shouldFollowIteration = true;
-		}
-	}
-
-	function onclickPreviousIteration() {
-		shouldFollowIteration = false;
-		currentIteration = Math.max(0, currentIteration - 1);
 	}
 </script>
 
@@ -361,13 +324,15 @@
 							<div class="flex flex-col gap-2">
 								{#if isRunning || isRunnedBefore}
 									<div class="flex h-11 rounded-lg py-2">
-										<div class="text-lg font-semibold opacity-30">Waiting for iteration data...</div>
+										<div class="text-lg font-semibold opacity-30">
+											Waiting for iteration data...
+										</div>
 									</div>
 								{/if}
 
 								{#each step.loop! as _, i}
 									<!-- Get the current iteration steps messages array -->
-									{@const messages = iterations[currentIteration] ?? []}
+									{@const messages = iterations[i] ?? []}
 
 									<!-- Get the current step messages array -->
 									{@const stepMessages = messages[i] ?? []}
