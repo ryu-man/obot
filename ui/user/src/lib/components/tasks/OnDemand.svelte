@@ -2,7 +2,7 @@
 	import { autoHeight } from '$lib/actions/textarea';
 	import { tooltip } from '$lib/actions/tooltip.svelte';
 	import type { OnDemand } from '$lib/services';
-	import { Minus, Plus } from 'lucide-svelte';
+	import { Plus, Trash2 } from 'lucide-svelte';
 
 	interface Props {
 		onDemand?: OnDemand;
@@ -80,7 +80,7 @@
 									}}
 									use:tooltip={'Remove Argument'}
 								>
-									<Minus class="size-5" />
+									<Trash2 class="size-5" />
 								</button>
 							</td>
 						{/if}
