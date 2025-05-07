@@ -73,10 +73,12 @@
 									class="icon-button"
 									onclick={() => {
 										const key = order[i];
-										order = order.filter((k) => k !== key);
+
 										if (onDemand?.params) {
 											delete onDemand.params[key];
 										}
+
+										order = order.filter((k, j) => k === key && j !== i);
 									}}
 									use:tooltip={'Remove Argument'}
 								>
@@ -89,6 +91,7 @@
 			</tbody>
 		</table>
 	{/if}
+
 	{#if !readOnly}
 		<div class="self-end">
 			<button
