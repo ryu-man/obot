@@ -439,7 +439,7 @@
 		{/each}
 		{@render explain()}
 	{:else}
-		<div class="message-content leading-6" transition:fade={{ duration: 1000 }}>
+		<div class="message-content" transition:fade={{ duration: 1000 }}>
 			{@html toHTMLFromMarkdown(animatedText)}
 		</div>
 	{/if}
