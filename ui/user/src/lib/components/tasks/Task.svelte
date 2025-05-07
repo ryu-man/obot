@@ -46,7 +46,6 @@
 
 	let showChat = $state(false);
 	let showAllOutput = $state(true);
-	let showAdvancedOptions = $state(false);
 
 	let taskHeaderActionDiv: HTMLDivElement | undefined = $state<HTMLDivElement>();
 	let isTaskInfoVisible = $state(true);
@@ -340,7 +339,7 @@
 					class="flex w-full flex-col gap-4 rounded-xl bg-gray-50 p-4 shadow-inner md:max-w-[1200px] dark:bg-black"
 				>
 					<div class="flex flex-col gap-4">
-						<TaskOptions bind:task {readOnly} {project} />
+						<TaskOptions bind:task {readOnly} />
 
 						<Steps
 							bind:task

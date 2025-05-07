@@ -1,17 +1,14 @@
 <script lang="ts">
 	import { type Task } from '$lib/services';
 	import Dropdown from '$lib/components/tasks/Dropdown.svelte';
-	import { version } from '$lib/stores';
 	import Trigger from './Trigger.svelte';
-	import type { Project } from '$lib/services';
 
 	interface Props {
 		task?: Task;
 		readOnly?: boolean;
-		project: Project;
 	}
 
-	let { task = $bindable(), readOnly, project }: Props = $props();
+	let { task = $bindable(), readOnly }: Props = $props();
 
 	let options = $derived.by(() => {
 		const options: Record<string, string> = {
@@ -24,7 +21,7 @@
 	});
 
 	type TriggerType = 'schedule' | 'onDemand';
-	
+
 	let triggerType: TriggerType = $derived(task?.schedule ? 'schedule' : 'onDemand');
 
 	function selectedTrigger(): string {
