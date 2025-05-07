@@ -282,88 +282,84 @@
 					</div>
 				{/if}
 
-				<div class="iterations-container flex flex-col gap-4">
-					<div class="iterations-body flex flex-col gap-6">
-						{#if iterations.length && (isRunning || isRunnedBefore)}
-							{#each iterations as iteration, i}
-								<!-- Get the current iteration steps messages array -->
-								{@const messages = iteration ?? []}
+				<div class="iterations-body flex flex-col gap-4">
+					{#if iterations.length && (isRunning || isRunnedBefore)}
+						{#each iterations as iteration, i}
+							<!-- Get the current iteration steps messages array -->
+							{@const messages = iteration ?? []}
 
-								<div class="iteration flex flex-col">
-									<div class="flex py-2">
-										<div class="text-lg font-semibold">
-											<span>Iteration</span>
-											<span>{i + 1}</span>
-										</div>
+							<div class="iteration flex flex-col">
+								<div class="flex py-2">
+									<div class="text-lg font-semibold">
+										<span>Iteration</span>
+										<span>{i + 1}</span>
 									</div>
-
-									{#each step.loop! as _, j}
-										<!-- Get the current step messages array -->
-										{@const stepMessages = messages[j] ?? []}
-
-										<LoopStep
-											bind:value={step.loop![j]}
-											{project}
-											messages={stepMessages}
-											isReadOnly={readOnly}
-											isLoopStepRunning={isRunning &&
-												taskRunStepLoopProgress &&
-												taskRunStepLoopProgress.iteration === i &&
-												taskRunStepLoopProgress.loopStep === j}
-											isStepRunning={isRunning}
-											isStepRunned={isRunnedBefore}
-											shouldShowOutput={showOutput}
-											{stale}
-											{onkeydown}
-											ondelete={() => step.loop!.splice(j, 1)}
-										/>
-									{/each}
 								</div>
-							{/each}
-						{:else}
-							<div class="flex flex-col gap-2">
-								{#if isRunning || isRunnedBefore}
-									<div class="flex h-11 rounded-lg py-2">
-										<div class="text-lg font-semibold opacity-30">
-											Waiting for iteration data...
-										</div>
-									</div>
-								{/if}
 
-								{#each step.loop! as _, i}
-									<!-- Get the current iteration steps messages array -->
-									{@const messages = iterations[i] ?? []}
-
+								{#each step.loop! as _, j}
 									<!-- Get the current step messages array -->
-									{@const stepMessages = messages[i] ?? []}
+									{@const stepMessages = messages[j] ?? []}
 
 									<LoopStep
-										bind:value={step.loop![i]}
+										bind:value={step.loop![j]}
 										{project}
 										messages={stepMessages}
 										isReadOnly={readOnly}
-										isLoopStepRunning={false}
-										isStepRunning={false}
-										isStepRunned={false}
+										isLoopStepRunning={isRunning &&
+											taskRunStepLoopProgress &&
+											taskRunStepLoopProgress.iteration === i &&
+											taskRunStepLoopProgress.loopStep === j}
+										isStepRunning={isRunning}
+										isStepRunned={isRunnedBefore}
 										shouldShowOutput={showOutput}
 										{stale}
 										{onkeydown}
-										ondelete={() => step.loop!.splice(i, 1)}
+										ondelete={() => step.loop!.splice(j, 1)}
 									/>
 								{/each}
 							</div>
-						{/if}
+						{/each}
+					{:else}
+						<div class="flex flex-col gap-2">
+							{#if isRunning || isRunnedBefore}
+								<div class="flex h-11 rounded-lg py-2">
+									<div class="text-lg font-semibold opacity-30">Waiting for iteration data...</div>
+								</div>
+							{/if}
 
-						{#if !readOnly}
-							<button
-								class="icon-button self-start"
-								onclick={() => step.loop!.push('')}
-								use:tooltip={'Add step to loop'}
-							>
-								<Plus class="size-4" />
-							</button>
-						{/if}
-					</div>
+							{#each step.loop! as _, i}
+								<!-- Get the current iteration steps messages array -->
+								{@const messages = iterations[i] ?? []}
+
+								<!-- Get the current step messages array -->
+								{@const stepMessages = messages[i] ?? []}
+
+								<LoopStep
+									bind:value={step.loop![i]}
+									{project}
+									messages={stepMessages}
+									isReadOnly={readOnly}
+									isLoopStepRunning={false}
+									isStepRunning={false}
+									isStepRunned={false}
+									shouldShowOutput={showOutput}
+									{stale}
+									{onkeydown}
+									ondelete={() => step.loop!.splice(i, 1)}
+								/>
+							{/each}
+						</div>
+					{/if}
+
+					{#if !readOnly}
+						<button
+							class="icon-button self-start"
+							onclick={() => step.loop!.push('')}
+							use:tooltip={'Add step to loop'}
+						>
+							<Plus class="size-4" />
+						</button>
+					{/if}
 				</div>
 			{/if}
 		</div>

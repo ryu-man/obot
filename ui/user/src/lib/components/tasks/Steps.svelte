@@ -52,7 +52,7 @@
 		</button>
 	</div>
 
-	<ol class="list-decimal pt-2 opacity-100">
+	<ol class="flex list-decimal flex-col gap-2 pt-2 opacity-100">
 		{#if task.steps.length > 0}
 			{#each steps as step, i (step.id)}
 				<Step
