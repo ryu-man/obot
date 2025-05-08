@@ -67,7 +67,7 @@
 		// Scroll to the bottom each time the steps element height changed
 		const onresize: ResizeObserverCallback = () => {
 			requestAnimationFrame(() => {
-				scrollAllDown();
+				scrollDown();
 			});
 		};
 
@@ -127,7 +127,8 @@
 		};
 	});
 
-	let hasReachedBottom = $state(false);
+	let hasScrollingContent = $state(false);
+	let scrollDirection: 'up' | 'down' = $state('down');
 
 	$effect(() => {
 		if (!scrollableElement) return;
@@ -140,9 +141,19 @@
 						if (!scrollableElement) return;
 						// Exit following task run
 						// Use setTimeout fn to make this less prioritized
-						hasReachedBottom =
-							Math.round(scrollableElement.scrollTop) <
+
+						if (
+							Math.round(scrollableElement.scrollHeight) >
+							Math.round(scrollableElement.clientHeight)
+						) {
+							hasScrollingContent = true;
+						}
+
+						const hasReachedBottom =
+							Math.round(scrollableElement.scrollTop) >=
 							Math.round(scrollableElement.scrollHeight - scrollableElement.clientHeight);
+
+						scrollDirection = hasReachedBottom ? 'up' : 'down';
 					});
 				}, 300);
 			});
@@ -167,10 +178,14 @@
 			shouldFollowTaskRun = true;
 		}
 
-		scrollAllDown();
+		if (scrollDirection === 'down') {
+			scrollDown();
+		} else {
+			scrollUp();
+		}
 	}
 
-	function scrollAllDown() {
+	function scrollDown() {
 		if (!scrollableElement) return;
 
 		// Calculate scroll top
@@ -180,6 +195,20 @@
 		);
 
 		scrollableElement!.scrollTo({ top, behavior: 'auto' });
+	}
+
+	function scrollUp() {
+		if (!scrollableElement) return;
+		scrollableElement!.scrollTo({ top: 0, behavior: 'auto' });
+	}
+
+	function rotate(node: HTMLElement, fn: () => number) {
+		$effect(() => {
+			console.log(fn());
+			const keyFrames: Keyframe[] = [{ rotate: 0 }, { transform: `rotate(${fn()}deg)` }];
+
+			const animation = node.animate(keyFrames, { duration: 300, fill: 'forwards' });
+		});
 	}
 </script>
 
@@ -224,7 +253,7 @@
 		<div class="mt-2 text-red-500">{error}</div>
 	{/if}
 
-	{#if (!readOnly && running) || hasReachedBottom}
+	{#if (!readOnly && running) || hasScrollingContent}
 		{@const isFollowModeActive = !readOnly && running && shouldFollowTaskRun}
 
 		<div class="pointer-events-none absolute inset-0 z-10 flex items-end justify-end px-8 py-12">
@@ -238,7 +267,7 @@
 				in:fade={{ duration: 100, delay: 0, easing: linear }}
 				out:fade={{ duration: 50, delay: 0, easing: linear }}
 			>
-				<div class="h-5 w-5">
+				<div class="h-5 w-5" use:rotate={() => (scrollDirection === 'up' ? 180 : 0)}>
 					{#if isFollowModeActive}
 						<UsersRound class="h-full w-full" />
 					{:else}
