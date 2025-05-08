@@ -204,7 +204,6 @@
 
 	function rotate(node: HTMLElement, fn: () => number) {
 		$effect(() => {
-			console.log(fn());
 			const keyFrames: Keyframe[] = [{ rotate: 0 }, { transform: `rotate(${fn()}deg)` }];
 
 			const animation = node.animate(keyFrames, { duration: 300, fill: 'forwards' });
