@@ -143,15 +143,17 @@
 						// Use setTimeout fn to make this less prioritized
 
 						if (
-							Math.round(scrollableElement.scrollHeight) >
-							Math.round(scrollableElement.clientHeight)
+							Math.ceil(scrollableElement.scrollHeight) > Math.ceil(scrollableElement.clientHeight)
 						) {
 							hasScrollingContent = true;
 						}
 
+						const maxScrollTop = Math.ceil(
+							scrollableElement.scrollHeight - scrollableElement.clientHeight
+						);
+
 						const hasReachedBottom =
-							Math.round(scrollableElement.scrollTop) >=
-							Math.round(scrollableElement.scrollHeight - scrollableElement.clientHeight);
+							Math.min(Math.ceil(scrollableElement.scrollTop), maxScrollTop) >= maxScrollTop;
 
 						scrollDirection = hasReachedBottom ? 'up' : 'down';
 					});
@@ -204,9 +206,9 @@
 
 	function rotate(node: HTMLElement, fn: () => number) {
 		$effect(() => {
-			const keyFrames: Keyframe[] = [{ rotate: 0 }, { transform: `rotate(${fn()}deg)` }];
+			const keyFrames = [{ transform: `rotate(${fn()}deg)` }];
 
-			const animation = node.animate(keyFrames, { duration: 300, fill: 'forwards' });
+			node.animate(keyFrames, { duration: 300, fill: 'forwards' });
 		});
 	}
 </script>
@@ -266,7 +268,10 @@
 				in:fade={{ duration: 100, delay: 0, easing: linear }}
 				out:fade={{ duration: 50, delay: 0, easing: linear }}
 			>
-				<div class="h-5 w-5" use:rotate={() => (scrollDirection === 'up' ? 180 : 0)}>
+				<div
+					class="h-5 w-5"
+					use:rotate={() => (!isFollowModeActive && scrollDirection === 'up' ? 180 : 0)}
+				>
 					{#if isFollowModeActive}
 						<UsersRound class="h-full w-full" />
 					{:else}
