@@ -7,7 +7,7 @@
 		type TaskStep
 	} from '$lib/services';
 	import { ChevronRight, MessageCircle, MessageCircleOff, Trash2, X } from 'lucide-svelte/icons';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, untrack } from 'svelte';
 	import Steps from '$lib/components/tasks/Steps.svelte';
 	import Confirm from '$lib/components/Confirm.svelte';
 	import { newSaveMonitor } from '$lib/save.js';
@@ -41,7 +41,7 @@
 	let input = $state('');
 	let error = $state('');
 	let pending = $derived(thread?.pending ?? false);
-	let running = $derived(allMessages.inProgress);
+	// let running = $derived(allMessages.inProgress);
 	let inputDialog = $state<HTMLDialogElement>();
 
 	let showChat = $state(false);
@@ -50,6 +50,54 @@
 	let taskHeaderActionDiv: HTMLDivElement | undefined = $state<HTMLDivElement>();
 	let isTaskInfoVisible = $state(true);
 	let observer: IntersectionObserver;
+
+	/**************************************************************************************************/
+	// HACK: fix glitch that happens when in messages.inProgress when loop steps executed
+	// Make sure that the .inProgress stays true until the end of the current run task
+
+	let timeoutId: number | undefined = undefined;
+	// save how many step.inProgress === false we got
+	let inProgressFalseCount = $state(0);
+
+	let isRunning = $state(allMessages.inProgress);
+
+	// Indicate whther the user is activating the task run following or not
+	let shouldFollowTaskRun = $state(true);
+
+	$effect(() => {
+		allMessages?.inProgress;
+
+		untrack(() => {
+			clearTimeout(timeoutId);
+
+			// check if inProgress is false
+			if (!allMessages?.inProgress) {
+				// increment the counter
+				inProgressFalseCount++;
+
+				// check if we got 2 false responses
+				if (inProgressFalseCount > 2) {
+					// set as not running
+					isRunning = false;
+
+					inProgressFalseCount = 0;
+				}
+
+				// in case we got the last message and 1 false inProgress; set a timeout function to update isRunning after some time
+				timeoutId = setTimeout(() => {
+					isRunning = false;
+					inProgressFalseCount = 0;
+				}, 1000);
+			} else {
+				// set task as running
+				isRunning = true;
+
+				inProgressFalseCount = 0;
+			}
+		});
+	});
+
+	/**************************************************************************************************/
 
 	const saver = newSaveMonitor(
 		() => task,
@@ -166,13 +214,15 @@
 		error = '';
 		showAllOutput = true;
 
+		shouldFollowTaskRun = true;
+
 		const hasAtLeastOneInstruction = task.steps.some((step) => (step.step ?? '').trim().length > 0);
 		if (!hasAtLeastOneInstruction) {
 			error = 'At least one instruction is required to run the task.';
 			return;
 		}
 
-		if (running || pending) {
+		if (isRunning || pending) {
 			if (runID) {
 				return await ChatService.abort(project.assistantID, project.id, {
 					taskID: task.id,
@@ -192,12 +242,12 @@
 	async function run(step?: TaskStep) {
 		await saver.save();
 
-		if (running || pending) {
+		if (isRunning || pending) {
 			return;
 		}
 
 		if (!step || !runID || !thread) {
-			if (thread && (running || pending)) {
+			if (thread && (isRunning || pending)) {
 				await thread.abort();
 			}
 			closeThread();
@@ -238,7 +288,7 @@
 				onclick={click}
 				class:grow={responsive.isMobile}
 			>
-				{#if running}
+				{#if isRunning}
 					Stop
 					<OctagonX class="h-4 w-4" />
 				{:else if pending}
@@ -255,7 +305,7 @@
 
 <div class="flex h-full w-full grow flex-col">
 	<div
-		class="sticky top-0 left-0 z-40 flex h-0 flex-col items-center justify-center bg-white px-4 opacity-0 transition-all duration-200 md:px-8 dark:bg-black"
+		class="sticky left-0 top-0 z-40 flex h-0 flex-col items-center justify-center bg-white px-4 opacity-0 transition-all duration-200 md:px-8 dark:bg-black"
 		class:opacity-100={!isTaskInfoVisible}
 		class:h-16={!isTaskInfoVisible}
 	>
@@ -271,6 +321,7 @@
 		class={twMerge(
 			'default-scrollbar-thin scrollbar-gutter-stable flex w-full grow justify-center overflow-y-auto px-4 md:px-8'
 		)}
+		data-scrollable="true"
 	>
 		<!-- div in div is needed for the scrollbar to work so that space outside the max-width is still scrollable -->
 		<div
@@ -279,7 +330,7 @@
 			class="relative flex w-full flex-col gap-4"
 		>
 			<div class="w-full self-center md:max-w-[1200px]">
-				<div class="mt-8 mb-4 flex w-full justify-between gap-8 pb-0">
+				<div class="mb-4 mt-8 flex w-full justify-between gap-8 pb-0">
 					<div class="border-blue flex grow flex-col gap-1 border-l-4 pl-4">
 						<strong class="text-blue text-xs">TASK</strong>
 
@@ -344,12 +395,13 @@
 						<Steps
 							bind:task
 							bind:showAllOutput
+							bind:shouldFollowTaskRun
 							{project}
 							{run}
 							{runID}
 							{stepMessages}
 							{pending}
-							{running}
+							running={isRunning}
 							{error}
 							{readOnly}
 						/>
@@ -400,7 +452,7 @@
 		<dialog
 			bind:this={inputDialog}
 			use:clickOutside={() => inputDialog?.close()}
-			class="max-w-full md:min-w-md"
+			class="md:min-w-md max-w-full"
 			class:p-4={!responsive.isMobile}
 			class:mobile-screen-dialog={responsive.isMobile}
 		>
