@@ -65,7 +65,7 @@
 		if (!shouldFollowTaskRun) return;
 
 		// Scroll to the bottom each time the steps element height changed
-		const onresize: ResizeObserverCallback = () => {
+		const onresize = () => {
 			requestAnimationFrame(() => {
 				scrollDown();
 			});
@@ -73,7 +73,7 @@
 
 		const observer = new ResizeObserver(onresize);
 
-		onresize([], observer);
+		onresize();
 
 		observer.observe(element!);
 
@@ -260,7 +260,7 @@
 		<div class="pointer-events-none absolute inset-0 z-10 flex items-end justify-end px-8 py-12">
 			<button
 				class={twMerge(
-					'bg-surface2 pointer-events-auto sticky bottom-4 right-0 box-border flex aspect-square h-12 items-center justify-center rounded-full',
+					'bg-surface2 pointer-events-auto sticky right-0 bottom-4 box-border flex aspect-square h-12 items-center justify-center rounded-full',
 					isFollowModeActive &&
 						'bg-blue/20 text-blue/70 hover:bg-blue/30 active:bg-blue/40 border border-current '
 				)}

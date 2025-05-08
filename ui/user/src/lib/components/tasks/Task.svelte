@@ -59,13 +59,14 @@
 	// save how many step.inProgress === false we got
 	let inProgressFalseCount = $state(0);
 
+	// svelte-ignore state_referenced_locally
 	let isRunning = $state(allMessages.inProgress);
 
 	// Indicate whther the user is activating the task run following or not
 	let shouldFollowTaskRun = $state(true);
 
 	$effect(() => {
-		allMessages?.inProgress;
+		(() => allMessages?.inProgress)();
 
 		untrack(() => {
 			clearTimeout(timeoutId);
@@ -305,7 +306,7 @@
 
 <div class="flex h-full w-full grow flex-col">
 	<div
-		class="sticky left-0 top-0 z-40 flex h-0 flex-col items-center justify-center bg-white px-4 opacity-0 transition-all duration-200 md:px-8 dark:bg-black"
+		class="sticky top-0 left-0 z-40 flex h-0 flex-col items-center justify-center bg-white px-4 opacity-0 transition-all duration-200 md:px-8 dark:bg-black"
 		class:opacity-100={!isTaskInfoVisible}
 		class:h-16={!isTaskInfoVisible}
 	>
@@ -330,7 +331,7 @@
 			class="relative flex w-full flex-col gap-4"
 		>
 			<div class="w-full self-center md:max-w-[1200px]">
-				<div class="mb-4 mt-8 flex w-full justify-between gap-8 pb-0">
+				<div class="mt-8 mb-4 flex w-full justify-between gap-8 pb-0">
 					<div class="border-blue flex grow flex-col gap-1 border-l-4 pl-4">
 						<strong class="text-blue text-xs">TASK</strong>
 
@@ -452,7 +453,7 @@
 		<dialog
 			bind:this={inputDialog}
 			use:clickOutside={() => inputDialog?.close()}
-			class="md:min-w-md max-w-full"
+			class="max-w-full md:min-w-md"
 			class:p-4={!responsive.isMobile}
 			class:mobile-screen-dialog={responsive.isMobile}
 		>
