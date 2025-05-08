@@ -324,6 +324,7 @@ export interface Task {
 	webhook?: object;
 	onDemand?: OnDemand;
 	onSlackMessage?: object;
+	onDiscordMessage?: object;
 	alias?: string;
 }
 
