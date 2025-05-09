@@ -59,8 +59,7 @@
 	// save how many step.inProgress === false we got
 	let inProgressFalseCount = $state(0);
 
-	// svelte-ignore state_referenced_locally
-	let isRunning = $state(allMessages.inProgress);
+	let isRunning = $state(false);
 
 	// Indicate whther the user is activating the task run following or not
 	let shouldFollowTaskRun = $state(true);
