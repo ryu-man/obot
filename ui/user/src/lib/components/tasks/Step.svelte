@@ -296,7 +296,7 @@
 									</div>
 								</div>
 
-								{#each step.loop! as _, j (_)}
+								{#each step.loop! as _, j (j)}
 									<!-- Get the current step messages array -->
 									{@const stepMessages = messages[j] ?? []}
 
