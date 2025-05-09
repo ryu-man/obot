@@ -180,11 +180,13 @@
 			shouldFollowTaskRun = true;
 		}
 
-		if (scrollDirection === 'down') {
-			scrollDown();
-		} else {
-			scrollUp();
-		}
+		requestAnimationFrame(() => {
+			if (scrollDirection === 'down') {
+				scrollDown();
+			} else {
+				scrollUp();
+			}
+		});
 	}
 
 	function scrollDown() {
@@ -196,15 +198,19 @@
 			scrollableElement!.scrollHeight - scrollableElement!.clientHeight
 		);
 
-		scrollableElement!.scrollTo({ top, behavior: 'auto' });
+		scrollableElement!.scrollTo({
+			top,
+			behavior: running && shouldFollowTaskRun ? 'instant' : 'smooth'
+		});
 	}
 
 	function scrollUp() {
 		if (!scrollableElement) return;
-		scrollableElement!.scrollTo({ top: 0, behavior: 'auto' });
+		scrollableElement!.scrollTo({
+			top: 0,
+			behavior: running && shouldFollowTaskRun ? 'instant' : 'smooth'
+		});
 	}
-
-	$inspect(scrollDirection);
 </script>
 
 <div
