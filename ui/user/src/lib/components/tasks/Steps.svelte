@@ -203,19 +203,11 @@
 		if (!scrollableElement) return;
 		scrollableElement!.scrollTo({ top: 0, behavior: 'auto' });
 	}
-
-	function rotate(node: HTMLElement, fn: () => number) {
-		$effect(() => {
-			const keyFrames = [{ transform: `rotate(${fn()}deg)` }];
-
-			node.animate(keyFrames, { duration: 300, fill: 'forwards' });
-		});
-	}
 </script>
 
 <div
 	bind:this={element}
-	class="task-steps dark:bg-surface1 dark:border-surface3 relative rounded-lg bg-white p-5 shadow-sm dark:border"
+	class="task-steps dark:bg-surface1 dark:border-surface3 relative rounded-lg bg-white p-5 pb-10 shadow-sm dark:border"
 >
 	<div class="flex w-full items-center justify-between">
 		<h4 class="text-lg font-semibold">Steps</h4>
@@ -257,20 +249,20 @@
 	{#if (!readOnly && running) || hasScrollingContent}
 		{@const isFollowModeActive = !readOnly && running && shouldFollowTaskRun}
 
-		<div class="pointer-events-none absolute inset-0 z-10 flex items-end justify-end px-8 py-12">
+		<div class="pointer-events-none absolute inset-0 z-10 flex items-end justify-end p-4">
 			<button
 				class={twMerge(
-					'bg-surface2 pointer-events-auto sticky right-0 bottom-4 box-border flex aspect-square h-12 items-center justify-center rounded-full',
+					'bg-surface2 pointer-events-auto sticky bottom-4 right-0 box-border flex aspect-square h-8 items-center justify-center rounded-lg transition-colors duration-200',
 					isFollowModeActive &&
-						'bg-blue/20 text-blue/70 hover:bg-blue/30 active:bg-blue/40 border border-current '
+						'bg-blue/0 text-blue/70 hover:bg-blue/10 active:bg-blue/20 border border-current'
 				)}
 				onclick={onNavigationClick}
 				in:fade={{ duration: 100, delay: 0, easing: linear }}
 				out:fade={{ duration: 50, delay: 0, easing: linear }}
 			>
 				<div
-					class="h-5 w-5"
-					use:rotate={() => (!isFollowModeActive && scrollDirection === 'up' ? 180 : 0)}
+					class="h-4 w-4 duration-200"
+					class:rotate={!isFollowModeActive && scrollDirection === 'up'}
 				>
 					{#if isFollowModeActive}
 						<UsersRound class="h-full w-full" />
@@ -286,3 +278,11 @@
 {#if runID}
 	<Files taskID={task.id} {runID} running={running || pending} {project} />
 {/if}
+
+<style>
+	.rotate {
+		transition-property: transform;
+		transition-duration: var(--tw-duration);
+		transform: rotate(0deg);
+	}
+</style>
