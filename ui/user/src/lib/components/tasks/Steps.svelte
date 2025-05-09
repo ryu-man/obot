@@ -203,6 +203,8 @@
 		if (!scrollableElement) return;
 		scrollableElement!.scrollTo({ top: 0, behavior: 'auto' });
 	}
+
+	$inspect(scrollDirection);
 </script>
 
 <div
@@ -283,6 +285,6 @@
 	.rotate {
 		transition-property: transform;
 		transition-duration: var(--tw-duration);
-		transform: rotate(0deg);
+		transform: rotate(180deg);
 	}
 </style>
