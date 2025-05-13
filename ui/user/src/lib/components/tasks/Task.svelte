@@ -23,6 +23,7 @@
 	import Input from './Input.svelte';
 	import Tools from '../navbar/Tools.svelte';
 	import { clickOutside } from '$lib/actions/clickoutside';
+	import { delay, throttle } from 'es-toolkit';
 	interface Props {
 		task: Task;
 		project: Project;
@@ -36,7 +37,8 @@
 	const readOnly = !!inputRunID;
 	let runID = $state(inputRunID);
 	let thread: Thread | undefined = $state<Thread>();
-	let stepMessages = new SvelteMap<string, Messages>();
+	let lastStepId: string | undefined = $state(undefined);
+	let stepMessages: Record<string, Messages> = $state({});
 	let allMessages = $state<Messages>({ messages: [], inProgress: false });
 	let input = $state('');
 	let error = $state('');
@@ -107,6 +109,7 @@
 		(t) => {
 			task = t;
 			onChanged?.(t);
+			console.log(t);
 		}
 	);
 
@@ -190,7 +193,8 @@
 		thread.close();
 		thread = undefined;
 		runID = undefined;
-		stepMessages.clear();
+		lastStepId = undefined;
+		stepMessages = {};
 		allMessages = { messages: [], inProgress: false };
 	}
 
@@ -201,9 +205,11 @@
 			task: task,
 			runID: runID
 		});
-		stepMessages.clear();
+		stepMessages = {};
 		thread.onStepMessages = (stepID, messages) => {
-			stepMessages.set(stepID, messages);
+			lastStepId = stepID;
+			console.log(lastStepId);
+			stepMessages[stepID] = messages;
 		};
 		thread.onMessages = (messages) => {
 			allMessages = messages;
@@ -212,9 +218,12 @@
 
 	async function click() {
 		error = '';
-		showAllOutput = true;
-
 		shouldFollowTaskRun = true;
+
+		// Avoid glitch in iterations UI
+		delay(1000).then(() => {
+			showAllOutput = true;
+		});
 
 		const hasAtLeastOneInstruction = task.steps.some((step) => (step.step ?? '').trim().length > 0);
 		if (!hasAtLeastOneInstruction) {
@@ -259,6 +268,8 @@
 			).id;
 			return;
 		}
+
+		lastStepId = undefined;
 
 		await thread.runStep(task.id, step.id, {
 			input: input
@@ -305,7 +316,7 @@
 
 <div class="flex h-full w-full grow flex-col">
 	<div
-		class="sticky top-0 left-0 z-40 flex h-0 flex-col items-center justify-center bg-white px-4 opacity-0 transition-all duration-200 md:px-8 dark:bg-black"
+		class="sticky left-0 top-0 z-40 flex h-0 flex-col items-center justify-center bg-white px-4 opacity-0 transition-all duration-200 md:px-8 dark:bg-black"
 		class:opacity-100={!isTaskInfoVisible}
 		class:h-16={!isTaskInfoVisible}
 	>
@@ -330,7 +341,7 @@
 			class="relative flex w-full flex-col gap-4"
 		>
 			<div class="w-full self-center md:max-w-[1200px]">
-				<div class="mt-8 mb-4 flex w-full justify-between gap-8 pb-0">
+				<div class="mb-4 mt-8 flex w-full justify-between gap-8 pb-0">
 					<div class="border-blue flex grow flex-col gap-1 border-l-4 pl-4">
 						<strong class="text-blue text-xs">TASK</strong>
 
@@ -396,6 +407,7 @@
 							bind:task
 							bind:showAllOutput
 							bind:shouldFollowTaskRun
+							{lastStepId}
 							{project}
 							{run}
 							{runID}
@@ -452,7 +464,7 @@
 		<dialog
 			bind:this={inputDialog}
 			use:clickOutside={() => inputDialog?.close()}
-			class="max-w-full md:min-w-md"
+			class="md:min-w-md max-w-full"
 			class:p-4={!responsive.isMobile}
 			class:mobile-screen-dialog={responsive.isMobile}
 		>

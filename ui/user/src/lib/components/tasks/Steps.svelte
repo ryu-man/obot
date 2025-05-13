@@ -4,24 +4,26 @@
 	import { SvelteMap } from 'svelte/reactivity';
 	import Files from '$lib/components/tasks/Files.svelte';
 	import { tooltip } from '$lib/actions/tooltip.svelte';
-	import { Eye, EyeClosed, UsersRound, ArrowBigDown } from 'lucide-svelte';
+	import { Eye, EyeClosed, UsersRound, ArrowBigDown, Regex } from 'lucide-svelte';
 	import { tick, untrack } from 'svelte';
 	import { twMerge } from 'tailwind-merge';
 	import { fade } from 'svelte/transition';
 	import { linear } from 'svelte/easing';
+	import { delay } from 'es-toolkit';
 
 	interface Props {
 		task: Task;
 		runID?: string;
 		project: Project;
 		run: (step?: TaskStep) => Promise<void>;
-		stepMessages: SvelteMap<string, Messages>;
+		stepMessages: Record<string, Messages>;
 		pending: boolean;
 		running: boolean;
 		error: string;
 		showAllOutput: boolean;
 		readOnly?: boolean;
 		shouldFollowTaskRun?: boolean;
+		lastStepId?: string;
 	}
 
 	let {
@@ -35,7 +37,8 @@
 		running,
 		error,
 		readOnly,
-		shouldFollowTaskRun = $bindable()
+		shouldFollowTaskRun = $bindable(),
+		lastStepId
 	}: Props = $props();
 
 	const steps = $derived(task?.steps ?? []);
@@ -222,7 +225,22 @@
 		<button
 			class="icon-button"
 			data-testid="steps-toggle-output-btn"
-			onclick={() => (showAllOutput = !showAllOutput)}
+			onclick={async () => {
+				if (showAllOutput) {
+					requestAnimationFrame(() => {});
+
+					const scrollableElement = element?.closest('[data-scrollable="true"]');
+
+					if (scrollableElement) {
+						// Search up the DOM tree for the scollable parent
+						scrollableElement?.scrollTo({ top: 0, behavior: 'smooth' });
+						await tick();
+						showAllOutput = false;
+					}
+				} else {
+					showAllOutput = true;
+				}
+			}}
 			use:tooltip={'Toggle All Output Visbility'}
 		>
 			{#if showAllOutput}
@@ -246,6 +264,7 @@
 				{project}
 				showOutput={showAllOutput}
 				{readOnly}
+				{lastStepId}
 			/>
 		{/each}
 	</ol>
@@ -260,7 +279,7 @@
 		<div class="pointer-events-none absolute inset-0 z-10 flex items-end justify-end p-4">
 			<button
 				class={twMerge(
-					'bg-surface2 pointer-events-auto sticky right-0 bottom-4 box-border flex aspect-square h-8 items-center justify-center rounded-lg transition-colors duration-200',
+					'bg-surface2 pointer-events-auto sticky bottom-4 right-0 box-border flex aspect-square h-8 items-center justify-center rounded-lg transition-colors duration-200',
 					isFollowModeActive &&
 						'bg-blue/0 text-blue/70 hover:bg-blue/10 active:bg-blue/20 border border-current'
 				)}

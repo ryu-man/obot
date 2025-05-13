@@ -1,11 +1,5 @@
 <script lang="ts">
-	import {
-		ChatService,
-		type Messages,
-		type Project,
-		type Task,
-		type TaskStep
-	} from '$lib/services';
+	import { type Messages, type Project, type Task, type TaskStep } from '$lib/services';
 	import Message from '$lib/components/messages/Message.svelte';
 	import { Plus, Trash2, Repeat } from 'lucide-svelte/icons';
 	import { LoaderCircle, OctagonX, Play, RefreshCcw } from 'lucide-svelte';
@@ -17,6 +11,7 @@
 	import LoopStep from './LoopStep.svelte';
 	import { transitionParentHeight } from '$lib/actions/size.svelte';
 	import { linear } from 'svelte/easing';
+	import { debounce } from 'es-toolkit';
 
 	interface Props {
 		parentStale?: boolean;
@@ -26,10 +21,13 @@
 		step: TaskStep;
 		runID?: string;
 		pending?: boolean;
-		stepMessages?: Map<string, Messages>;
+		stepMessages?: Record<string, Messages>;
 		project: Project;
 		showOutput?: boolean;
 		readOnly?: boolean;
+		lastStepId?: string;
+		onRerun?: () => void;
+		onAbort?: () => void;
 	}
 
 	let {
@@ -42,23 +40,29 @@
 		pending,
 		stepMessages,
 		project,
-		showOutput: parentShowOutput,
-		readOnly
+		showOutput: shouldShowOutputGlobal,
+		readOnly,
+		lastStepId,
+		onRerun = undefined,
+		onAbort = undefined
 	}: Props = $props();
 
 	// let isRunning = $derived(stepMessages?.get(step.id)?.inProgress ?? false);
-	let isRunnedBefore = $derived(!!stepMessages?.get(step.id)?.lastRunID);
+	let isRunnedBefore = $derived(!!stepMessages?.[step.id]?.lastRunID);
 	let stale: boolean = $derived(parentStale || !parentMatches());
 	let toDelete = $state<boolean>();
-	let showOutput = $state(true);
 
-	let isRunning = $state(stepMessages?.get(step.id)?.inProgress ?? false);
+	let shouldShowOutputLocal = $state(!!shouldShowOutputGlobal);
+
+	let shouldShowOutput = $derived(shouldShowOutputLocal && shouldShowOutputGlobal);
+
+	let isRunning = $state(stepMessages?.[step.id]?.inProgress ?? false);
 
 	let timeoutId: number | undefined = undefined;
 	// save how many step.inProgress === false we got
 	let inProgressFalseCount = $state(0);
 	$effect(() => {
-		const s = stepMessages?.get(step.id);
+		const s = stepMessages?.[step.id];
 
 		untrack(() => {
 			clearTimeout(timeoutId);
@@ -93,20 +97,39 @@
 	// Check whether the current step has looping steps (sub steps)
 	let isLoopStep = $derived((step?.loop?.length ?? 0) > 0);
 
-	let messages = $derived(stepMessages?.get(step.id)?.messages ?? []);
+	let simpleStepMessages = $derived(stepMessages?.[step.id]?.messages ?? []);
+	let loopStepMessage = $derived(stepMessages?.[step.id + '{loopdata}']?.messages ?? []);
 
-	let loopDataMessages = $derived(stepMessages?.get(step.id + '{loopdata}')?.messages ?? []);
+	const messages = $derived(!isLoopStep ? simpleStepMessages : loopStepMessage);
 
-	const taskRunStepLoopProgress = $derived(
-		getTaskRunProgress(step.id, stepMessages?.keys().toArray() ?? [])
-	);
+	let runningProgress = $state(getCurrentRunData(step.id, lastStepId));
+
+	let isCompleted = $state(false);
+
+	$effect(() => {
+		if (lastStepId && !isCompleted) {
+			untrack(() => {
+				const newVal = getCurrentRunData(step.id, lastStepId);
+
+				if (newVal && newVal.iteration >= (runningProgress?.iteration ?? 0)) {
+					runningProgress = newVal;
+				}
+
+				if (runningProgress && !newVal) {
+					isCompleted = true;
+				}
+			});
+		} else if (!lastStepId) {
+			untrack(() => (runningProgress = undefined));
+		}
+	});
 
 	type Iteration = Messages[];
 
 	// Convert the steps messages map to an array of messages where each index represent the number of iteration
 	let iterations: Iteration[] = $derived.by(() => {
 		// Convert the keys into an array
-		const keys = stepMessages?.keys().toArray() ?? [];
+		const keys = Object.keys(stepMessages ?? {}) ?? [];
 
 		// Define a regex pattern to extract iterations data
 		const pattern = new RegExp(`^${step.id}{element=(\\d+)}`);
@@ -131,20 +154,14 @@
 
 				// Push the step messages to the same iteration array
 				const steps = iterations.at(iteration) ?? [];
-				const messages = stepMessages?.get(key);
+				const messages = stepMessages?.[key];
 
 				steps.push(messages!);
 
 				iterations[iteration] = steps;
 			});
 
-		return iterations;
-	});
-
-	$effect(() => {
-		if (parentShowOutput !== undefined) {
-			showOutput = parentShowOutput;
-		}
+		return iterations.filter(Boolean);
 	});
 
 	function parentMatches() {
@@ -154,12 +171,10 @@
 		if (index === 0) {
 			return true;
 		}
-		const lastRun = stepMessages
-			?.get(task.steps[index - 1].id)
-			?.messages.findLast((msg) => msg.runID);
-		const currentRun = stepMessages
-			?.get(task.steps[index].id)
-			?.messages.find((msg) => msg.parentRunID);
+		const lastRun = stepMessages?.[task.steps[index - 1].id]?.messages.findLast((msg) => msg.runID);
+		const currentRun = stepMessages?.[task.steps[index].id]?.messages.find(
+			(msg) => msg.parentRunID
+		);
 		return lastRun?.runID === currentRun?.parentRunID;
 	}
 
@@ -198,50 +213,73 @@
 	}
 
 	async function doRun() {
-		if (isRunning || pending) {
-			if (runID) {
-				await ChatService.abort(project.assistantID, project.id, {
-					taskID: task.id,
-					runID: runID
-				});
-			}
-			return;
-		}
 		if (isRunning || pending || !step.step || step.step?.trim() === '') {
 			return;
 		}
 
+		if (!isRunning && !pending && simpleStepMessages.length > 0) {
+			onRerun?.();
+		}
+
+		// Activate visibility for the current step
+		shouldShowOutput = true;
+
+		runningProgress;
+
 		await run?.($state.snapshot(step));
 	}
 
-	function getTaskRunProgress(stepId: string, messageIds: string[]) {
+	async function rerun() {
+		onRerun?.();
+
+		_run();
+	}
+
+	async function abort() {
+		if (isRunning || pending) {
+			if (runID) {
+				onAbort?.();
+			}
+			return;
+		}
+	}
+
+	async function _run() {
+		if (isRunning || pending || !step.step || step.step?.trim() === '') {
+			return;
+		}
+
+		// Activate visibility for the current step
+		shouldShowOutput = true;
+
+		await run?.($state.snapshot(step));
+	}
+
+	function getCurrentRunData(stepId: string, key?: string) {
+		if (key) {
 		// Define a regex pattern to extract iterations data
 		const pattern = new RegExp(`^${stepId}{element=(\\d+)}{step=(\\d+)}`);
 
-		let acc = { iteration: -1, loopStep: -1 };
-
-		for (const key of messageIds) {
-			if (!pattern.test(key)) {
-				continue;
-			}
-
 			const match = key.match(pattern);
+
+			if (match) {
 			const iteration = parseInt(match?.at(1) ?? '0');
 			const loopStep = parseInt(match?.at(2) ?? '0');
 
-			acc = {
-				iteration: Math.max(acc.iteration, iteration),
+				return {
+					iteration: iteration,
 				loopStep: loopStep
 			};
+			}
 		}
 
-		return acc;
+		return undefined;
 	}
 </script>
 
 <li class="ms-4">
 	<div class="flex items-start justify-between gap-6">
-		<div class="flex grow flex-col gap-2">
+		<div class="flex grow flex-col gap-0">
 			<div class="flex items-center gap-2">
 				<textarea
 					{onkeydown}
@@ -255,25 +293,25 @@
 				></textarea>
 			</div>
 
-			{#if isLoopStep}
-				{#if loopDataMessages.length > 0 && showOutput}
-					<!-- Show step message -->
+			<!-- This code section is responsible for showing messages in a !loop task -->
+			{#if shouldShowOutput && messages.length}
 					<div
 						class="transition-height relative my-3 -ml-4 box-content flex min-h-6 flex-col gap-4 overflow-hidden rounded-lg bg-white p-5 dark:bg-black"
 						class:outline-2={isRunning}
 						class:outline-blue={isRunning}
-						transition:slide={{ duration: !readOnly ? 200 : 0, easing: linear }}
+					transition:slide={{ duration: 200, easing: linear }}
 					>
 						<div
-							class="message-container flex w-full flex-col gap-4"
-							use:transitionParentHeight={() => (isRunning && showOutput) || loopDataMessages}
+						class="messages-container flex w-full flex-col gap-4"
+						use:transitionParentHeight={() => isRunning || messages}
 						>
-							{#each loopDataMessages as msg}
+						{#each messages as msg}
 								{#if !msg.sent}
 									<Message {msg} {project} disableMessageToEditor />
 								{/if}
 							{/each}
 						</div>
+
 						{#if stale}
 							<div
 								class="absolute inset-0 h-full w-full rounded-3xl bg-white opacity-80 dark:bg-black"
@@ -282,7 +320,41 @@
 					</div>
 				{/if}
 
-				<div class="iterations-body flex flex-col gap-2">
+			{#if isLoopStep}
+				<div
+					class="loop-steps mb-8 flex flex-col gap-2"
+					in:fade|global={{ duration: 200 }}
+					out:fade={{ duration: 0 }}
+				>
+					{#each step.loop! as s, i (s)}
+						<!-- Get the current iteration steps messages array -->
+						{@const messages = iterations[i] ?? []}
+
+						<!-- Get the current step messages array -->
+						{@const stepMessages = messages[i] ?? []}
+
+						<LoopStep
+							bind:value={step.loop![i]}
+							{project}
+							messages={stepMessages}
+							isReadOnly={readOnly}
+							isLoopStepRunning={false}
+							isStepRunning={false}
+							isStepRunned={false}
+							{shouldShowOutput}
+							{stale}
+							onKeydown={onkeydown}
+							onDelete={() => step.loop!.splice(i, 1)}
+							onAdd={() => step.loop!.splice(i + 1, 0, '')}
+						/>
+					{/each}
+				</div>
+
+				{#if shouldShowOutput}
+					<div
+						class="iterations-body flex flex-col gap-4"
+						transition:slide={{ duration: 300, easing: linear }}
+					>
 					{#if iterations.length && (isRunning || isRunnedBefore)}
 						{#each iterations as iteration, i}
 							<!-- Get the current iteration steps messages array -->
@@ -301,22 +373,22 @@
 								</div>
 
 								<div class="flex flex-col">
-									{#each step.loop! as _, j}
+										{#each step.loop! as s, j (s)}
 										<!-- Get the current step messages array -->
 										{@const stepMessages = messages[j] ?? []}
 
 										<LoopStep
+												class=""
 											bind:value={step.loop![j]}
 											{project}
 											messages={stepMessages}
 											isReadOnly={readOnly}
 											isLoopStepRunning={isRunning &&
-												taskRunStepLoopProgress &&
-												taskRunStepLoopProgress.iteration === i &&
-												taskRunStepLoopProgress.loopStep === j}
+													runningProgress?.iteration === i &&
+													runningProgress?.loopStep === j}
 											isStepRunning={isRunning}
 											isStepRunned={isRunnedBefore}
-											shouldShowOutput={showOutput}
+												{shouldShowOutput}
 											{stale}
 											onKeydown={onkeydown}
 											onDelete={() => step.loop!.splice(j, 1)}
@@ -325,43 +397,9 @@
 								</div>
 							</div>
 						{/each}
-					{:else}
-						<div
-							class="flex flex-col gap-2 pl-4"
-							in:fade|global={{ duration: 200 }}
-							out:fade={{ duration: 0 }}
-						>
-							{#if isRunning || isRunnedBefore}
-								<div class="flex h-11 rounded-lg py-2">
-									<div class="text-lg font-semibold opacity-30">Waiting for iteration data...</div>
-								</div>
 							{/if}
-
-							{#each step.loop! as _, i}
-								<!-- Get the current iteration steps messages array -->
-								{@const messages = iterations[i] ?? []}
-
-								<!-- Get the current step messages array -->
-								{@const stepMessages = messages[i] ?? []}
-
-								<LoopStep
-									bind:value={step.loop![i]}
-									{project}
-									messages={stepMessages}
-									isReadOnly={readOnly}
-									isLoopStepRunning={false}
-									isStepRunning={false}
-									isStepRunned={false}
-									shouldShowOutput={showOutput}
-									{stale}
-									onKeydown={onkeydown}
-									onDelete={() => step.loop!.splice(i, 1)}
-									onAdd={() => step.loop!.splice(i + 1, 0, '')}
-								/>
-							{/each}
 						</div>
 					{/if}
-				</div>
 			{/if}
 		</div>
 
@@ -387,7 +425,7 @@
 						? 'Abort'
 						: pending
 							? 'Running...'
-							: messages.length > 0
+							: simpleStepMessages.length > 0
 								? 'Re-run Step'
 								: 'Run Step'}
 				>
@@ -395,7 +433,7 @@
 						<OctagonX class="size-4" />
 					{:else if pending}
 						<LoaderCircle class="size-4 animate-spin" />
-					{:else if messages.length > 0}
+					{:else if simpleStepMessages.length > 0}
 						<RefreshCcw class="size-4" />
 					{:else}
 						<Play class="size-4" />
@@ -434,32 +472,6 @@
 		{/if}
 	</div>
 </li>
-
-<!-- This code section is responsible for showing messages in a !loop task -->
-{#if !isLoopStep && messages.length > 0 && showOutput}
-	<div
-		class="transition-height relative my-3 box-content flex min-h-6 flex-col gap-4 overflow-hidden rounded-lg bg-white p-5 dark:bg-black"
-		class:outline-2={isRunning}
-		class:outline-blue={isRunning}
-		transition:slide={{ duration: !readOnly ? 200 : 0, easing: linear }}
-	>
-		<div
-			class="messages-container flex w-full flex-col gap-4"
-			use:transitionParentHeight={() => isRunning || messages}
-		>
-			{#each messages as msg}
-				{#if !msg.sent}
-					<Message {msg} {project} disableMessageToEditor />
-				{/if}
-			{/each}
-		</div>
-		{#if stale}
-			<div
-				class="absolute inset-0 h-full w-full rounded-3xl bg-white opacity-80 dark:bg-black"
-			></div>
-		{/if}
-	</div>
-{/if}
 
 <!-- This code section show dialog to confirm task delete -->
 <!-- REFACTOR: Move out to the Steps.svelte component; having one dialog shared with many steps is better than each steps has its own dialog-->
