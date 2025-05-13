@@ -9,6 +9,7 @@
 	import { Loader2 } from 'lucide-svelte';
 	import ModelProviderCard from './ModelProviderCard.svelte';
 	import { twMerge } from 'tailwind-merge';
+	import { slide } from 'svelte/transition';
 
 	let { project = $bindable() }: { project: Project } = $props();
 
@@ -193,19 +194,21 @@
 					{/if}
 				</select>
 			</div>
-			{#if !hasOneModelSelected}
-				<p class="px-1 py-1 text-xs">
-					Configure at least one provider and select models to set a default model.
-				</p>
-			{/if}
+			<div class="h-6">
+				{#if !hasOneModelSelected}
+					<p class="px-1 py-1 text-xs" transition:slide={{ duration: 200 }}>
+						Configure at least one provider and select models to set a default model.
+					</p>
+				{/if}
+			</div>
 		</div>
 
 		<!-- Available Model Providers -->
 		<div class="flex flex-col gap-0">
 			<h4 class="text-md mb-2 font-medium">Available Model Providers</h4>
-			<div class="model-providers-cards flex flex-col gap-4 2xl:block 2xl:columns-2">
+			<div class="model-providers-cards flex flex-col gap-4 2xl:grid 2xl:grid-cols-2">
 				{#each modelProviders as provider (provider.id)}
-					<ModelProviderCard {provider} bind:project onError={() => {}} />
+					<ModelProviderCard {provider} bind:project />
 				{/each}
 			</div>
 		</div>

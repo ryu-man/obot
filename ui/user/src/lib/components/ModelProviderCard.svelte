@@ -19,17 +19,17 @@
 		provider: ModelProvider;
 		project: Project;
 		configuringProvider?: string | null;
-		availableModels: string[];
-		onError: (error: string) => void;
+		onError?: (error: string) => void;
 	};
 
 	let {
 		provider,
 		project = $bindable(),
 		configuringProvider = $bindable(),
-		availableModels: models = [],
 		onError
 	}: Props = $props();
+
+	let models: string[] = $state([]);
 
 	let selectedModels: string[] = $derived(project.models?.[provider.id] ?? []);
 	let error: string | null = $state(null);
@@ -316,7 +316,7 @@
 </script>
 
 <div
-	class="model-provider-card border-surface2 flex h-fit w-full flex-col gap-2 rounded-md border py-4 shadow-sm 2xl:mb-4 2xl:last:mb-0"
+	class="model-provider-card border-surface2 flex h-fit w-full flex-col rounded-md border py-4 shadow-sm 2xl:mb-4 2xl:h-[514px] 2xl:last:mb-0"
 >
 	<div class="flex flex-col px-4">
 		<div class="mb-2 flex items-center gap-2">
@@ -350,125 +350,130 @@
 				{@html toHTMLFromMarkdown(provider.description)}
 			</div>
 		{:else}
-			<div class="bg-surface1 text-gray flex w-full items-center rounded-lg px-4 py-3 text-sm">
+			<div class="bg-surface1 text-gray flex h-14 w-full items-center rounded-lg px-4 py-3 text-sm">
 				<p>Description is not available</p>
 			</div>
 		{/if}
 	</div>
 
-	<div class="flex flex-col gap-4 px-4 pb-4 pt-4">
+	<div class="flex flex-1 flex-col gap-4 px-4 pt-4 pb-4">
 		{#if isConfigured}
 			<!-- Models Selection Section -->
 			<div
 				class={twMerge(
-					'flex flex-col',
+					'bg-surface1/0 flex flex-1 flex-col gap-2 rounded-md',
 					isProviderConfigurationShown && 'pointer-events-none opacity-50'
 				)}
 				transition:slide={{ duration: 100 }}
 			>
-				{#if models.length}
-					<div class="bg-surface1/0 flex flex-col gap-2 rounded-md">
+				<div
+					class="model-provider-search-input bg-surface1 dark:bg-surface2 relative flex h-10 w-full items-center gap-2 rounded-md text-sm"
+				>
+					<div class="absolute inset-x-0 left-2 aspect-square h-5 opacity-50">
+						<Search class="h-full" />
+					</div>
+					<input
+						bind:value={modelQuery}
+						class="h-full w-full bg-transparent px-3 pr-8 pl-9"
+						type="text"
+						placeholder="Search your model here..."
+					/>
+
+					{#if filteredModels.length !== models.length}
 						<div
-							class="model-provider-search-input bg-surface1 dark:bg-surface2 relative flex h-10 w-full items-center gap-2 rounded-md text-sm"
+							class="absolute inset-y-0 right-4 flex h-full items-center justify-center text-sm font-medium opacity-50"
+							transition:fade={{ duration: 100 }}
 						>
-							<div class="absolute inset-x-0 left-2 aspect-square h-5 opacity-50">
-								<Search class="h-full" />
-							</div>
+							<div>{filteredModels.length}</div>
+						</div>
+					{/if}
+				</div>
+
+				<div class="flex justify-between">
+					<div class="flex items-center gap-2 px-3 text-sm font-medium">
+						<h5 class="flex items-center">
 							<input
-								bind:value={modelQuery}
-								class="h-full w-full bg-transparent px-3 pl-9 pr-8"
-								type="text"
-								placeholder="Search your model here..."
+								class="bg-surface3 mr-2 h-4 w-4"
+								type="checkbox"
+								id={`model-${provider.id}-toggle-all`}
+								bind:checked={
+									() => models.length > 0 && models.length === selectedModels.length,
+									(v) => {
+										const indeterminate =
+											selectedModels.length > 0 && models.length > selectedModels.length;
+
+										if (indeterminate || v) {
+											selectModels(models);
+										} else {
+											unselectModels(selectedModels);
+										}
+									}
+								}
+								indeterminate={selectedModels.length > 0 && models.length > selectedModels.length}
+							/>
+							<label class="inline" for={`model-${provider.id}-toggle-all`}>Available Models</label>
+
+							{#if models.length}
+								<span class="opacity-50">({models.length})</span>
+							{/if}
+						</h5>
+
+						{#if selectedModels.length}
+							<div class="h-full border-l"></div>
+							<button class="inline font-normal">
+								<span class="">Selected</span>
+								<span class="opacity-50">({selectedModels.length})</span>
+							</button>
+						{/if}
+					</div>
+				</div>
+
+				<div
+					class="default-scrollbar-thin scrollbar-track-rounded-full relative max-h-48 min-h-[192px] flex-1 overflow-y-auto pr-2"
+				>
+					{#each filteredModels as model (model)}
+						<div class="hover:bg-surface1 bored flex items-center rounded px-3 py-2">
+							<input
+								class="bg-surface3 mr-2 h-4 w-4"
+								type="checkbox"
+								id={`model-${provider.id}-${model}`}
+								bind:checked={
+									() => (selectedModels ?? []).includes(model),
+									(checked) => toggleModel(model, checked)
+								}
 							/>
 
-							{#if filteredModels.length !== models.length}
-								<div
-									class="absolute inset-y-0 right-4 flex h-full items-center justify-center text-sm font-medium opacity-50"
-									transition:fade={{ duration: 100 }}
-								>
-									<div>{filteredModels.length}</div>
-								</div>
+							<label
+								for={`model-${provider.id}-${model}`}
+								class="flex-1 cursor-pointer truncate text-sm select-none"
+							>
+								{model}
+							</label>
+						</div>
+					{:else}
+						<div
+							class="w-full h-full flex items-center justify-center text-gray-400 text-xl font-semibold bg-surface1 rounded-lg absolute inset-0"
+							transition:fade={{ duration: 100 }}
+						>
+							{#if isModelsLoading}
+								<p>Loading models...</p>
+							{:else}
+								<p>No model is available</p>
 							{/if}
 						</div>
-
-						<div class="mb-2 flex justify-between">
-							<div class="flex items-center gap-2 px-3 text-sm font-medium">
-								<h5 class="flex items-center">
-									<input
-										class="bg-surface3 mr-2 h-4 w-4"
-										type="checkbox"
-										bind:checked={
-											() => models.length === selectedModels.length,
-											(v) => {
-												const indeterminate =
-													selectedModels.length > 0 && models.length > selectedModels.length;
-
-												if (indeterminate || v) {
-													selectModels(models);
-												} else {
-													unselectModels(selectedModels);
-												}
-											}
-										}
-										indeterminate={selectedModels.length > 0 &&
-											models.length > selectedModels.length}
-									/>
-									<label
-										class="inline hover:underline"
-										onclick={() => {
-											if (selectedModels.length) {
-												unselectModels(selectedModels);
-											} else {
-												selectModels(models);
-											}
-										}}>Available Models</label
-									>
-									{#if models.length}
-										<span class="opacity-50">({models.length})</span>
-									{/if}
-								</h5>
-
-								{#if selectedModels.length}
-									<div class="h-full border-l"></div>
-									<button class="inline font-normal">
-										<span class="">Selected</span>
-										<span class="opacity-50">({selectedModels.length})</span>
-									</button>
-								{/if}
-							</div>
-						</div>
-
-						<div
-							class="default-scrollbar-thin scrollbar-track-rounded-full max-h-48 overflow-y-auto pr-2"
-						>
-							{#each filteredModels as model, i (model)}
-								<div class="hover:bg-surface1 bored flex items-center rounded px-3 py-2">
-									<input
-										class="bg-surface3 mr-2 h-4 w-4"
-										type="checkbox"
-										id={`model-${provider.id}-${model}`}
-										bind:checked={
-											() => (selectedModels ?? []).includes(model),
-											(checked) => toggleModel(model, checked)
-										}
-									/>
-
-									<label
-										for={`model-${provider.id}-${model}`}
-										class="flex-1 cursor-pointer select-none truncate text-sm"
-									>
-										{model}
-										<!-- {#if defaultModelProvider === provider.id && defaultModel === model}
-									<span class="text-primary ml-2 text-xs font-medium">(Default Model)</span>
-								{/if} -->
-									</label>
-								</div>
-							{:else}
-								<p class="text-muted text-sm">No models available for this provider.</p>
-							{/each}
-						</div>
-					</div>
-				{/if}
+					{/each}
+				</div>
+			</div>
+		{:else}
+			<!-- TODO: this is an example placeholder, feel free to change if you have a better one -->
+			<div
+				class="bg-surface1 flex h-full flex-col items-center justify-center rounded-lg px-4 py-6"
+			>
+				<div class="mb-2 text-xl font-semibold text-gray-400">Provider is not yet configured</div>
+				<p class="text-center text-sm opacity-50">
+					Click on the "Configure" button below to step up the provider, Then we will show the
+					available models
+				</p>
 			</div>
 		{/if}
 
@@ -505,7 +510,7 @@
 		{/if}
 	</div>
 
-	<div class="border-surface2 flex w-full justify-between gap-4 border-t px-4 pt-4">
+	<div class="border-surface2 flex min-h-14 w-full justify-between gap-4 border-t px-4 pt-4">
 		{#if isProviderConfigurationShown}
 			{@const isDirty =
 				JSON.stringify($state.snapshot(configuration)) !==
