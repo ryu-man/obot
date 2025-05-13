@@ -89,7 +89,7 @@
 				<p class="text-xs italic">Loading model providers...</p>
 			{:else if project?.models && Object.keys(project.models).length > 0}
 				<div class="pb-2">
-					<p class="mb-1 text-xs font-medium">Configured providers:</p>
+					<p class="mb-1 text-sm font-medium">Configured providers:</p>
 					<ul class="flex flex-col text-xs">
 						{#each projectProvidersModels as [providerId, array]}
 							{@const provider = providersWithMoreData.get(providerId)}
