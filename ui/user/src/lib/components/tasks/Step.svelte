@@ -257,19 +257,19 @@
 
 	function getCurrentRunData(stepId: string, key?: string) {
 		if (key) {
-		// Define a regex pattern to extract iterations data
-		const pattern = new RegExp(`^${stepId}{element=(\\d+)}{step=(\\d+)}`);
+			// Define a regex pattern to extract iterations data
+			const pattern = new RegExp(`^${stepId}{element=(\\d+)}{step=(\\d+)}`);
 
 			const match = key.match(pattern);
 
 			if (match) {
-			const iteration = parseInt(match?.at(1) ?? '0');
-			const loopStep = parseInt(match?.at(2) ?? '0');
+				const iteration = parseInt(match?.at(1) ?? '0');
+				const loopStep = parseInt(match?.at(2) ?? '0');
 
 				return {
 					iteration: iteration,
-				loopStep: loopStep
-			};
+					loopStep: loopStep
+				};
 			}
 		}
 
@@ -293,36 +293,9 @@
 				></textarea>
 			</div>
 
-			<!-- This code section is responsible for showing messages in a !loop task -->
-			{#if shouldShowOutput && messages.length}
-					<div
-						class="transition-height relative my-3 -ml-4 box-content flex min-h-6 flex-col gap-4 overflow-hidden rounded-lg bg-white p-5 dark:bg-black"
-						class:outline-2={isRunning}
-						class:outline-blue={isRunning}
-					transition:slide={{ duration: 200, easing: linear }}
-					>
-						<div
-						class="messages-container flex w-full flex-col gap-4"
-						use:transitionParentHeight={() => isRunning || messages}
-						>
-						{#each messages as msg}
-								{#if !msg.sent}
-									<Message {msg} {project} disableMessageToEditor />
-								{/if}
-							{/each}
-						</div>
-
-						{#if stale}
-							<div
-								class="absolute inset-0 h-full w-full rounded-3xl bg-white opacity-80 dark:bg-black"
-							></div>
-						{/if}
-					</div>
-				{/if}
-
 			{#if isLoopStep}
 				<div
-					class="loop-steps mb-8 flex flex-col gap-2"
+					class="loop-steps flex flex-col gap-2"
 					in:fade|global={{ duration: 200 }}
 					out:fade={{ duration: 0 }}
 				>
@@ -349,12 +322,40 @@
 						/>
 					{/each}
 				</div>
+			{/if}
 
-				{#if shouldShowOutput}
+			<!-- This code section is responsible for showing messages in a !loop task -->
+			{#if shouldShowOutput && messages.length}
+				<div
+					class="transition-height relative my-3 -ml-4 box-content flex min-h-6 flex-col gap-4 overflow-hidden rounded-lg bg-white p-5 dark:bg-black"
+					class:outline-2={isRunning}
+					class:outline-blue={isRunning}
+					transition:slide={{ duration: 200, easing: linear }}
+				>
 					<div
-						class="iterations-body flex flex-col gap-4"
-						transition:slide={{ duration: 300, easing: linear }}
+						class="messages-container flex w-full flex-col gap-4"
+						use:transitionParentHeight={() => isRunning || messages}
 					>
+						{#each messages as msg}
+							{#if !msg.sent}
+								<Message {msg} {project} disableMessageToEditor />
+							{/if}
+						{/each}
+					</div>
+
+					{#if stale}
+						<div
+							class="absolute inset-0 h-full w-full rounded-3xl bg-white opacity-80 dark:bg-black"
+						></div>
+					{/if}
+				</div>
+			{/if}
+
+			{#if shouldShowOutput}
+				<div
+					class="iterations-body flex flex-col gap-4"
+					transition:slide={{ duration: 300, easing: linear }}
+				>
 					{#if iterations.length && (isRunning || isRunnedBefore)}
 						{#each iterations as iteration, i}
 							<!-- Get the current iteration steps messages array -->
@@ -373,22 +374,22 @@
 								</div>
 
 								<div class="flex flex-col">
-										{#each step.loop! as s, j (s)}
+									{#each step.loop! as s, j (s)}
 										<!-- Get the current step messages array -->
 										{@const stepMessages = messages[j] ?? []}
 
 										<LoopStep
-												class=""
+											class=""
 											bind:value={step.loop![j]}
 											{project}
 											messages={stepMessages}
 											isReadOnly={readOnly}
 											isLoopStepRunning={isRunning &&
-													runningProgress?.iteration === i &&
-													runningProgress?.loopStep === j}
+												runningProgress?.iteration === i &&
+												runningProgress?.loopStep === j}
 											isStepRunning={isRunning}
 											isStepRunned={isRunnedBefore}
-												{shouldShowOutput}
+											{shouldShowOutput}
 											{stale}
 											onKeydown={onkeydown}
 											onDelete={() => step.loop!.splice(j, 1)}
@@ -397,9 +398,8 @@
 								</div>
 							</div>
 						{/each}
-							{/if}
-						</div>
 					{/if}
+				</div>
 			{/if}
 		</div>
 

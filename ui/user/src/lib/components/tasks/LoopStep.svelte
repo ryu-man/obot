@@ -57,8 +57,8 @@
 >
 	<div
 		class={twMerge(
-			'flex items-center gap-2 overflow-hidden',
-			(!isReadOnly || isStepRunned || isStepRunning) && 'px-4'
+			'flex items-center gap-2 overflow-hidden px-4',
+			(!isReadOnly || isStepRunned || isStepRunning) && ''
 		)}
 	>
 		<textarea
