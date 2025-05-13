@@ -108,7 +108,6 @@
 		(t) => {
 			task = t;
 			onChanged?.(t);
-			console.log(t);
 		}
 	);
 
@@ -207,7 +206,6 @@
 		stepMessages = {};
 		thread.onStepMessages = (stepID, messages) => {
 			lastStepId = stepID;
-			console.log(lastStepId);
 			stepMessages[stepID] = messages;
 		};
 		thread.onMessages = (messages) => {

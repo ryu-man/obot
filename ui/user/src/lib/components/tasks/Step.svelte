@@ -1,5 +1,11 @@
 <script lang="ts">
-	import { type Messages, type Project, type Task, type TaskStep } from '$lib/services';
+	import {
+		ChatService,
+		type Messages,
+		type Project,
+		type Task,
+		type TaskStep
+	} from '$lib/services';
 	import Message from '$lib/components/messages/Message.svelte';
 	import { Plus, Trash2, Repeat } from 'lucide-svelte/icons';
 	import { LoaderCircle, OctagonX, Play, RefreshCcw } from 'lucide-svelte';
@@ -25,8 +31,6 @@
 		showOutput?: boolean;
 		readOnly?: boolean;
 		lastStepId?: string;
-		onRerun?: () => void;
-		onAbort?: () => void;
 	}
 
 	let {
@@ -41,9 +45,7 @@
 		project,
 		showOutput: shouldShowOutputGlobal,
 		readOnly,
-		lastStepId,
-		onRerun = undefined,
-		onAbort = undefined
+		lastStepId
 	}: Props = $props();
 
 	// let isRunning = $derived(stepMessages?.get(step.id)?.inProgress ?? false);
@@ -212,18 +214,21 @@
 	}
 
 	async function doRun() {
+		if (isRunning || pending) {
+			if (runID) {
+				await ChatService.abort(project.assistantID, project.id, {
+					taskID: task.id,
+					runID: runID
+				});
+			}
+			return;
+		}
 		if (isRunning || pending || !step.step || step.step?.trim() === '') {
 			return;
 		}
 
-		if (!isRunning && !pending && simpleStepMessages.length > 0) {
-			onRerun?.();
-		}
-
 		// Activate visibility for the current step
 		shouldShowOutput = true;
-
-		runningProgress;
 
 		await run?.($state.snapshot(step));
 	}
