@@ -16,17 +16,12 @@
 	let { project }: Props = $props();
 	const layout = getLayout();
 
-	$inspect(project);
-
 	let isLoading = $state(false);
 
-	let projectProvidersIds = $derived(Object.keys(project?.models ?? {}));
-
-	let projectProvidersModels = $derived(
-		Object.entries(project?.models ?? {}).sort((a, b) => a[0].localeCompare(b[0]))
+	let projectProviderModelIds = $derived(
+		Object.keys(project?.models ?? {}).sort((a, b) => a.localeCompare(b))
 	);
 	let providersWithMoreData: Map<string, ModelProvider> = new SvelteMap();
-	// let providerNames = $derived<Record<string, ModelProvider>>(providers.values().toArray());
 
 	// Get a friendly name for a provider
 	function getProviderName(providerId: string): string {
@@ -62,14 +57,6 @@
 
 		loadModelProviders(project);
 	});
-
-	// $effect(() => {
-	// 	if (project) {
-	// 		fetchModelProviders();
-	// 	}
-	// });
-
-	// $inspect(project);
 </script>
 
 <CollapsePane
@@ -91,7 +78,7 @@
 				<div class="pb-2">
 					<p class="mb-1 text-sm font-medium">Configured providers:</p>
 					<ul class="flex flex-col text-xs">
-						{#each projectProvidersModels as [providerId, array]}
+						{#each projectProviderModelIds as providerId}
 							{@const provider = providersWithMoreData.get(providerId)}
 
 							<li class="model-provider flex items-center gap-1 py-2">

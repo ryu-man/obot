@@ -356,7 +356,7 @@
 		{/if}
 	</div>
 
-	<div class="flex flex-col gap-4 px-4 pb-4 pt-4">
+	<div class="flex flex-col gap-4 px-4 pt-4 pb-4">
 		{#if isConfigured}
 			<!-- Models Selection Section -->
 			<div
@@ -376,7 +376,7 @@
 							</div>
 							<input
 								bind:value={modelQuery}
-								class="h-full w-full bg-transparent px-3 pl-9 pr-8"
+								class="h-full w-full bg-transparent px-3 pr-8 pl-9"
 								type="text"
 								placeholder="Search your model here..."
 							/>
@@ -465,7 +465,7 @@
 
 									<label
 										for={`model-${provider.id}-${model}`}
-										class="flex-1 cursor-pointer select-none truncate text-sm"
+										class="flex-1 cursor-pointer truncate text-sm select-none"
 									>
 										{model}
 										<!-- {#if defaultModelProvider === provider.id && defaultModel === model}

@@ -4,11 +4,9 @@
 	import {
 		updateProject,
 		listAvailableModels,
-		listModelProviders,
-		getModelProviderConfig
+		listModelProviders
 	} from '$lib/services/chat/operations';
 	import { Loader2 } from 'lucide-svelte';
-
 	import ModelProviderCard from './ModelProviderCard.svelte';
 	import { twMerge } from 'tailwind-merge';
 
@@ -17,8 +15,6 @@
 	let modelProviders: ModelProvider[] = $state([]);
 	let isLoading = $state(true);
 	let error: string | null = $state(null);
-	let configFormData: Record<string, string> = $state({});
-	let configIsLoading = $state(true);
 	let isSaving = $state(false);
 
 	// Convenience getters for derived values
@@ -127,28 +123,6 @@
 		}
 	}
 
-	// Load configuration for a model provider
-	async function loadProviderConfig(providerId: string) {
-		configIsLoading = true;
-		configFormData = {};
-
-		try {
-			const data = await getModelProviderConfig(project.assistantID, project.id, providerId);
-			configFormData = data || {};
-		} catch (err) {
-			console.error(`Failed to get configuration for provider ${providerId}`, err);
-		} finally {
-			configIsLoading = false;
-		}
-	}
-
-	// When a provider is selected for configuration, load its config
-	// $effect(() => {
-	// 	if (configuringProvider) {
-	// 		loadProviderConfig(configuringProvider);
-	// 	}
-	// });
-
 	onMount(() => {
 		if (project && project.id) {
 			loadModelProviders();
@@ -156,7 +130,7 @@
 	});
 </script>
 
-<div class="flex w-full flex-col pb-10 pt-10">
+<div class="flex w-full flex-col pt-10 pb-10">
 	<div class="mb-4 flex items-center justify-between">
 		<h3 class="text-lg font-semibold">Model Providers</h3>
 
@@ -193,7 +167,7 @@
 
 			<div>
 				<select
-					class="border-surface2 w-full rounded-md border px-4 py-4 text-sm dark:bg-surface1"
+					class="border-surface2 dark:bg-surface1 w-full rounded-md border px-4 py-4 text-sm"
 					value={defaultModelProvider && defaultModel
 						? `${defaultModel}|||${defaultModelProvider}`
 						: ''}
