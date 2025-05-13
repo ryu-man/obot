@@ -21,6 +21,8 @@
 	let modelButtonRef = $state<HTMLButtonElement>();
 	let defaultModel = $state<{ model: string; modelProvider: string } | null>(null);
 
+	let modelsEntries = $derived(Object.entries(project.models || {}));
+
 	const isDefaultModelSelected = $derived(
 		threadDetails && defaultModel?.model !== '' && defaultModel?.model === threadDetails?.model
 	);
@@ -135,7 +137,7 @@
 <div class="relative pr-2">
 	<button
 		class={twMerge(
-			'hover:bg-surface2/50 active:bg-surface2/80 flex h-10 items-center gap-1 rounded-full  px-4 py-1 text-xs',
+			'hover:bg-surface2/50 active:bg-surface2/80 flex h-10 items-center gap-1 rounded-full  px-4 py-1 text-xs text-gray-600',
 			isDefaultModelSelected && 'text-blue hover:bg-blue/10 active:bg-blue/15 bg-transparent'
 		)}
 		onclick={(e) => {
@@ -171,7 +173,7 @@
 			role="listbox"
 			tabindex="-1"
 			aria-labelledby="thread-model-button"
-			class="border-surface1 dark:bg-surface2 absolute bottom-full z-10 mb-1 max-h-60 w-auto max-w-80 overflow-auto rounded-md border bg-white p-2 shadow-lg"
+			class="border-surface1 dark:bg-surface2 absolute right-0 bottom-full z-10 mb-1 max-h-60 w-auto overflow-hidden overflow-y-auto rounded-md border bg-white p-2 shadow-lg"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => {
 				if (e.key === 'Escape') {
@@ -181,37 +183,43 @@
 			}}
 			bind:this={modelSelectorRef}
 		>
-			{#each Object.entries(project.models || {}) as [providerId, models]}
-				{#if Array.isArray(models) && models.length > 0 && providerId}
-					{#each models as model}
-						<button
-							role="option"
-							aria-selected={threadDetails?.modelProvider === providerId &&
-								threadDetails?.model === model}
-							class={twMerge(
-								'hover:bg-surface1 focus:bg-surface1 w-full rounded px-2 py-1.5 text-left text-sm focus:outline-none',
-								defaultModel?.model === model && 'text-blue hover:bg-blue/10 active:bg-blue/15'
-							)}
-							onclick={() => setThreadModel(model, providerId)}
-							tabindex="0"
-						>
-							{model}
-							{#if threadDetails?.modelProvider === providerId && threadDetails?.model === model}
-								<span class="ml-1 text-xs text-green-500">✓</span>
-							{/if}
-						</button>
-					{/each}
-				{/if}
-			{/each}
+			{#if modelsEntries.length}
+				{#each modelsEntries as [providerId, models] (providerId)}
+					{#if Array.isArray(models) && models.length > 0 && providerId}
+						{#each models as model (model)}
+							<button
+								role="option"
+								aria-selected={threadDetails?.modelProvider === providerId &&
+									threadDetails?.model === model}
+								class={twMerge(
+									'hover:bg-surface1 focus:bg-surface1 w-full rounded px-2 py-1.5 text-left text-sm focus:outline-none',
+									defaultModel?.model === model && 'text-blue hover:bg-blue/10 active:bg-blue/15'
+								)}
+								onclick={() => setThreadModel(model, providerId)}
+								tabindex="0"
+							>
+								{model}
+								{#if threadDetails?.modelProvider === providerId && threadDetails?.model === model}
+									<span class="ml-1 text-xs text-green-500">✓</span>
+								{/if}
+							</button>
+						{/each}
+					{/if}
+				{/each}
 
-			{#if isUpdatingModel}
-				<div class="flex justify-center p-2">
-					<div
-						class="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
-						aria-hidden="true"
-					></div>
-					<span class="sr-only">Loading...</span>
-				</div>
+				{#if isUpdatingModel}
+					<div class="flex justify-center p-2">
+						<div
+							class="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+							aria-hidden="true"
+						></div>
+						<span class="sr-only">Loading...</span>
+					</div>
+				{/if}
+			{:else}
+				<p class="truncate text-sm text-gray-400">
+					No model is available. Configure you provider first!
+				</p>
 			{/if}
 		</div>
 	{/if}
