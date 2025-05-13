@@ -471,7 +471,7 @@
 			>
 				<div class="mb-2 text-xl font-semibold text-gray-400">Provider is not yet configured</div>
 				<p class="text-center text-sm opacity-50">
-					Click on the "Configure" button below to step up the provider, Then we will show the
+					Click on the "Configure" button below to set-up this provider, Then we will show the
 					available models
 				</p>
 			</div>
