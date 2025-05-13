@@ -450,7 +450,7 @@
 						</div>
 					{:else}
 						<div
-							class="w-full h-full flex items-center justify-center text-gray-400 text-xl font-semibold bg-surface1 rounded-lg absolute inset-0"
+							class="w-full h-full flex items-center justify-center text-gray-400 text-lg font-semibold bg-surface1 rounded-lg absolute inset-0 p-8"
 							transition:fade={{ duration: 100 }}
 						>
 							{#if isModelsLoading}
@@ -465,10 +465,10 @@
 		{:else}
 			<!-- TODO: this is an example placeholder, feel free to change if you have a better one -->
 			<div
-				class="bg-surface1 flex h-full flex-col items-center justify-center rounded-lg px-4 py-6"
+				class="bg-surface1 flex h-full flex-col items-center justify-center rounded-lg p-8"
 			>
-				<div class="mb-2 text-xl font-semibold text-gray-400">Provider is not yet configured</div>
-				<p class="text-center text-sm opacity-50">
+				<div class="mb-2 text-lg font-semibold text-gray-400">Provider is not yet configured</div>
+				<p class="text-center text-xs opacity-50">
 					Click on the "Configure" button below to set-up this provider, Then we will show the
 					available models
 				</p>
