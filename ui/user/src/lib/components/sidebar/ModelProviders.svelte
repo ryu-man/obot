@@ -8,6 +8,7 @@
 	import { SvelteMap } from 'svelte/reactivity';
 	import { darkMode } from '$lib/stores';
 	import { twMerge } from 'tailwind-merge';
+	import { delay } from 'es-toolkit';
 
 	interface Props {
 		project?: Project;
@@ -81,25 +82,47 @@
 						{#each projectProviderModelIds as providerId}
 							{@const provider = providersWithMoreData.get(providerId)}
 
-							<li class="model-provider flex items-center gap-1 py-2">
-								<div class="size-4">
-									{#if provider?.icon || provider?.iconDark}
-										<img
-											src={darkMode.isDark && provider.iconDark ? provider.iconDark : provider.icon}
-											alt={provider.name}
-											class={twMerge(
-												'size-full',
-												darkMode.isDark && !provider.iconDark ? 'dark:invert' : ''
-											)}
-										/>
-									{/if}
-								</div>
+							<li class="model-provider w-full">
+								<button
+									class="hover:bg-surface3 flex w-full items-center gap-1 rounded-md p-2 transition-colors duration-200"
+									onclick={async () => {
+										openModelProvidersConfig();
 
-								<span>{getProviderName(providerId)}</span>
-								<span class="text-muted-foreground"
-									>({project.models[providerId].length}
-									{project.models[providerId].length === 1 ? 'model' : 'models'})</span
+										// Wait for the UI to be ready
+										await delay(300);
+
+										requestAnimationFrame(() => {
+											const cardElement = document.querySelector(
+												`.model-provider-card[data-provider-id="${providerId}"]`
+											);
+
+											if (cardElement) {
+												cardElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+											}
+										});
+									}}
 								>
+									<div class="size-4">
+										{#if provider?.icon || provider?.iconDark}
+											<img
+												src={darkMode.isDark && provider.iconDark
+													? provider.iconDark
+													: provider.icon}
+												alt={provider.name}
+												class={twMerge(
+													'size-full',
+													darkMode.isDark && !provider.iconDark ? 'dark:invert' : ''
+												)}
+											/>
+										{/if}
+									</div>
+
+									<span>{getProviderName(providerId)}</span>
+									<span class="text-muted-foreground"
+										>({project.models[providerId].length}
+										{project.models[providerId].length === 1 ? 'model' : 'models'})</span
+									>
+								</button>
 							</li>
 						{/each}
 					</ul>

@@ -314,6 +314,7 @@
 
 <div
 	class="model-provider-card border-surface2 flex h-fit w-full flex-col rounded-md border py-4 shadow-sm 2xl:mb-4 2xl:h-[514px] 2xl:last:mb-0"
+	data-provider-id={provider.id}
 >
 	<div class="flex flex-col px-4">
 		<div class="mb-2 flex items-center gap-2">
