@@ -6,7 +6,7 @@
 		listAvailableModels,
 		listModelProviders
 	} from '$lib/services/chat/operations';
-	import { Loader2 } from 'lucide-svelte';
+	import { ChevronDown, Loader2 } from 'lucide-svelte';
 	import ModelProviderCard from './ModelProviderCard.svelte';
 	import { twMerge } from 'tailwind-merge';
 	import { slide } from 'svelte/transition';
@@ -26,6 +26,8 @@
 	// Track available models for each provider
 	let availableModels: Record<string, string[]> = $state({});
 	let loadingModels: Record<string, boolean> = $state({});
+
+	let isDefaultModelSelectOpen = $state(false);
 
 	const hasOneModelSelected = $derived(
 		Object.values(selectedModels).some((provider) => provider.length)
@@ -166,13 +168,16 @@
 		<div class={twMerge('mb-6 flex flex-col gap-2', !hasOneModelSelected && 'opacity-50')}>
 			<h4 class="text-md font-medium">Default Model</h4>
 
-			<div>
+			<!-- Not the best approach -->
+			<!-- TODO: Use a 3rd-party UI library or create an internal custom component in the future -->
+			<div class="relative">
 				<select
-					class="border-surface2 dark:bg-surface1 w-full rounded-md border px-4 py-4 text-sm"
+					class="border-surface2 dark:bg-surface1 w-full appearance-none rounded-md border px-4 py-4 text-sm"
 					value={defaultModelProvider && defaultModel
 						? `${defaultModel}|||${defaultModelProvider}`
 						: ''}
 					onchange={(e) => updateDefaultModel(e.currentTarget.value)}
+					onclick={() => (isDefaultModelSelectOpen = !isDefaultModelSelectOpen)}
 				>
 					<option class="dark:bg-surface3" value="" disabled
 						>Select the default model for {project.name} project</option
@@ -193,6 +198,15 @@
 						{/each}
 					{/if}
 				</select>
+
+				<div
+					class={twMerge(
+						'absolute inset-y-0 right-0 flex aspect-square h-full items-center justify-center transition-transform duration-200',
+						isDefaultModelSelectOpen && 'rotate-180'
+					)}
+				>
+					<ChevronDown />
+				</div>
 			</div>
 			<div class="h-6">
 				{#if !hasOneModelSelected}
