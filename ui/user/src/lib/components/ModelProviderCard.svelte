@@ -76,7 +76,7 @@
 				try {
 					await loadProviderConfig(providerId);
 					await delay(1000);
-					loadAvailableModels(providerId);
+					models = await loadAvailableModels(providerId);
 				} catch (err) {}
 			});
 		} else {
@@ -164,13 +164,13 @@
 		try {
 			const response = await listAvailableModels(project.assistantID, project.id, providerId);
 
-			models = (response.data || [])
+			return (response.data || [])
 				.filter((m) => m.metadata && m.metadata.usage === 'llm')
 				.map((m) => m.id)
 				.sort((a, b) => a.localeCompare(b));
 		} catch (err) {
 			console.error(`Failed to load models for provider ${providerId}`, err);
-			models = [];
+			return [];
 		} finally {
 			await delay(500);
 			isModelsLoading = false;
@@ -186,10 +186,15 @@
 
 			provider.configured = true;
 
-			await delay(1000);
+			await delay(400);
 
-			await loadAvailableModels(provider.id);
+			const array = await loadAvailableModels(provider.id);
+
 			isProviderConfigurationShown = false;
+
+			await delay(300);
+
+			models = array;
 		} catch (err) {
 			console.log(err);
 			provider.configured = false;
