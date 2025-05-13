@@ -1,12 +1,11 @@
 <script lang="ts">
-	import type { Model, ModelProvider, Project } from '$lib/services';
-	import { CheckCircleIcon, Loader2, Settings, Search } from 'lucide-svelte';
+	import type { ModelProvider, Project } from '$lib/services';
+	import { CheckCircleIcon, Loader2, Search } from 'lucide-svelte';
 	import { toHTMLFromMarkdown } from '$lib/markdown';
 	import { darkMode } from '$lib/stores';
 	import {
 		updateProject,
 		listAvailableModels,
-		listModelProviders,
 		configureModelProvider,
 		deconfigureModelProvider,
 		getModelProviderConfig
@@ -32,9 +31,7 @@
 		onError
 	}: Props = $props();
 
-	let modelProviders: ModelProvider[] = $state([]);
 	let selectedModels: string[] = $derived(project.models?.[provider.id] ?? []);
-	let isLoading = $state(true);
 	let error: string | null = $state(null);
 
 	let defaultModelProvider = $derived(project.defaultModelProvider || '');
@@ -50,7 +47,7 @@
 		structuredClone($state.snapshot(configuration))
 	);
 
-	let isConfigurationLoading = $state(true);
+	let isConfigurationLoading = $state(false);
 	let isModelsLoading = $state(false);
 	let isSaving = $state(false);
 	let isProviderConfigurationShown = $state(false);
@@ -77,14 +74,14 @@
 					await loadProviderConfig(providerId);
 					await delay(1000);
 					models = await loadAvailableModels(providerId);
-				} catch (err) {}
+				} catch (err) {
+					console.error(err);
+				}
 			});
 		} else {
 			models = [];
 		}
 	});
-
-	// $inspect(isConfigured, providerId);
 
 	// Deconfigure model provider
 	async function handleDeconfigureModelProvider(provider: ModelProvider) {
@@ -143,13 +140,9 @@
 			await configureModelProvider(project.assistantID, project.id, provider.id, config);
 			const newProject = setProjectModels(project, providerId, []);
 
-			console.log(newProject);
-
 			await updateProject(newProject);
 
 			project = newProject;
-
-			console.log(project);
 		} catch (err) {
 			onError?.((error = `Failed to configure ${provider.name}`));
 
@@ -201,10 +194,6 @@
 		} finally {
 			isModelsLoading = false;
 		}
-	}
-
-	function updateFormValue(key: string, value: string) {
-		configuration = { ...configuration, [key]: value };
 	}
 
 	// Toggle model selection
@@ -338,7 +327,18 @@
 					class="h-6 w-6 {darkMode.isDark && !provider.iconDark ? 'dark:invert' : ''}"
 				/>
 			{/if}
-			<h4 class="truncate text-lg font-medium">{provider.name}</h4>
+			<div class="flex items-center gap-4">
+				<h4 class="truncate text-lg font-medium">{provider.name}</h4>
+				{#if [isModelsLoading, isSaving, isConfigurationLoading].some(Boolean)}
+					<div
+						class="flex justify-center"
+						in:fade={{ duration: 1000 }}
+						out:fade={{ duration: 600 }}
+					>
+						<Loader2 class="size-5 animate-spin" />
+					</div>
+				{/if}
+			</div>
 
 			{#if provider.configured}
 				<CheckCircleIcon class="text-blue ml-auto aspect-square h-5" />
@@ -356,7 +356,7 @@
 		{/if}
 	</div>
 
-	<div class="flex flex-col gap-4 px-4 pt-4 pb-4">
+	<div class="flex flex-col gap-4 px-4 pb-4 pt-4">
 		{#if isConfigured}
 			<!-- Models Selection Section -->
 			<div
@@ -376,7 +376,7 @@
 							</div>
 							<input
 								bind:value={modelQuery}
-								class="h-full w-full bg-transparent px-3 pr-8 pl-9"
+								class="h-full w-full bg-transparent px-3 pl-9 pr-8"
 								type="text"
 								placeholder="Search your model here..."
 							/>
@@ -403,10 +403,10 @@
 												const indeterminate =
 													selectedModels.length > 0 && models.length > selectedModels.length;
 
-												if (indeterminate || models.length === selectedModels.length) {
-													unselectModels(selectedModels);
-												} else if (selectedModels.length === 0) {
+												if (indeterminate || v) {
 													selectModels(models);
+												} else {
+													unselectModels(selectedModels);
 												}
 											}
 										}
@@ -436,16 +436,6 @@
 									</button>
 								{/if}
 							</div>
-
-							{#if [isModelsLoading, isSaving].some(Boolean)}
-								<div
-									class="flex justify-center"
-									in:fade={{ duration: 1000 }}
-									out:fade={{ duration: 600 }}
-								>
-									<Loader2 class="size-5 animate-spin" />
-								</div>
-							{/if}
 						</div>
 
 						<div
@@ -465,7 +455,7 @@
 
 									<label
 										for={`model-${provider.id}-${model}`}
-										class="flex-1 cursor-pointer truncate text-sm select-none"
+										class="flex-1 cursor-pointer select-none truncate text-sm"
 									>
 										{model}
 										<!-- {#if defaultModelProvider === provider.id && defaultModel === model}
