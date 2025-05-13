@@ -55,12 +55,7 @@
 	class:outline-2={isStepRunning && isLoopStepRunning}
 	class:outline-blue={isStepRunning && isLoopStepRunning}
 >
-	<div
-		class={twMerge(
-			'flex items-center gap-2 overflow-hidden px-4',
-			(!isReadOnly || isStepRunned || isStepRunning) && ''
-		)}
-	>
+	<div class={'flex items-center gap-2 overflow-hidden px-4'}>
 		<textarea
 			use:autoHeight
 			bind:value
@@ -90,9 +85,7 @@
 
 	{#if (isStepRunning || isStepRunned) && shouldShowOutput}
 		<div
-			class={twMerge(
-				'loop-step-messages transition-loop-step-message relative box-content flex min-h-11 flex-col gap-4 overflow-hidden rounded-none px-4 py-4 duration-200'
-			)}
+			class="loop-step-messages transition-loop-step-message relative box-content flex min-h-11 flex-col gap-4 overflow-hidden rounded-none px-4 py-4 duration-200"
 			in:slide|global={{
 				duration: !isReadOnly ? 200 : 0,
 				delay: isStepRunning && !isReadOnly ? index * 190 : 0,
