@@ -11,7 +11,6 @@
 	import LoopStep from './LoopStep.svelte';
 	import { transitionParentHeight } from '$lib/actions/size.svelte';
 	import { linear } from 'svelte/easing';
-	import { debounce } from 'es-toolkit';
 
 	interface Props {
 		parentStale?: boolean;
@@ -225,32 +224,6 @@
 		shouldShowOutput = true;
 
 		runningProgress;
-
-		await run?.($state.snapshot(step));
-	}
-
-	async function rerun() {
-		onRerun?.();
-
-		_run();
-	}
-
-	async function abort() {
-		if (isRunning || pending) {
-			if (runID) {
-				onAbort?.();
-			}
-			return;
-		}
-	}
-
-	async function _run() {
-		if (isRunning || pending || !step.step || step.step?.trim() === '') {
-			return;
-		}
-
-		// Activate visibility for the current step
-		shouldShowOutput = true;
 
 		await run?.($state.snapshot(step));
 	}

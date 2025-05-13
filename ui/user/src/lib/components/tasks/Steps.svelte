@@ -1,15 +1,13 @@
 <script lang="ts">
 	import { type Messages, type Project, type Task, type TaskStep } from '$lib/services';
 	import Step from '$lib/components/tasks/Step.svelte';
-	import { SvelteMap } from 'svelte/reactivity';
 	import Files from '$lib/components/tasks/Files.svelte';
 	import { tooltip } from '$lib/actions/tooltip.svelte';
-	import { Eye, EyeClosed, UsersRound, ArrowBigDown, Regex } from 'lucide-svelte';
+	import { Eye, EyeClosed, UsersRound, ArrowBigDown } from 'lucide-svelte';
 	import { tick, untrack } from 'svelte';
 	import { twMerge } from 'tailwind-merge';
 	import { fade } from 'svelte/transition';
 	import { linear } from 'svelte/easing';
-	import { delay } from 'es-toolkit';
 
 	interface Props {
 		task: Task;
@@ -279,7 +277,7 @@
 		<div class="pointer-events-none absolute inset-0 z-10 flex items-end justify-end p-4">
 			<button
 				class={twMerge(
-					'bg-surface2 pointer-events-auto sticky bottom-4 right-0 box-border flex aspect-square h-8 items-center justify-center rounded-lg transition-colors duration-200',
+					'bg-surface2 pointer-events-auto sticky right-0 bottom-4 box-border flex aspect-square h-8 items-center justify-center rounded-lg transition-colors duration-200',
 					isFollowModeActive &&
 						'bg-blue/0 text-blue/70 hover:bg-blue/10 active:bg-blue/20 border border-current'
 				)}
