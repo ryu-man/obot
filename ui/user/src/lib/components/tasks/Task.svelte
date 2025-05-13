@@ -22,7 +22,7 @@
 	import Input from './Input.svelte';
 	import Tools from '../navbar/Tools.svelte';
 	import { clickOutside } from '$lib/actions/clickoutside';
-	import { delay } from 'es-toolkit';
+
 	interface Props {
 		task: Task;
 		project: Project;
@@ -216,11 +216,6 @@
 	async function click() {
 		error = '';
 		shouldFollowTaskRun = true;
-
-		// Avoid glitch in iterations UI
-		delay(1000).then(() => {
-			showAllOutput = true;
-		});
 
 		const hasAtLeastOneInstruction = task.steps.some((step) => (step.step ?? '').trim().length > 0);
 		if (!hasAtLeastOneInstruction) {
