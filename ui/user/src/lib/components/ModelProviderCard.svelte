@@ -464,9 +464,7 @@
 			</div>
 		{:else}
 			<!-- TODO: this is an example placeholder, feel free to change if you have a better one -->
-			<div
-				class="bg-surface1 flex h-full flex-col items-center justify-center rounded-lg p-8"
-			>
+			<div class="bg-surface1 flex h-full flex-col items-center justify-center rounded-lg p-8">
 				<div class="mb-2 text-lg font-semibold text-gray-400">Provider is not yet configured</div>
 				<p class="text-center text-xs opacity-50">
 					Click on the "Configure" button below to set-up this provider, Then we will show the
@@ -548,10 +546,8 @@
 					<button
 						in:fade={{ duration: 100 }}
 						out:fade={{ duration: 0 }}
-						type="submit"
-						class={twMerge(
-							'button bg-blue/10 text-blue hover:bg-blue/15 active:bg-blue/20 rounded-full border-none px-4 py-2 text-sm transition-colors duration-100'
-						)}
+						type="button"
+						class="button bg-blue/10 text-blue hover:bg-blue/15 active:bg-blue/20 rounded-full border-none px-4 py-2 text-sm transition-colors duration-100"
 						disabled={!isDirty}
 						onclick={(ev) => saveHandler(ev)}
 					>
@@ -562,9 +558,18 @@
 		{/if}
 
 		<div class="ml-auto flex gap-2">
+			{#if !isProviderConfigurationShown}
+				<button
+					class="button hover:bg-surface3/80 active:bg-surface3/100 bg-transparent text-sm font-medium"
+					onclick={onConfigureProviderClickHandler}
+				>
+					{provider.configured ? 'Reconfigure' : 'Configure'}
+				</button>
+			{/if}
+
 			{#if provider.configured}
 				<button
-					class="button bg-red-500/0 text-sm font-medium text-red-500 transition-colors duration-100 hover:bg-red-500/10 active:bg-red-500/15"
+					class="button bg-red-500/5 text-sm font-medium text-red-500 transition-colors duration-100 hover:bg-red-500/10 active:bg-red-500/15"
 					onclick={() => {
 						if (confirm(`Are you sure you want to deconfigure ${provider.name}?`)) {
 							handleDeconfigureModelProvider(provider);
@@ -572,11 +577,6 @@
 					}}
 				>
 					Unconfigure
-				</button>
-			{/if}
-			{#if !isProviderConfigurationShown}
-				<button class="button text-sm font-medium" onclick={onConfigureProviderClickHandler}>
-					{provider.configured ? 'Reconfigure' : 'Configure'}
 				</button>
 			{/if}
 		</div>
