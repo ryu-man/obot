@@ -42,10 +42,7 @@
 	// let selectedModels = $derived<Record<string, string[]>>(project.models || {});
 
 	let configuration: Record<string, string> = $state({});
-	// svelte-ignore state_referenced_locally
-	let oldConfiguration: Record<string, string> = $state(
-		structuredClone($state.snapshot(configuration))
-	);
+	let oldConfiguration: Record<string, string> = $state(structuredClone({}));
 
 	let isConfigurationLoading = $state(false);
 	let isModelsLoading = $state(false);
