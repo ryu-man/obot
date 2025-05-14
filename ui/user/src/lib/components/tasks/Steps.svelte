@@ -11,6 +11,7 @@
 
 	interface Props {
 		task: Task;
+		taskRun?: Task;
 		runID?: string;
 		project: Project;
 		run: (step?: TaskStep) => Promise<void>;
@@ -26,6 +27,7 @@
 
 	let {
 		task = $bindable(),
+		taskRun,
 		runID,
 		showAllOutput = $bindable(),
 		project,
@@ -39,7 +41,7 @@
 		lastStepId
 	}: Props = $props();
 
-	const steps = $derived(task?.steps ?? []);
+	const steps = $derived(taskRun?.steps ?? task?.steps ?? []);
 
 	// Capture the steps element
 	let element: HTMLElement | undefined = $state();
@@ -255,11 +257,29 @@
 
 	<ol class="flex list-decimal flex-col gap-2 pt-2 opacity-100">
 		{#each steps as step, i (step.id)}
+			<!-- step & loop steps are calculated based on wheter the user is consulting a task or a task run, hence readOnly or not -->
 			<Step
 				{run}
 				{runID}
 				bind:task
-				bind:step={task.steps[i]}
+				bind:step={
+					() => (readOnly && taskRun ? taskRun?.steps[i] : steps[i]),
+					(v) => {
+						// do not change value on read-only mode
+						if (readOnly) return;
+
+						task.steps[i] = v;
+					}
+				}
+				bind:loopSteps={
+					() => (readOnly && taskRun ? taskRun?.steps[i]?.loop : steps[i]?.loop) ?? [],
+					(v) => {
+						// do not change value on read-only mode
+						if (readOnly) return;
+
+						step.loop = v;
+					}
+				}
 				index={i}
 				{stepMessages}
 				{pending}
@@ -282,7 +302,7 @@
 		<div class="pointer-events-none absolute inset-0 z-10 flex items-end justify-end p-4">
 			<button
 				class={twMerge(
-					'bg-surface2 pointer-events-auto sticky right-0 bottom-4 box-border flex aspect-square h-8 items-center justify-center rounded-lg transition-colors duration-200',
+					'bg-surface2 pointer-events-auto sticky bottom-4 right-0 box-border flex aspect-square h-8 items-center justify-center rounded-lg transition-colors duration-200',
 					isFollowModeActive &&
 						'bg-blue/0 text-blue/70 hover:bg-blue/10 active:bg-blue/20 border border-current'
 				)}
