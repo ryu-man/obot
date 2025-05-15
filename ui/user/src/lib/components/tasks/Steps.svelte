@@ -302,7 +302,7 @@
 		<div class="pointer-events-none absolute inset-0 z-10 flex items-end justify-end p-4">
 			<button
 				class={twMerge(
-					'bg-surface2 pointer-events-auto sticky bottom-4 right-0 box-border flex aspect-square h-8 items-center justify-center rounded-lg transition-colors duration-200',
+					'bg-surface2 pointer-events-auto sticky right-0 bottom-4 box-border flex aspect-square h-8 items-center justify-center rounded-lg transition-colors duration-200',
 					isFollowModeActive &&
 						'bg-blue/0 text-blue/70 hover:bg-blue/10 active:bg-blue/20 border border-current'
 				)}
