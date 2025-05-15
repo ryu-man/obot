@@ -230,11 +230,6 @@
 </div>
 
 <style>
-	.model-providers-cards {
-		/* column-count: 2;
-		column-gap: var(--spacing-4) ;
-		row-gap: var(--spacing-4); */
-	}
 	.markdown-content :global(a) {
 		text-decoration: underline;
 		font-weight: 500;
