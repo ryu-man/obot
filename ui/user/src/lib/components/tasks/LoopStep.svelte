@@ -47,21 +47,21 @@
 
 <div
 	class={twMerge(
-		'iteration-step flex w-full flex-col gap-0',
-		(isReadOnly || isStepRunned || isStepRunning) && 'border-surface2 border-b last:border-none',
+		'iteration-step flex w-full flex-col gap-0 transition-opacity duration-100',
 		klass
 	)}
 	class:opacity-50={isStepRunning && !isLoopStepRunning}
 	class:outline-2={isStepRunning && isLoopStepRunning}
 	class:outline-blue={isStepRunning && isLoopStepRunning}
 >
-	<div class={'flex items-center gap-2 overflow-hidden px-4'}>
+	<div class={'flex items-center gap-2 overflow-hidden pl-4'}>
 		<textarea
 			use:autoHeight
 			bind:value
 			rows="1"
 			placeholder="Instructions..."
-			class="ghost-input border-surface2 h-auto grow resize-none"
+			class={'ghost-input border-surface2 h-auto grow resize-none'}
+			disabled={isReadOnly}
 			readonly={isReadOnly || isTaskRunning}
 			onkeydown={onKeydown}
 		></textarea>
@@ -72,9 +72,11 @@
 					<Trash2 class="size-4" />
 				</button>
 
-				<button class="icon-button self-start" onclick={onAdd} use:tooltip={'Add step to loop'}>
-					<Plus class="size-4" />
-				</button>
+				{#if value}
+					<button class="icon-button self-start" onclick={onAdd} use:tooltip={'Add step to loop'}>
+						<Plus class="size-4" />
+					</button>
+				{/if}
 			</div>
 		{/if}
 	</div>
