@@ -51,7 +51,7 @@
 			};
 		},
 		methods: {
-			swap: () => {
+			reorder: () => {
 				if (!sourceItem || !targetItem) {
 					sourceItemId = undefined;
 					targetItemId = undefined;
@@ -60,17 +60,24 @@
 
 				clearTimeout(synchTimeoutId);
 
-				// take a snapshot
+				// take a snapshot of items
 				let array = [...$state.snapshot(internalItems)] as DraggableItem<unknown>[];
 
-				if (!sourceItem) return;
+				const reorderedArray = [];
 
-				if (!targetItem) return;
+				for (let i = 0; i < array.length; i++) {
+					const item = array[i];
 
-				array.splice(sourceItemIndex, 1, targetItem);
-				array.splice(targetItemIndex, 1, sourceItem);
+					// skip the source item
+					if (i === sourceItemIndex) continue;
 
-				internalItems = [...array];
+					// add item to new array
+					reorderedArray.push(item);
+				}
+
+				reorderedArray.splice(targetItemIndex, 0, $state.snapshot(sourceItem));
+
+				internalItems = [...reorderedArray];
 
 				sourceItemId = undefined;
 				targetItemId = undefined;
