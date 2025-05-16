@@ -128,9 +128,7 @@
 					</ul>
 				</div>
 			{:else}
-				<div
-					class="text-gray flex items-center gap-2 rounded-lg py-4 text-xs"
-				>
+				<div class="text-gray flex items-center gap-2 rounded-lg py-4 text-xs">
 					<div>
 						<Info class="h-5" />
 					</div>

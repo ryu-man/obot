@@ -137,7 +137,7 @@
 <div class="relative mr-2 md:mr-6 lg:mr-8">
 	<button
 		class={twMerge(
-			'hover:bg-surface2/50 active:bg-surface2/80 flex h-10 items-center gap-3 rounded-full px-2  md:px-4 lg:px-6 py-1 text-xs text-gray-600',
+			'hover:bg-surface2/50 active:bg-surface2/80 flex h-10 items-center gap-3 rounded-full px-2  py-1 text-xs text-gray-600 md:px-4 lg:px-6',
 			isDefaultModelSelected && 'text-blue hover:bg-blue/10 active:bg-blue/15 bg-transparent'
 		)}
 		onclick={(e) => {
@@ -155,7 +155,7 @@
 				: 'Select model for this thread'}
 		bind:this={modelButtonRef}
 	>
-		<div class="truncate max-w-40 sm:max-w-60 md:max-w-96 lg:max-w-none">
+		<div class="max-w-40 truncate sm:max-w-60 md:max-w-96 lg:max-w-none">
 			{#if threadDetails?.modelProvider && threadDetails?.model}
 				{threadDetails.model}
 			{:else if defaultModel?.model && defaultModel.model !== ''}
@@ -173,7 +173,7 @@
 			role="listbox"
 			tabindex="-1"
 			aria-labelledby="thread-model-button"
-			class="available-models-popover default-scrollbar-thin border-surface1 dark:bg-surface2 absolute right-0 bottom-full z-10 w-max mb-1 max-h-60 max-w-sm md:max-w-md lg:max-w-lg overflow-hidden overflow-y-auto rounded-md border bg-white p-2 shadow-lg"
+			class="available-models-popover default-scrollbar-thin border-surface1 dark:bg-surface2 absolute right-0 bottom-full z-10 mb-1 max-h-60 w-max max-w-sm overflow-hidden overflow-y-auto rounded-md border bg-white p-2 shadow-lg md:max-w-md lg:max-w-lg"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => {
 				if (e.key === 'Escape') {
@@ -224,7 +224,6 @@
 		</div>
 	{/if}
 </div>
-
 
 <style>
 	.available-models-popover {

@@ -9,7 +9,6 @@
 	import { ChevronDown, Loader2 } from 'lucide-svelte';
 	import ModelProviderCard from './ModelProviderCard.svelte';
 	import { twMerge } from 'tailwind-merge';
-	import { slide } from 'svelte/transition';
 
 	let { project = $bindable() }: { project: Project } = $props();
 
@@ -133,7 +132,7 @@
 	});
 </script>
 
-<div class="flex w-full flex-col pb-10 pt-10">
+<div class="flex w-full flex-col pt-10 pb-10">
 	<div class="mb-4 flex items-center justify-between">
 		<div class="flex flex-col">
 			<h3 class="text-lg font-semibold">Model Providers</h3>
