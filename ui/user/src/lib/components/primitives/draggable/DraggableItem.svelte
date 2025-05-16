@@ -21,8 +21,6 @@
 		children = undefined
 	} = $props();
 
-	let isDragActive = $derived(!!draggableContext.state.sourceItemId);
-
 	let isPointerDown = $state(false);
 
 	let isPointerEntered = $state(false);
@@ -86,7 +84,7 @@
 
 	// Attach pointer up handler to the window object to assure it will be call when user release the pointer
 	$effect(() => {
-		const onPointerUp = async (ev: PointerEvent) => {
+		const onPointerUp = async () => {
 			isPointerDown = false;
 			isPointerEntered = false;
 			top = 0;

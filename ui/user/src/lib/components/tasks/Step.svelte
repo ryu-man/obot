@@ -364,7 +364,6 @@
 						{@const stepMessages = messages[i] ?? []}
 
 						<LoopStep
-							
 							bind:value={
 								() => step.loop![i],
 								(v) => {
@@ -451,7 +450,7 @@
 										{@const stepMessages = messages[j] ?? []}
 
 										<LoopStep
-											class="border-surface2 border-b last:border-none pr-4"
+											class="border-surface2 border-b pr-4 last:border-none"
 											value={step.loop![j]}
 											{project}
 											messages={stepMessages}
@@ -494,9 +493,3 @@
 	onsuccess={makeRegularStep}
 	oncancel={() => (isConvertToRegularDialogShown = false)}
 />
-
-<style>
-	li::marker {
-		display: flex;
-	}
-</style>

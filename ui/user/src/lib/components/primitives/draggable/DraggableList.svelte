@@ -1,11 +1,16 @@
-<script lang="ts" generics="T">
+<script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { setDraggableContext, type DraggableContext, type DraggableItem } from './contextRoot';
 	import { on } from 'svelte/events';
 	import { twMerge } from 'tailwind-merge';
 
 	type Props = {
+		class: string;
 		order: string[];
-		onChange: (items: T[]) => void;
+		as: string;
+		disabled?: boolean;
+		onChange?: (items: unknown[]) => void;
+		children?: Snippet<[]>;
 	};
 	let {
 		class: klass = '',
@@ -14,7 +19,7 @@
 		disabled = false,
 		onChange = undefined,
 		children = undefined
-	} = $props();
+	}: Props = $props();
 
 	let internalItems: DraggableItem<unknown>[] = $state([]);
 
@@ -32,6 +37,7 @@
 	let synchTimeoutId: number | undefined = undefined;
 
 	// sync number to trigger effect
+	// I don't want to call change fn when items are mounting
 	let sync: number | undefined = $state(undefined);
 
 	// Share context with children
