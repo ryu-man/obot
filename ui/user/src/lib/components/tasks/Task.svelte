@@ -56,7 +56,7 @@
 	let taskRun: Task | undefined = $state(undefined);
 
 	$effect(() => {
-		// Load task run data only in readonly mode; so we can get the correct steps & loop steps related to the current task
+		// Load task run data only in readonly mode; so that we can get the correct steps & loop steps related to the current task
 		if (readOnly && project && runID) {
 			getTaskRun(project.assistantID, project.id, task.id, runID).then((res) => {
 				taskRun = res.task;
