@@ -43,9 +43,7 @@
 		lastStepId
 	}: Props = $props();
 
-	const steps = $derived(taskRun?.steps ?? task?.steps ?? []);
-
-	let orderedSteps = $state(readOnly && taskRun ? taskRun?.steps : (task?.steps ?? [] ?? []));
+	let orderedSteps = $state(readOnly && taskRun ? taskRun?.steps : (task?.steps ?? []));
 
 	// Capture the steps element
 	let element: HTMLElement | undefined = $state();
@@ -281,13 +279,13 @@
 	</div>
 
 	<DraggableList
-		class="flex list-decimal flex-col gap-2 pl-4 pt-2 opacity-100"
+		class="flex list-decimal flex-col gap-2 pt-2 pl-4 opacity-100"
 		as="ol"
 		order={orderedSteps.map((d) => d.id)}
 		disabled={showAllOutput && (readOnly || isTaskRunning || pending || !!runID)}
 		onChange={(items) => {
 			// Update order
-			orderedSteps = items;
+			orderedSteps = items as TaskStep[];
 
 			// Sync new ordered steps with task steps
 			untrack(() => {
@@ -334,7 +332,7 @@
 		<div class="pointer-events-none absolute inset-0 z-10 flex items-end justify-end p-4">
 			<button
 				class={twMerge(
-					'bg-surface2 pointer-events-auto sticky bottom-4 right-0 box-border flex aspect-square h-8 items-center justify-center rounded-lg transition-colors duration-200',
+					'bg-surface2 pointer-events-auto sticky right-0 bottom-4 box-border flex aspect-square h-8 items-center justify-center rounded-lg transition-colors duration-200',
 					isFollowModeActive &&
 						'bg-blue/0 text-blue/70 hover:bg-blue/10 active:bg-blue/20 border border-current'
 				)}

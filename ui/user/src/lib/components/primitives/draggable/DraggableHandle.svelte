@@ -14,7 +14,7 @@
 
 <button
 	class={twMerge(
-		'draggable-handle flex h-10 cursor-move touch-none select-none items-center justify-center',
+		'draggable-handle flex h-10 cursor-move touch-none items-center justify-center select-none',
 		isDisabled && 'pointer-events-none opacity-50',
 		klass
 	)}
