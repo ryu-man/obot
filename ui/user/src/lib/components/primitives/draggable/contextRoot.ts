@@ -15,7 +15,7 @@ export type DraggableContext<T = unknown> = {
 		disabled?: boolean;
 	};
 	methods: {
-		swap: () => void;
+		reorder: () => void;
 		mount: (id: string, item: { id: string; data: T }) => () => void;
 		unmount: (id: string) => void;
 		setSourceItem: (id?: string) => void;

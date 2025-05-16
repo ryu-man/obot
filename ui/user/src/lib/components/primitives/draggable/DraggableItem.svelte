@@ -93,7 +93,7 @@
 
 			await tick();
 
-			draggableContext.methods.swap();
+			draggableContext.methods.reorder();
 		};
 		return on(window, 'pointerup', onPointerUp);
 	});
