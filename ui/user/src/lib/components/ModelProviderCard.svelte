@@ -1,7 +1,32 @@
+<script module>
+	function sortGptModels(models: string[]) {
+		console.log('gpt models....');
+		const query = 'gpt';
+
+		return [...models].sort((m1, m2) => {
+			const m1LowerCase = m1.toLowerCase();
+			const isM1StartWithQuery = m1LowerCase.startsWith(query);
+
+			// m1 does not starts with query move it out
+			if (!isM1StartWithQuery) return 1;
+
+			const m2LowerCase = m2.toLowerCase();
+			const isM2StartsWithQuery = m2LowerCase.startsWith(query);
+
+			// Both starts with query; local compare
+			if (isM1StartWithQuery && isM2StartsWithQuery) {
+				return m1LowerCase.localeCompare(m2LowerCase);
+			}
+
+			// move m1 in
+			return -1;
+		});
+	}
+</script>
+
 <script lang="ts">
 	import type { ModelProvider, Project } from '$lib/services';
 	import { CheckCircleIcon, Loader2, Search } from 'lucide-svelte';
-	import { toHTMLFromMarkdown } from '$lib/markdown';
 	import { darkMode } from '$lib/stores';
 	import {
 		updateProject,
@@ -14,6 +39,7 @@
 	import { fade, slide } from 'svelte/transition';
 	import { delay, throttle } from 'es-toolkit';
 	import { untrack } from 'svelte';
+	import Confirm from './Confirm.svelte';
 
 	type Props = {
 		provider: ModelProvider;
@@ -48,19 +74,43 @@
 	let isModelsLoading = $state(false);
 	let isSaving = $state(false);
 	let isProviderConfigurationShown = $state(false);
+	let isUnconfigureProviderDialogShown = $state(false);
 
 	let modelQuery: string = $state('');
 	let filteredModels: string[] = $state([]);
 
 	// Throttle search model for better performance
 	const searchModels = throttle((query: string, models: string[] = []) => {
-		filteredModels = models.filter((model) =>
-			model.trim().toLowerCase().includes(query.trim().toLowerCase())
-		);
+		// Filter out items and keep those include the query text
+		// Sort results where items that starts with the query text goes first
+		filteredModels = [
+			...models.filter((model) => model.trim().toLowerCase().includes(query.trim().toLowerCase()))
+		].sort((m1, m2) => {
+			const m1LowerCase = m1.toLowerCase();
+			const isM1StartWithQuery = m1LowerCase.startsWith(query);
+
+			// m1 does not starts with query move it out
+			if (!isM1StartWithQuery) return 1;
+
+			const m2LowerCase = m2.toLowerCase();
+			const isM2StartsWithQuery = m2LowerCase.startsWith(query);
+
+			// Both starts with query; local compare
+			if (isM1StartWithQuery && isM2StartsWithQuery) {
+				return m1LowerCase.localeCompare(m2LowerCase);
+			}
+
+			// move m1 in
+			return -1;
+		});
 	}, 100);
 
 	$effect(() => {
-		searchModels(modelQuery, models);
+		if (providerId.startsWith('openai-model-provider') && !modelQuery) {
+			filteredModels = sortGptModels(models);
+		} else {
+			searchModels(modelQuery, models);
+		}
 	});
 
 	// When a provider is selected for configuration, load its config
@@ -69,7 +119,9 @@
 			untrack(async () => {
 				try {
 					await loadProviderConfig(providerId);
+
 					await delay(1000);
+
 					models = await loadAvailableModels(providerId);
 				} catch (err) {
 					console.error(err);
@@ -313,7 +365,7 @@
 </script>
 
 <div
-	class="model-provider-card border-surface2 flex min-h-fit w-full flex-col rounded-md border py-4 shadow-sm 2xl:mb-4 2xl:min-h-[514px] 2xl:last:mb-0"
+	class="model-provider-card border-surface2 flex max-h-[514px] min-h-fit w-full flex-col rounded-md border py-4 shadow-sm 2xl:mb-4 2xl:min-h-[514px] 2xl:last:mb-0"
 	data-provider-id={provider.id}
 >
 	<div class="flex flex-col px-4">
@@ -342,24 +394,14 @@
 				<CheckCircleIcon class="text-blue ml-auto aspect-square h-5" />
 			{/if}
 		</div>
-
-		{#if provider.description}
-			<div class="markdown-content text-gray text-sm">
-				{@html toHTMLFromMarkdown(provider.description)}
-			</div>
-		{:else}
-			<div class="bg-surface1 text-gray flex h-14 w-full items-center rounded-lg px-4 py-3 text-sm">
-				<p>Description is not available</p>
-			</div>
-		{/if}
 	</div>
 
-	<div class="flex flex-1 flex-col gap-4 px-4 pt-4 pb-4">
+	<div class="flex flex-1 flex-col gap-4 px-4 pb-4 pt-4">
 		{#if isConfigured}
 			<!-- Models Selection Section -->
 			<div
 				class={twMerge(
-					'bg-surface1/0 flex flex-1 flex-col gap-2 rounded-md',
+					'bg-surface1/0 flex flex-1 flex-col rounded-md',
 					isProviderConfigurationShown && 'pointer-events-none opacity-50'
 				)}
 				transition:slide={{ duration: 100 }}
@@ -372,7 +414,7 @@
 					</div>
 					<input
 						bind:value={modelQuery}
-						class="h-full w-full bg-transparent px-3 pr-8 pl-9"
+						class="h-full w-full bg-transparent px-3 pl-9 pr-8"
 						type="text"
 						placeholder="Search your model here..."
 					/>
@@ -387,79 +429,79 @@
 					{/if}
 				</div>
 
-				<div class="flex justify-between">
-					<div class="flex items-center gap-2 px-3 text-sm font-medium">
-						<h5 class="flex items-center">
-							<input
-								class="bg-surface3 mr-2 h-4 w-4"
-								type="checkbox"
-								id={`model-${provider.id}-toggle-all`}
-								bind:checked={
-									() => models.length > 0 && models.length === selectedModels.length,
-									(v) => {
-										const indeterminate =
-											selectedModels.length > 0 && models.length > selectedModels.length;
+				<div class="flex items-center gap-2 px-3 py-2 text-sm font-medium">
+					<h5 class="flex items-center">
+						<input
+							class="bg-surface3 mr-2 h-4 w-4"
+							type="checkbox"
+							id={`model-${provider.id}-toggle-all`}
+							bind:checked={
+								() => models.length > 0 && models.length === selectedModels.length,
+								(v) => {
+									const indeterminate =
+										selectedModels.length > 0 && models.length > selectedModels.length;
 
-										if (indeterminate || v) {
-											selectModels(models);
-										} else {
-											unselectModels(selectedModels);
-										}
+									if (indeterminate || v) {
+										selectModels(models);
+									} else {
+										unselectModels(selectedModels);
 									}
 								}
-								indeterminate={selectedModels.length > 0 && models.length > selectedModels.length}
-							/>
-							<label class="inline" for={`model-${provider.id}-toggle-all`}>Available Models</label>
+							}
+							indeterminate={selectedModels.length > 0 && models.length > selectedModels.length}
+						/>
+						<label class="inline" for={`model-${provider.id}-toggle-all`}>Available Models</label>
 
-							{#if models.length}
-								<span class="opacity-50">({models.length})</span>
-							{/if}
-						</h5>
-
-						{#if selectedModels.length}
-							<div class="h-full border-l"></div>
-							<button class="inline font-normal">
-								<span class="">Selected</span>
-								<span class="opacity-50">({selectedModels.length})</span>
-							</button>
+						{#if models.length}
+							<span class="opacity-50">({models.length})</span>
 						{/if}
-					</div>
+					</h5>
+
+					{#if selectedModels.length}
+						<div class="h-full border-l"></div>
+						<button class="inline font-normal">
+							<span class="">Selected</span>
+							<span class="opacity-50">({selectedModels.length})</span>
+						</button>
+					{/if}
 				</div>
 
-				<div
-					class="default-scrollbar-thin scrollbar-track-rounded-full relative max-h-48 min-h-[192px] flex-1 overflow-y-auto pr-2"
-				>
-					{#each filteredModels as model (model)}
-						<div class="hover:bg-surface1 bored flex items-center rounded px-3 py-2">
-							<input
-								class="bg-surface3 mr-2 h-4 w-4"
-								type="checkbox"
-								id={`model-${provider.id}-${model}`}
-								bind:checked={
-									() => (selectedModels ?? []).includes(model),
-									(checked) => toggleModel(model, checked)
-								}
-							/>
+				<div class="relative flex flex-1 flex-col">
+					<div
+						class="default-scrollbar-thin scrollbar-track-rounded-full absolute inset-0 flex h-full max-h-full flex-col overflow-y-auto pr-2"
+					>
+						{#each filteredModels as model (model)}
+							<div class="hover:bg-surface1 bored flex items-center rounded px-3 py-2">
+								<input
+									class="bg-surface3 mr-2 h-4 w-4"
+									type="checkbox"
+									id={`model-${provider.id}-${model}`}
+									bind:checked={
+										() => (selectedModels ?? []).includes(model),
+										(checked) => toggleModel(model, checked)
+									}
+								/>
 
-							<label
-								for={`model-${provider.id}-${model}`}
-								class="flex-1 cursor-pointer truncate text-sm select-none"
+								<label
+									for={`model-${provider.id}-${model}`}
+									class="flex-1 cursor-pointer select-none truncate text-sm"
+								>
+									{model}
+								</label>
+							</div>
+						{:else}
+							<div
+								class="w-full h-full flex items-center justify-center text-gray-400 text-lg font-semibold bg-surface1 rounded-lg absolute inset-0 p-8"
+								transition:fade={{ duration: 100 }}
 							>
-								{model}
-							</label>
-						</div>
-					{:else}
-						<div
-							class="w-full h-full flex items-center justify-center text-gray-400 text-lg font-semibold bg-surface1 rounded-lg absolute inset-0 p-8"
-							transition:fade={{ duration: 100 }}
-						>
-							{#if isModelsLoading}
-								<p>Loading models...</p>
-							{:else}
-								<p>No model is available</p>
-							{/if}
-						</div>
-					{/each}
+								{#if isModelsLoading}
+									<p>Loading models...</p>
+								{:else}
+									<p>No model is available</p>
+								{/if}
+							</div>
+						{/each}
+					</div>
 				</div>
 			</div>
 		{:else}
@@ -467,8 +509,8 @@
 			<div class="bg-surface1 flex h-full flex-col items-center justify-center rounded-lg p-8">
 				<div class="mb-2 text-lg font-semibold text-gray-400">Provider is not yet configured</div>
 				<p class="text-center text-xs opacity-50">
-					Click on the "Configure" button below to set-up this provider, Then we will show the
-					available models
+					Click on the "Configure" button below to set up this provider. We’ll then validate your
+					configuration and display available models.
 				</p>
 			</div>
 		{/if}
@@ -485,7 +527,7 @@
 				<div class="flex flex-col gap-4">
 					{#each provider.requiredConfigurationParameters || [] as param}
 						<div class="flex w-full flex-col gap-1">
-							<label class="mb-1 block truncate text-sm font-medium" for={param.name}>
+							<label class="mb-1 block text-sm font-medium" for={param.name}>
 								{param.friendlyName || param.name}
 								{#if param.description}
 									<span class="text-muted text-xs">({param.description})</span>
@@ -571,9 +613,7 @@
 				<button
 					class="button bg-red-500/5 text-sm font-medium text-red-500 transition-colors duration-100 hover:bg-red-500/10 active:bg-red-500/15"
 					onclick={() => {
-						if (confirm(`Are you sure you want to deconfigure ${provider.name}?`)) {
-							handleDeconfigureModelProvider(provider);
-						}
+						isUnconfigureProviderDialogShown = true;
 					}}
 				>
 					Unconfigure
@@ -582,6 +622,16 @@
 		</div>
 	</div>
 </div>
+
+<Confirm
+	show={isUnconfigureProviderDialogShown}
+	msg={`Are you sure you want to unconfigure ${provider.name} models provider?`}
+	onsuccess={async () => {
+		await handleDeconfigureModelProvider(provider);
+		isUnconfigureProviderDialogShown = false;
+	}}
+	oncancel={() => (isUnconfigureProviderDialogShown = false)}
+/>
 
 <style>
 	.model-provider-card {

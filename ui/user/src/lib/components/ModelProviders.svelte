@@ -133,9 +133,15 @@
 	});
 </script>
 
-<div class="flex w-full flex-col pt-10 pb-10">
+<div class="flex w-full flex-col pb-10 pt-10">
 	<div class="mb-4 flex items-center justify-between">
-		<h3 class="text-lg font-semibold">Model Providers</h3>
+		<div class="flex flex-col">
+			<h3 class="text-lg font-semibold">Model Providers</h3>
+			<p class="text-gray text-xs">
+				Configure model providers and select models to make them available to all threads and tasks.
+				The default model will be used in place of Obot’s built-in model.
+			</p>
+		</div>
 
 		{#if isSaving}
 			<div class="text-muted flex items-center gap-1 text-sm">
@@ -207,13 +213,6 @@
 				>
 					<ChevronDown />
 				</div>
-			</div>
-			<div class="h-6">
-				{#if !hasOneModelSelected}
-					<p class="px-1 py-1 text-xs" transition:slide={{ duration: 200 }}>
-						Configure at least one provider and select models to set a default model.
-					</p>
-				{/if}
 			</div>
 		</div>
 

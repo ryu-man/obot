@@ -129,7 +129,7 @@
 				</div>
 			{:else}
 				<div
-					class="dark:bg-surface2 bg-surface3/50 text-gray flex items-center gap-2 rounded-lg p-4 text-xs"
+					class="text-gray flex items-center gap-2 rounded-lg py-4 text-xs"
 				>
 					<div>
 						<Info class="h-5" />
