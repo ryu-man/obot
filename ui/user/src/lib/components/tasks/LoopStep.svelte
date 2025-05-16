@@ -72,11 +72,9 @@
 					<Trash2 class="size-4" />
 				</button>
 
-				{#if value}
-					<button class="icon-button self-start" onclick={onAdd} use:tooltip={'Add step to loop'}>
-						<Plus class="size-4" />
-					</button>
-				{/if}
+				<button class="icon-button self-start" onclick={onAdd} use:tooltip={'Add step to loop'}>
+					<Plus class="size-4" />
+				</button>
 			</div>
 		{/if}
 	</div>
