@@ -19,7 +19,6 @@
 		klass
 	)}
 	type="button"
-	draggable="true"
 	onpointerdown={(ev) => {
 		if (isDisabled) return;
 
