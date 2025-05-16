@@ -49,6 +49,7 @@
 		}
 	};
 
+	// Share item context
 	setDraggableItemContext({
 		get state() {
 			return {
