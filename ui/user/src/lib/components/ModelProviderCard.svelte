@@ -401,7 +401,7 @@
 			<!-- Models Selection Section -->
 			<div
 				class={twMerge(
-					'bg-surface1/0 flex flex-1 flex-col rounded-md',
+					'bg-surface1/0 flex flex-1 flex-col gap-2 rounded-md',
 					isProviderConfigurationShown && 'pointer-events-none opacity-50'
 				)}
 				transition:slide={{ duration: 100 }}
@@ -429,78 +429,80 @@
 					{/if}
 				</div>
 
-				<div class="flex items-center gap-2 px-3 py-2 text-sm font-medium">
-					<h5 class="flex items-center">
-						<input
-							class="bg-surface3 mr-2 h-4 w-4"
-							type="checkbox"
-							id={`model-${provider.id}-toggle-all`}
-							bind:checked={
-								() => models.length > 0 && models.length === selectedModels.length,
-								(v) => {
-									const indeterminate =
-										selectedModels.length > 0 && models.length > selectedModels.length;
+				<div class="flex flex-1 flex-col gap-2 rounded-md border">
+					<div class="flex items-center gap-2 px-3 py-2 text-sm font-medium">
+						<h5 class="flex items-center">
+							<input
+								class="bg-surface3 mr-2 h-4 w-4"
+								type="checkbox"
+								id={`model-${provider.id}-toggle-all`}
+								bind:checked={
+									() => models.length > 0 && models.length === selectedModels.length,
+									(v) => {
+										const indeterminate =
+											selectedModels.length > 0 && models.length > selectedModels.length;
 
-									if (indeterminate || v) {
-										selectModels(models);
-									} else {
-										unselectModels(selectedModels);
+										if (indeterminate || v) {
+											selectModels(models);
+										} else {
+											unselectModels(selectedModels);
+										}
 									}
 								}
-							}
-							indeterminate={selectedModels.length > 0 && models.length > selectedModels.length}
-						/>
-						<label class="inline" for={`model-${provider.id}-toggle-all`}>Available Models</label>
+								indeterminate={selectedModels.length > 0 && models.length > selectedModels.length}
+							/>
+							<label class="inline" for={`model-${provider.id}-toggle-all`}>Available Models</label>
 
-						{#if models.length}
-							<span class="opacity-50">({models.length})</span>
+							{#if models.length}
+								<span class="opacity-50">({models.length})</span>
+							{/if}
+						</h5>
+
+						{#if selectedModels.length}
+							<div class="h-full border-l"></div>
+							<button class="inline font-normal">
+								<span class="">Selected</span>
+								<span class="opacity-50">({selectedModels.length})</span>
+							</button>
 						{/if}
-					</h5>
+					</div>
 
-					{#if selectedModels.length}
-						<div class="h-full border-l"></div>
-						<button class="inline font-normal">
-							<span class="">Selected</span>
-							<span class="opacity-50">({selectedModels.length})</span>
-						</button>
-					{/if}
-				</div>
+					<div class="relative flex flex-1 flex-col">
+						<div
+							class="default-scrollbar-thin scrollbar-track-rounded-full absolute inset-0 flex h-full max-h-full flex-col overflow-y-auto pr-2"
+						>
+							{#each filteredModels as model (model)}
+								<div class="hover:bg-surface1 bored flex items-center rounded px-3 py-2">
+									<input
+										class="bg-surface3 mr-2 h-4 w-4"
+										type="checkbox"
+										id={`model-${provider.id}-${model}`}
+										bind:checked={
+											() => (selectedModels ?? []).includes(model),
+											(checked) => toggleModel(model, checked)
+										}
+									/>
 
-				<div class="relative flex flex-1 flex-col">
-					<div
-						class="default-scrollbar-thin scrollbar-track-rounded-full absolute inset-0 flex h-full max-h-full flex-col overflow-y-auto pr-2"
-					>
-						{#each filteredModels as model (model)}
-							<div class="hover:bg-surface1 bored flex items-center rounded px-3 py-2">
-								<input
-									class="bg-surface3 mr-2 h-4 w-4"
-									type="checkbox"
-									id={`model-${provider.id}-${model}`}
-									bind:checked={
-										() => (selectedModels ?? []).includes(model),
-										(checked) => toggleModel(model, checked)
-									}
-								/>
-
-								<label
-									for={`model-${provider.id}-${model}`}
-									class="flex-1 cursor-pointer truncate text-sm select-none"
+									<label
+										for={`model-${provider.id}-${model}`}
+										class="flex-1 cursor-pointer truncate text-sm select-none"
+									>
+										{model}
+									</label>
+								</div>
+							{:else}
+								<div
+									class="w-full h-full flex items-center justify-center text-gray-400 text-lg font-semibold rounded-lg absolute inset-0 p-8"
+									transition:fade={{ duration: 100 }}
 								>
-									{model}
-								</label>
-							</div>
-						{:else}
-							<div
-								class="w-full h-full flex items-center justify-center text-gray-400 text-lg font-semibold bg-surface1 rounded-lg absolute inset-0 p-8"
-								transition:fade={{ duration: 100 }}
-							>
-								{#if isModelsLoading}
-									<p>Loading models...</p>
-								{:else}
-									<p>No model is available</p>
-								{/if}
-							</div>
-						{/each}
+									{#if isModelsLoading}
+										<p>Loading models...</p>
+									{:else}
+										<p>No model is available</p>
+									{/if}
+								</div>
+							{/each}
+						</div>
 					</div>
 				</div>
 			</div>
