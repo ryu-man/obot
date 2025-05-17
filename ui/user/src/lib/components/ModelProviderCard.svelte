@@ -404,7 +404,8 @@
 					'bg-surface1/0 flex flex-1 flex-col gap-2 rounded-md',
 					isProviderConfigurationShown && 'pointer-events-none opacity-50'
 				)}
-				transition:slide={{ duration: 100 }}
+				in:fade={{ duration: 200 }}
+				out:fade={{ duration: 0 }}
 			>
 				<div
 					class="model-provider-search-input bg-surface1 dark:bg-surface2 relative flex h-10 w-full items-center gap-2 rounded-md text-sm"
@@ -508,7 +509,11 @@
 			</div>
 		{:else}
 			<!-- TODO: this is an example placeholder, feel free to change if you have a better one -->
-			<div class="bg-surface1 flex h-full flex-col items-center justify-center rounded-lg p-8">
+			<div
+				class="bg-surface1 flex flex-1 flex-col items-center justify-center rounded-lg p-8"
+				in:fade={{ duration: 200 }}
+				out:fade={{ duration: 0 }}
+			>
 				<div class="mb-2 text-lg font-semibold text-gray-400">Provider is not yet configured</div>
 				<p class="text-center text-xs opacity-50">
 					Click on the "Configure" button below to set up this provider. We’ll then validate your
