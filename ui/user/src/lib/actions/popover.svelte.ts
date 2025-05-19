@@ -69,9 +69,14 @@ export default function popover(initialOptions?: PopoverOptions): Popover {
 		if (!ready) return;
 		if (!open || options?.hover) return;
 
-		const cleanup = clickOutside(tooltip, () => {
+		const cleanup = clickOutside(tooltip, (event) => {
+			// ignore user clicks on the ref element; handle it on ref onclick event handler
+			if (ref.contains(event.target as HTMLElement)) {
+				return;
+			}
+
 			open = false;
-			open = false;
+			options.onOpenChange?.(open);
 		});
 
 		return cleanup.destroy;
