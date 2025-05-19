@@ -2,6 +2,7 @@
 	import type { Schedule } from '$lib/services';
 	import Dropdown from '$lib/components/tasks/Dropdown.svelte';
 	import { GlobeIcon } from 'lucide-svelte';
+	import Combobox from './Combobox.svelte';
 
 	interface Props {
 		schedule?: Schedule;
@@ -13,10 +14,12 @@
 	let defaultTimezone = $state(Intl.DateTimeFormat().resolvedOptions().timeZone);
 </script>
 
-<h4 class="text-base font-medium">Schedule</h4>
-<div class="flex gap-4 md:min-w-sm">
+<div class="flex h-12 items-center self-start">
+	<h4 class="text-base font-medium">Schedule</h4>
+</div>
+<div class="flex flex-col gap-4 md:flex-row">
 	<Dropdown
-		class="schedule-dropdown"
+		class="schedule-dropdown max-w-[144px] md:max-w-[204px]"
 		values={{
 			hourly: 'hourly',
 			daily: 'daily',
@@ -33,8 +36,9 @@
 	/>
 
 	{#if schedule?.interval === 'hourly'}
-		<Dropdown
-			class="schedule-dropdown"
+		<Combobox
+			class="schedule-dropdown max-w-[144px] md:max-w-[204px]"
+			type="number"
 			values={{
 				'0': 'on the hour',
 				'15': '15 minutes past',
@@ -52,8 +56,9 @@
 	{/if}
 
 	{#if schedule?.interval === 'daily'}
-		<Dropdown
-			class="schedule-dropdown"
+		<Combobox
+			class="schedule-dropdown max-w-[144px] md:max-w-[204px]"
+			type="number"
 			values={{
 				'0': 'midnight',
 				'3': '3 AM',
@@ -82,7 +87,7 @@
 
 	{#if schedule?.interval === 'weekly'}
 		<Dropdown
-			class="schedule-dropdown"
+			class="schedule-dropdown max-w-[144px] md:max-w-[204px]"
 			values={{
 				'0': 'Sunday',
 				'1': 'Monday',
@@ -109,22 +114,33 @@
 	{/if}
 
 	{#if schedule?.interval === 'monthly'}
-		<Dropdown
-			class="schedule-dropdown"
+		<!-- The value of schedule.day is saved on the backend based on zero-based numbering, whereas the user is familliar with one-based numbering -->
+		<!-- The solution will be to convert back and forth -->
+		<Combobox
+			class="schedule-dropdown max-w-[144px] md:max-w-[204px]"
+			type="number"
 			values={{
-				'0': '1st',
-				'1': '2nd',
-				'2': '3rd',
-				'4': '5th',
-				'14': '15th',
-				'19': '20th',
-				'24': '25th',
+				'1': '1st',
+				'2': '2nd',
+				'3': '3rd',
+				'5': '5th',
+				'15': '15th',
+				'20': '20th',
+				'25': '25th',
 				'-1': 'last day'
 			}}
-			selected={schedule?.day.toString()}
+			selected={(schedule?.day >= 0 ? schedule?.day + 1 : schedule?.day).toString()}
 			onSelected={(value) => {
 				if (schedule) {
-					schedule.day = parseInt(value);
+					const valueAsNumber = parseInt(value);
+
+					if (valueAsNumber >= 0) {
+						// reset counting to 0-based
+						schedule.day = valueAsNumber - 1;
+					} else {
+						// negative set as is
+						schedule.day = valueAsNumber;
+					}
 				}
 			}}
 			disabled={readOnly}
