@@ -1,3 +1,4 @@
+import { clickOutside } from './clickoutside';
 import {
 	type ComputePositionConfig,
 	type Placement,
@@ -68,22 +69,12 @@ export default function popover(initialOptions?: PopoverOptions): Popover {
 		if (!ready) return;
 		if (!open || options?.hover) return;
 
-		document.querySelector('#click-catch')?.remove();
-		const div = document.createElement('div');
-		div.id = 'click-catch';
-		div.classList.add('fixed', 'inset-0', 'z-30', 'cursor-default');
-		div.onclick = () => {
+		const cleanup = clickOutside(tooltip, () => {
 			open = false;
-			div.remove();
-			options?.onOpenChange?.(open);
-		};
+			open = false;
+		});
 
-		if (options?.disablePortal) {
-			ref.insertAdjacentElement('afterend', div);
-		} else {
-			document.body.appendChild(div);
-		}
-		return () => div.remove();
+		return cleanup.destroy;
 	});
 
 	$effect(() => {
