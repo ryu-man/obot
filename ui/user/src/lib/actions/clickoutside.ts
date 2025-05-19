@@ -1,8 +1,8 @@
-export function clickOutside(element: HTMLElement, onClickOutside: () => void) {
+export function clickOutside(element: HTMLElement, onClickOutside: (event: Event) => void) {
 	function checkClickOutside(event: Event) {
-		if (!(event.target as HTMLElement)?.contains(element)) return;
+		if (element?.contains(event.target as HTMLElement)) return;
 
-		onClickOutside();
+		onClickOutside(event);
 	}
 
 	// <dialog> called with showModal()
