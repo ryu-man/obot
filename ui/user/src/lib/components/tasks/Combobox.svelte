@@ -64,6 +64,11 @@
 					onSelected?.(v);
 				}
 			}
+			onclick={(ev) => {
+				if (popoverController.open) {
+					ev.stopPropagation();
+				}
+			}}
 		/>
 		<ChevronDown />
 	</button>
