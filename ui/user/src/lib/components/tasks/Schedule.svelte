@@ -116,6 +116,9 @@
 	{#if schedule?.interval === 'monthly'}
 		<!-- The value of schedule.day is saved on the backend based on zero-based numbering, whereas the user is familliar with one-based numbering -->
 		<!-- The solution will be to convert back and forth -->
+
+		{@const day = schedule?.day ?? 0}
+
 		<Combobox
 			class="schedule-dropdown max-w-[144px] md:max-w-[204px]"
 			type="number"
@@ -129,7 +132,7 @@
 				'25': '25th',
 				'-1': 'last day'
 			}}
-			selected={(schedule?.day >= 0 ? schedule?.day + 1 : schedule?.day).toString()}
+			selected={(day >= 0 ? day + 1 : day).toString()}
 			onSelected={(value) => {
 				if (schedule) {
 					const valueAsNumber = parseInt(value);

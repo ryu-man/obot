@@ -47,7 +47,7 @@
 {:else}
 	<button
 		use:ref
-		onclick={(ev) => {
+		onclick={() => {
 			toggle();
 		}}
 		class={twMerge(
