@@ -19,7 +19,7 @@
 </div>
 <div class="flex flex-col gap-4 md:flex-row">
 	<Dropdown
-		class="schedule-dropdown max-w-[144px] md:max-w-[204px]"
+		class="schedule-dropdown w-[144px] md:w-[172px]"
 		values={{
 			hourly: 'hourly',
 			daily: 'daily',
@@ -37,7 +37,7 @@
 
 	{#if schedule?.interval === 'hourly'}
 		<Combobox
-			class="schedule-dropdown max-w-[144px] md:max-w-[204px]"
+			class="schedule-dropdown w-[144px] md:w-[172px]"
 			type="number"
 			values={{
 				'0': 'on the hour',
@@ -57,7 +57,7 @@
 
 	{#if schedule?.interval === 'daily'}
 		<Combobox
-			class="schedule-dropdown max-w-[144px] md:max-w-[204px]"
+			class="schedule-dropdown w-[144px] md:w-[172px]"
 			type="number"
 			values={{
 				'0': 'midnight',
@@ -87,7 +87,7 @@
 
 	{#if schedule?.interval === 'weekly'}
 		<Dropdown
-			class="schedule-dropdown max-w-[144px] md:max-w-[204px]"
+			class="schedule-dropdown w-[144px] md:w-[172px]"
 			values={{
 				'0': 'Sunday',
 				'1': 'Monday',
@@ -120,7 +120,7 @@
 		{@const day = schedule?.day ?? 0}
 
 		<Combobox
-			class="schedule-dropdown max-w-[144px] md:max-w-[204px]"
+			class="schedule-dropdown w-[144px] md:w-[196px]"
 			type="number"
 			values={{
 				'1': '1st',
