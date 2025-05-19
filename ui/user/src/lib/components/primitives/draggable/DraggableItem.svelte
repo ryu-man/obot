@@ -1,9 +1,19 @@
 <script lang="ts">
-	import { tick } from 'svelte';
+	import { tick, type Snippet } from 'svelte';
 	import { on } from 'svelte/events';
 	import { twMerge } from 'tailwind-merge';
 	import { getDraggableContext } from './contextRoot';
 	import { setDraggableItemContext } from './contextItem';
+
+	type Props = {
+		rootClass?: string;
+		class?: string;
+		as?: string;
+		index?: number;
+		id?: string;
+		data?: unknown;
+		children?: Snippet;
+	};
 
 	const draggableContext = getDraggableContext();
 
@@ -12,14 +22,14 @@
 	}
 
 	let {
-		rootClass = '',
-		class: klass = '',
-		as = 'div',
+		rootClass,
+		class: klass,
+		as,
 		index = 0,
 		id = (Date.now() * Math.random() + index).toString(16),
 		data,
-		children = undefined
-	} = $props();
+		children
+	}: Props = $props();
 
 	let isPointerDown = $state(false);
 

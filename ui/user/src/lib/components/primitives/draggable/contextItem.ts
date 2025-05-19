@@ -9,7 +9,7 @@ export type DraggableItem<T = unknown> = {
 
 export type DraggableItemContext<T = unknown> = {
 	readonly state: {
-		id: DraggableItem<T>[];
+		id: string;
 		data?: T;
 		onPointerDown?: (ev: PointerEvent) => void;
 		onPointerEnter?: (ev: PointerEvent) => void;

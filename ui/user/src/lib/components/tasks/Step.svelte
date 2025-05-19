@@ -52,9 +52,9 @@
 		readOnly,
 		lastStepId,
 		isTaskRunning = false,
-		onChange = undefined,
-		onAdd = undefined,
-		onDelete = undefined
+		onChange,
+		onAdd,
+		onDelete
 	}: Props = $props();
 
 	// let isRunning = $derived(stepMessages?.get(step.id)?.inProgress ?? false);

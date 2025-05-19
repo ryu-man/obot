@@ -12,14 +12,7 @@
 		onChange?: (items: unknown[]) => void;
 		children?: Snippet<[]>;
 	};
-	let {
-		class: klass = '',
-		as = 'div',
-		order = [],
-		disabled = false,
-		onChange = undefined,
-		children = undefined
-	}: Props = $props();
+	let { class: klass, as, order = [], disabled = false, onChange, children }: Props = $props();
 
 	let internalItems: DraggableItem<unknown>[] = $state([]);
 
@@ -186,6 +179,6 @@
 	});
 </script>
 
-<svelte:element this={as} class={twMerge('draggable-list flex flex-col', klass)}>
+<svelte:element this={as ?? 'div'} class={twMerge('draggable-list flex flex-col', klass)}>
 	{@render children?.()}
 </svelte:element>
