@@ -218,7 +218,7 @@
 				{/if}
 			{:else}
 				<p class="truncate text-sm text-gray-400">
-					You can add additional models under the Model Providers tab in the Configuration section.
+					See "Configuration" for more options
 				</p>
 			{/if}
 		</div>
