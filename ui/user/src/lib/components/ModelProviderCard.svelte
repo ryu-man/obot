@@ -431,7 +431,7 @@
 				</div>
 
 				<div class="border-surface1 flex flex-1 flex-col gap-2 rounded-md border">
-					<div class="flex items-center gap-2 px-3 py-2 text-sm font-medium">
+					<div class="flex items-center gap-2 px-4 py-2 text-sm font-medium">
 						<h5 class="flex items-center">
 							<input
 								class="bg-surface3 mr-2 h-4 w-4"
@@ -470,10 +470,10 @@
 
 					<div class="relative flex flex-1 flex-col">
 						<div
-							class="default-scrollbar-thin scrollbar-track-rounded-full absolute inset-0 flex h-full max-h-full flex-col overflow-y-auto pr-2"
+							class="default-scrollbar-thin scrollbar-track-rounded-full absolute inset-0 flex h-full max-h-full flex-col overflow-y-auto px-2"
 						>
 							{#each filteredModels as model (model)}
-								<div class="hover:bg-surface1 bored flex items-center rounded px-3 py-2">
+								<div class="hover:bg-surface1 bored flex items-center rounded px-2 py-2">
 									<input
 										class="bg-surface3 mr-2 h-4 w-4"
 										type="checkbox"
