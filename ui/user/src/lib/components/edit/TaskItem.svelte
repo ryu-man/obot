@@ -68,9 +68,9 @@
 <li class="flex min-h-9 flex-col">
 	<div
 		class={twMerge(
-			'hover:bg-surface3/90 active:bg-surface3/100 group mb-[2px] flex items-center rounded-md transition-colors duration-200',
+			'hover:bg-surface3/90 active:bg-surface3/100 group mb-[2px] flex items-center rounded-md font-light transition-colors duration-200',
 			layout.editTaskID === task.id && 'bg-surface3/60',
-			layout.displayTaskRun && layout.displayTaskRun.taskID === task.id && 'bg-surface3/30'
+			layout.displayTaskRun && layout.displayTaskRun.taskID === task.id && 'font-medium'
 		)}
 	>
 		<div class="flex grow items-center gap-1 truncate">
@@ -82,7 +82,7 @@
 			<button
 				use:overflowToolTip
 				class:font-medium={layout.editTaskID === task.id}
-				class={twMerge('grow py-2 pr-2 text-left text-xs font-light', classes?.title)}
+				class={twMerge('grow py-2 pr-2 text-left text-xs', classes?.title)}
 				onclick={async () => {
 					if (responsive.isMobile) {
 						layout.sidebarOpen = false;
