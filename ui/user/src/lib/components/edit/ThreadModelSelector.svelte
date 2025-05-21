@@ -255,27 +255,41 @@
 									{/if}
 									<div>{provider?.name ?? ''}</div>
 								</div>
-								<div class="provider-models flex flex-col">
+								<div class="provider-models flex flex-col gap-1">
 									{#each models as model (model)}
 										{@const isModelSelected =
 											threadDetails?.modelProvider === providerId && threadDetails?.model === model}
+
+										{@const isDefaultModel =
+											defaultModel?.modelProvider === providerId && defaultModel?.model === model}
 
 										<button
 											role="option"
 											aria-selected={isModelSelected}
 											class={twMerge(
-												'hover:bg-surface1 focus:bg-surface1 w-full rounded px-2 py-1.5 text-left text-sm focus:outline-none',
-												defaultModel?.model === model &&
-													'text-blue hover:bg-blue/10 active:bg-blue/15'
+												'hover:bg-surface1/70 active:bg-surface1/80 focus:bg-surface1/70 flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-sm transition-colors duration-200 focus:outline-none',
+												isModelSelected && 'text-blue bg-blue/10 hover:bg-blue/15 active:bg-blue/20'
 											)}
 											onclick={() => setThreadModel(model, providerId)}
 											tabindex="0"
 											data-provider={providerId}
 											data-model={model}
 										>
-											{model}
+											<div>
+												{model}
+											</div>
+
+											{#if isDefaultModel}
+												<img
+													class={twMerge(' size-4', !isModelSelected && 'grayscale-100')}
+													src="/user/images/obot-icon-blue.svg"
+													alt="Obot default model"
+													title="Obot default model"
+												/>
+											{/if}
+
 											{#if threadDetails?.modelProvider === providerId && threadDetails?.model === model}
-												<span class="ml-1 text-xs text-green-500">✓</span>
+												<div class="ml-auto text-xs text-blue-500">✓</div>
 											{/if}
 										</button>
 									{/each}
