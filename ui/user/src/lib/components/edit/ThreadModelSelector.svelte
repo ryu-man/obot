@@ -176,7 +176,7 @@
 				`[data-provider="${params.providerId}"][data-model="${params.modelId}"]`
 			);
 			if (modelElement) {
-				modelElement.scrollIntoView({ behavior: 'instant' });
+				modelElement.scrollIntoView({ behavior: 'instant', block: 'center' });
 			}
 		});
 	}
