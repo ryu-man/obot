@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { clickOutside } from '$lib/actions/clickoutside';
 	import { CircleAlert, X } from 'lucide-svelte/icons';
 	import { twMerge } from 'tailwind-merge';
 
@@ -12,7 +13,6 @@
 	let { show = false, msg = 'OK?', onsuccess, oncancel }: Props = $props();
 
 	let dialog: HTMLDialogElement | undefined = $state();
-	let dialogInnerElement: HTMLElement | undefined = $state();
 
 	$effect(() => {
 		if (show) {
@@ -26,20 +26,13 @@
 
 <dialog
 	bind:this={dialog}
-	onclick={(ev) => {
-		const target = ev.target as HTMLElement;
-		// Check if user click inside the dialog content
-		if (dialogInnerElement?.contains(target)) return;
-
-		// User clicks on the backdrop
-		oncancel();
-	}}
+	use:clickOutside={() => oncancel()}
 	class={twMerge(
 		'pointer-events-none max-h-full w-full max-w-md bg-gray-50 dark:bg-gray-950',
 		show && 'pointer-events-auto'
 	)}
 >
-	<div bind:this={dialogInnerElement} class="relative">
+	<div class="relative">
 		<button
 			type="button"
 			onclick={oncancel}
