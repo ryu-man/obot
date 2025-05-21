@@ -48,7 +48,7 @@
 			selected={schedule?.minute.toString()}
 			onSelected={(value) => {
 				if (schedule) {
-					schedule.minute = parseInt(value);
+					schedule.minute = Math.min(60, Math.max(0, parseInt(value)));
 				}
 			}}
 			disabled={readOnly}
@@ -72,7 +72,7 @@
 			selected={schedule?.hour.toString()}
 			onSelected={(value) => {
 				if (schedule) {
-					schedule.hour = parseInt(value);
+					schedule.hour = Math.min(23, Math.max(0, parseInt(value)));
 				}
 			}}
 			disabled={readOnly}
@@ -139,7 +139,7 @@
 
 					if (valueAsNumber >= 0) {
 						// reset counting to 0-based
-						schedule.day = valueAsNumber - 1;
+						schedule.day = Math.min(31, Math.max(0, valueAsNumber - 1));
 					} else {
 						// negative set as is
 						schedule.day = valueAsNumber;
