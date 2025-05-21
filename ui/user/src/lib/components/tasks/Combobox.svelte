@@ -51,12 +51,12 @@
 			toggle();
 		}}
 		class={twMerge(
-			'hover:bg-gray-70 flex items-center justify-between gap-2 rounded-3xl px-4 capitalize dark:hover:bg-gray-900',
+			'hover:bg-gray-70 flex items-center justify-between gap-2 rounded-3xl px-4 capitalize focus-within:outline dark:hover:bg-gray-900',
 			kclass
 		)}
 	>
 		<input
-			class="w-full min-w-0 flex-1 bg-transparent py-3"
+			class="w-full min-w-0 flex-1 bg-transparent py-3 outline-none"
 			{type}
 			bind:value={
 				() => selected ?? '',
