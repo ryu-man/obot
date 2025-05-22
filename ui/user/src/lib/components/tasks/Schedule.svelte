@@ -4,6 +4,7 @@
 	import type { Schedule } from '$lib/services';
 	import Dropdown from '$lib/components/tasks/Dropdown.svelte';
 	import Combobox from './Combobox.svelte';
+	import AmPmSwith from './AmPmSwith.svelte';
 
 	interface Props {
 		schedule?: Schedule;
@@ -35,14 +36,52 @@
 	};
 
 	let dailyComboboxFocused = $state(false);
+	let dailyComboboxAmPm: 'am' | 'pm' = $state('am');
+	let dailyComboboxFocusTimeout: number | undefined = undefined;
+
+	function to12H(value: number) {
+		if (value === 0 || value > 23) {
+			return 0;
+		}
+
+		if (value === 12) {
+			return 12;
+		}
+
+		// value in 24H format
+		if (value > 12) {
+			return Math.min(11, Math.max(0, Math.trunc(value - 12)));
+		}
+
+		// value in 12H AM, just make sure it is within the boudaries
+		return Math.min(11, Math.max(0, value));
+	}
+
+	function from12H(value: number, ampm: 'am' | 'pm' = 'am') {
+		let v = value;
+		let factor = 0;
+
+		// if value is greateer than 11; subtract 12 hours to make it 12H format
+		if (value > 11) {
+			v -= 12;
+		}
+
+		// if pm is selected then add 12 hours to make it 24H format
+		if (ampm === 'pm') {
+			factor = 12;
+		}
+
+		// sum and check for boundaries
+		return Math.trunc(Math.min(23, Math.max(0, v + factor)));
+	}
 </script>
 
 <div class="flex h-12 items-center self-start">
 	<h4 class="text-base font-medium">Schedule</h4>
 </div>
-<div class="flex flex-col gap-4 md:flex-row">
+<div class="md:min-w-auto flex min-w-[220px] flex-col gap-4 lg:flex-row">
 	<Dropdown
-		class="schedule-dropdown w-[144px] md:w-[172px]"
+		class="schedule-dropdown w-full md:w-[172px]"
 		values={{
 			hourly: 'hourly',
 			daily: 'daily',
@@ -60,10 +99,10 @@
 
 	{#if schedule?.interval === 'hourly'}
 		<Combobox
-			class="schedule-dropdown w-[144px] overflow-hidden md:w-[172px]"
+			class="schedule-dropdown w-full overflow-hidden md:w-[220px]"
 			type="number"
 			values={hourlyValues}
-			selected={schedule?.minute.toString()}
+			value={schedule?.minute.toString()}
 			disabled={readOnly}
 			onselect={(value) => {
 				if (schedule) {
@@ -93,14 +132,19 @@
 
 	{#if schedule?.interval === 'daily'}
 		<Combobox
-			class="schedule-dropdown w-[144px] overflow-hidden md:w-[172px]"
+			class="schedule-dropdown w-full overflow-hidden md:w-[220px]"
 			type="number"
 			values={dailyValues}
-			selected={schedule?.hour.toString()}
+			value={to12H(schedule?.hour ?? 0).toString()}
+			selected={(schedule?.hour ?? 0).toString()}
 			disabled={readOnly}
 			onselect={(value) => {
 				if (schedule) {
-					schedule.hour = Math.min(23, Math.max(0, parseInt(value)));
+					const valueAsInt = parseInt(value);
+					dailyComboboxAmPm = valueAsInt > 11 ? 'pm' : 'am';
+
+					const hour = from12H(valueAsInt, dailyComboboxAmPm);
+					schedule.hour = hour;
 				}
 			}}
 			onblur={() => {
@@ -112,11 +156,42 @@
 			onfocus={() => {
 				dailyComboboxFocused = true;
 			}}
+			onclickout={(ev) => {
+				const target = ev.target as HTMLElement;
+
+				const comboboxRootElement = target.closest('.combobox');
+
+				// click target is inside combobox element
+				if (comboboxRootElement) {
+					return;
+				}
+
+				// click target is outside combobox element
+				dailyComboboxFocused = false;
+			}}
 		>
+			{#snippet post()}
+				<div class="border-surface3 border-x pr-0" role="button" tabindex="0" onkeydown={() => {}}>
+					<AmPmSwith
+						bind:value={dailyComboboxAmPm}
+						onchange={(value) => {
+							const hour = from12H(schedule.hour, value);
+							schedule.hour = hour;
+						}}
+						onclick={(ev) => {
+							if (!dailyComboboxFocused) {
+								dailyComboboxFocused = true;
+							}
+							ev.stopPropagation();
+						}}
+					/>
+				</div>
+			{/snippet}
+
 			{#if !dailyComboboxFocused && (schedule?.hour === 0 || schedule?.hour === 12)}
 				{@const key = schedule?.hour?.toString() ?? ''}
 				<div
-					class="pointer-events-none absolute inset-0 flex items-center pl-4 backdrop-blur-2xl"
+					class="pointer-events-none absolute inset-0 flex items-center pl-4 backdrop-blur-[80px]"
 					transition:fade={{ duration: 100 }}
 				>
 					<div>{dailyValues[key]}</div>
@@ -133,7 +208,7 @@
 
 	{#if schedule?.interval === 'weekly'}
 		<Dropdown
-			class="schedule-dropdown w-[144px] md:w-[172px]"
+			class="schedule-dropdown w-full md:w-[220px]"
 			values={{
 				'0': 'Sunday',
 				'1': 'Monday',
@@ -166,7 +241,7 @@
 		{@const day = schedule?.day ?? 0}
 
 		<Combobox
-			class="schedule-dropdown w-[144px] md:w-[196px]"
+			class="schedule-dropdown w-full md:w-[220px]"
 			type="number"
 			values={{
 				'1': '1st',
@@ -178,7 +253,7 @@
 				'25': '25th',
 				'-1': 'last day'
 			}}
-			selected={(day >= 0 ? day + 1 : day).toString()}
+			value={(day >= 0 ? day + 1 : day).toString()}
 			onselect={(value) => {
 				if (schedule) {
 					const valueAsNumber = parseInt(value);
