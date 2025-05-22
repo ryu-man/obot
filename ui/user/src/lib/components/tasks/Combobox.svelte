@@ -2,12 +2,7 @@
 	import { ChevronDown } from 'lucide-svelte/icons';
 	import { popover } from '$lib/actions';
 	import { twMerge } from 'tailwind-merge';
-	import type {
-		FocusEventHandler,
-		HTMLInputTypeAttribute,
-		KeyboardEventHandler,
-		MouseEventHandler
-	} from 'svelte/elements';
+	import type { HTMLInputTypeAttribute } from 'svelte/elements';
 	import type { Snippet } from 'svelte';
 	import { clickOutside } from '$lib/actions/clickoutside';
 
@@ -22,9 +17,9 @@
 		pre?: Snippet<[]>;
 		post?: Snippet<[]>;
 		onselect?: (value: string) => void | Promise<void>;
-		onfocus?: FocusEventHandler<HTMLInputElement> | null;
-		onblur?: FocusEventHandler<HTMLInputElement> | null;
-		onkeydown?: KeyboardEventHandler<HTMLInputElement> | null;
+		onfocus?: (ev?: FocusEvent) => void;
+		onblur?: (ev?: FocusEvent) => void;
+		onkeydown?: (ev?: KeyboardEvent) => void;
 		onclickout?: (event: MouseEvent) => void | null;
 	}
 
@@ -57,7 +52,7 @@
 		if (document.activeElement === inputElement) return;
 
 		if (popoverController.open) {
-			onfocus?.();
+			onfocus?.(undefined);
 		} else {
 			onblur?.();
 		}
@@ -83,7 +78,7 @@
 {:else}
 	<button
 		use:ref
-		use:clickOutside={(ev) => onclickout?.(ev)}
+		use:clickOutside={(ev) => onclickout?.(ev as MouseEvent)}
 		onclick={() => {
 			toggle();
 		}}

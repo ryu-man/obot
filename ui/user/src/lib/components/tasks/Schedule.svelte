@@ -37,7 +37,6 @@
 
 	let dailyComboboxFocused = $state(false);
 	let dailyComboboxAmPm: 'am' | 'pm' = $state('am');
-	let dailyComboboxFocusTimeout: number | undefined = undefined;
 
 	function to12H(value: number) {
 		if (value === 0 || value > 23) {
@@ -79,7 +78,7 @@
 <div class="flex h-12 items-center self-start">
 	<h4 class="text-base font-medium">Schedule</h4>
 </div>
-<div class="md:min-w-auto flex min-w-[220px] flex-col gap-4 lg:flex-row">
+<div class="flex min-w-[220px] flex-col gap-4 md:min-w-auto lg:flex-row">
 	<Dropdown
 		class="schedule-dropdown w-full md:w-[172px]"
 		values={{

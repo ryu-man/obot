@@ -5,6 +5,7 @@
 		class?: string;
 		value: 'am' | 'pm';
 		onchange?: (value: Props['value']) => void;
+		onclick?: (ev: MouseEvent) => void;
 	};
 
 	let { class: klass, value = $bindable(), onchange, ...restProps }: Props = $props();
@@ -12,7 +13,7 @@
 
 <div
 	class={twMerge(
-		'ampm-switch leading-1 bg-surface1/0 border-surface2 flex h-10 gap-1 rounded-full border p-1 text-xs',
+		'ampm-switch bg-surface1/0 border-surface2 flex h-10 gap-1 rounded-full border p-1 text-xs leading-1',
 		klass
 	)}
 	{...restProps}
