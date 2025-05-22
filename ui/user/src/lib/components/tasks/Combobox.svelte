@@ -2,7 +2,8 @@
 	import { ChevronDown } from 'lucide-svelte/icons';
 	import { popover } from '$lib/actions';
 	import { twMerge } from 'tailwind-merge';
-	import type { HTMLInputTypeAttribute } from 'svelte/elements';
+	import type { FocusEventHandler, HTMLInputTypeAttribute } from 'svelte/elements';
+	import type { Snippet } from 'svelte';
 
 	interface Props {
 		class?: string;
@@ -10,7 +11,10 @@
 		selected?: string;
 		disabled?: boolean;
 		type?: HTMLInputTypeAttribute | null | undefined;
-		onSelected?: (value: string) => void | Promise<void>;
+		children?: Snippet<[]>;
+		onselect?: (value: string) => void | Promise<void>;
+		onfocus?: FocusEventHandler<HTMLInputElement> | null;
+		onblur?: FocusEventHandler<HTMLInputElement> | null;
 	}
 
 	const popoverController = popover({
@@ -23,13 +27,16 @@
 		values,
 		selected,
 		disabled = false,
-		onSelected,
 		class: kclass = '',
-		type = 'text'
+		type = 'text',
+		onselect,
+		onfocus,
+		onblur,
+		children
 	}: Props = $props();
 
 	async function select(value: string) {
-		await onSelected?.(value);
+		await onselect?.(value);
 		toggle();
 	}
 </script>
@@ -51,7 +58,7 @@
 			toggle();
 		}}
 		class={twMerge(
-			'hover:bg-gray-70 flex items-center justify-between gap-2 rounded-3xl px-4 capitalize focus-within:outline dark:hover:bg-gray-900',
+			'hover:bg-gray-70 relative flex items-center justify-between gap-2 rounded-3xl px-4 capitalize focus-within:outline dark:hover:bg-gray-900',
 			kclass
 		)}
 	>
@@ -61,7 +68,7 @@
 			bind:value={
 				() => selected ?? '',
 				(v) => {
-					onSelected?.(v);
+					onselect?.(v);
 				}
 			}
 			onclick={(ev) => {
@@ -69,8 +76,11 @@
 					ev.stopPropagation();
 				}
 			}}
+			{onfocus}
+			{onblur}
 		/>
-		<ChevronDown />
+		{@render children?.()}
+		<ChevronDown class="z-10" />
 	</button>
 	<div use:tooltip class="min-w-[150px] rounded-3xl bg-white shadow dark:bg-gray-900">
 		<ul>

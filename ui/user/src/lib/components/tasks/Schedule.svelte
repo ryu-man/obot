@@ -1,7 +1,8 @@
 <script lang="ts">
+	import { fade } from 'svelte/transition';
+	import { GlobeIcon } from 'lucide-svelte';
 	import type { Schedule } from '$lib/services';
 	import Dropdown from '$lib/components/tasks/Dropdown.svelte';
-	import { GlobeIcon } from 'lucide-svelte';
 	import Combobox from './Combobox.svelte';
 
 	interface Props {
@@ -12,6 +13,28 @@
 	let { schedule = $bindable(), readOnly }: Props = $props();
 
 	let defaultTimezone = $state(Intl.DateTimeFormat().resolvedOptions().timeZone);
+
+	const hourlyValues: Record<string, string> = {
+		'0': 'on the hour',
+		'15': '15 minutes past',
+		'30': '30 minutes past',
+		'45': '45 minutes past'
+	};
+
+	let hourlyComboboxFocused = $state(false);
+
+	const dailyValues: Record<string, string> = {
+		'0': 'midnight',
+		'3': '3 AM',
+		'6': '6 AM',
+		'9': '9 AM',
+		'12': 'noon',
+		'15': '3 PM',
+		'18': '6 PM',
+		'21': '9 PM'
+	};
+
+	let dailyComboboxFocused = $state(false);
 </script>
 
 <div class="flex h-12 items-center self-start">
@@ -37,46 +60,69 @@
 
 	{#if schedule?.interval === 'hourly'}
 		<Combobox
-			class="schedule-dropdown w-[144px] md:w-[172px]"
+			class="schedule-dropdown w-[144px] overflow-hidden md:w-[172px]"
 			type="number"
-			values={{
-				'0': 'on the hour',
-				'15': '15 minutes past',
-				'30': '30 minutes past',
-				'45': '45 minutes past'
-			}}
+			values={hourlyValues}
 			selected={schedule?.minute.toString()}
-			onSelected={(value) => {
+			disabled={readOnly}
+			onselect={(value) => {
 				if (schedule) {
 					schedule.minute = Math.min(60, Math.max(0, parseInt(value)));
 				}
 			}}
-			disabled={readOnly}
-		/>
+			onblur={() => {
+				setTimeout(() => {
+					hourlyComboboxFocused = false;
+				}, 100);
+			}}
+			onfocus={() => {
+				hourlyComboboxFocused = true;
+			}}
+		>
+			{#if !hourlyComboboxFocused && schedule?.minute === 0}
+				{@const key = schedule?.minute?.toString() ?? ''}
+				<div
+					class="pointer-events-none absolute inset-0 flex items-center pl-4 backdrop-blur-2xl"
+					transition:fade={{ duration: 100 }}
+				>
+					<div>{hourlyValues[key]}</div>
+				</div>
+			{/if}
+		</Combobox>
 	{/if}
 
 	{#if schedule?.interval === 'daily'}
 		<Combobox
-			class="schedule-dropdown w-[144px] md:w-[172px]"
+			class="schedule-dropdown w-[144px] overflow-hidden md:w-[172px]"
 			type="number"
-			values={{
-				'0': 'midnight',
-				'3': '3 AM',
-				'6': '6 AM',
-				'9': '9 AM',
-				'12': 'noon',
-				'15': '3 PM',
-				'18': '6 PM',
-				'21': '9 PM'
-			}}
+			values={dailyValues}
 			selected={schedule?.hour.toString()}
-			onSelected={(value) => {
+			disabled={readOnly}
+			onselect={(value) => {
 				if (schedule) {
 					schedule.hour = Math.min(23, Math.max(0, parseInt(value)));
 				}
 			}}
-			disabled={readOnly}
-		/>
+			onblur={() => {
+				// Execute inside timeout to make sure schedule is updated
+				setTimeout(() => {
+					dailyComboboxFocused = false;
+				}, 100);
+			}}
+			onfocus={() => {
+				dailyComboboxFocused = true;
+			}}
+		>
+			{#if !dailyComboboxFocused && (schedule?.hour === 0 || schedule?.hour === 12)}
+				{@const key = schedule?.hour?.toString() ?? ''}
+				<div
+					class="pointer-events-none absolute inset-0 flex items-center pl-4 backdrop-blur-2xl"
+					transition:fade={{ duration: 100 }}
+				>
+					<div>{dailyValues[key]}</div>
+				</div>
+			{/if}
+		</Combobox>
 		{#if schedule?.timezone && schedule.timezone !== defaultTimezone}
 			<div class="flex items-center gap-1">
 				<GlobeIcon class="text-muted-foreground mr-1 h-4 w-4" />
@@ -133,7 +179,7 @@
 				'-1': 'last day'
 			}}
 			selected={(day >= 0 ? day + 1 : day).toString()}
-			onSelected={(value) => {
+			onselect={(value) => {
 				if (schedule) {
 					const valueAsNumber = parseInt(value);
 
