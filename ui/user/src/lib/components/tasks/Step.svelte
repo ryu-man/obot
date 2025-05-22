@@ -285,11 +285,11 @@
 						const value = (ev.target as HTMLInputElement).value;
 
 						// Get a snapshot of procied object
-							const s = $state.snapshot(step);
-							// Apply new changes
-							s.step = value;
-							// Send it upp to be saved
-							onChange?.(s);
+						const s = $state.snapshot(step);
+						// Apply new changes
+						s.step = value;
+						// Send it upp to be saved
+						onChange?.(s);
 					}}
 				></textarea>
 
