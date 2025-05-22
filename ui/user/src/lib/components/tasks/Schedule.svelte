@@ -147,12 +147,6 @@
 					schedule.hour = hour;
 				}
 			}}
-			onblur={() => {
-				// Execute inside timeout to make sure schedule is updated
-				setTimeout(() => {
-					dailyComboboxFocused = false;
-				}, 100);
-			}}
 			onfocus={() => {
 				dailyComboboxFocused = true;
 			}}
@@ -179,22 +173,30 @@
 							schedule.hour = hour;
 						}}
 						onclick={(ev) => {
+							ev.stopPropagation();
+
 							if (!dailyComboboxFocused) {
 								dailyComboboxFocused = true;
 							}
-							ev.stopPropagation();
 						}}
 					/>
 				</div>
 			{/snippet}
 
-			{#if !dailyComboboxFocused && (schedule?.hour === 0 || schedule?.hour === 12)}
+			{#if !dailyComboboxFocused}
 				{@const key = schedule?.hour?.toString() ?? ''}
 				<div
 					class="pointer-events-none absolute inset-0 flex items-center pl-4 backdrop-blur-[80px]"
-					transition:fade={{ duration: 100 }}
+					transition:fade={{ duration: 50 }}
 				>
-					<div>{dailyValues[key]}</div>
+					{#if schedule?.hour === 0 || schedule?.hour === 12}
+						<div>{dailyValues[key]}</div>
+					{:else}
+						<div>
+							<span>{schedule?.hour ?? 0}</span>
+							<span class="uppercase">{dailyComboboxAmPm}</span>
+						</div>
+					{/if}
 				</div>
 			{/if}
 		</Combobox>
