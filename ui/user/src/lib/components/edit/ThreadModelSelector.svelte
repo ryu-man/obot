@@ -232,8 +232,8 @@
 			}}
 			bind:this={modelSelectorRef}
 			use:scrollIntoSelectedModel={{
-				providerId: threadDetails?.modelProvider,
-				modelId: threadDetails?.model
+				providerId: threadDetails?.modelProvider ?? defaultModel?.modelProvider,
+				modelId: threadDetails?.model ?? defaultModel?.model
 			}}
 		>
 			{#if modelsEntries.length}
