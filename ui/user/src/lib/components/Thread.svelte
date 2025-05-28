@@ -320,8 +320,6 @@
 
 	function focusChat() {
 		const e = window.document.querySelector('#main-input textarea');
-		console.log(e);
-
 		if (e instanceof HTMLTextAreaElement) {
 			e.focus();
 		}

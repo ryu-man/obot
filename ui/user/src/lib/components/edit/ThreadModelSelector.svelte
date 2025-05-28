@@ -36,8 +36,6 @@
 	let isUpdatingModel = $state(false);
 	let modelSelectorRef = $state<HTMLDivElement>();
 	let modelButtonRef = $state<HTMLButtonElement>();
-	// let defaultModel = $state<{ model: string; modelProvider: string } | null>(null);
-
 	let modelsEntries = $derived(Object.entries(project.models || {}));
 
 	let threadDefaultModel = $state<string>();
@@ -80,8 +78,6 @@
 
 		try {
 			const res = await getDefaultModelForThread(project.assistantID, project.id, threadId);
-
-			console.log(res);
 
 			threadDefaultModel = res.model;
 			threadDefaultModelProvider = res.modelProvider;
@@ -257,7 +253,7 @@
 		<div class="max-w-40 truncate sm:max-w-60 md:max-w-96 lg:max-w-none">
 			{#if threadModelProvider && threadModel}
 				{threadModel}
-			{:else if defaultModel && defaultModel !== ''}
+			{:else if defaultModel}
 				{defaultModel}
 			{:else}
 				No Default Model
