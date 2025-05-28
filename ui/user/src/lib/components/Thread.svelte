@@ -284,9 +284,6 @@
 	let projectModel = $derived(project.defaultModel ?? projectDefaultModel);
 
 	$effect(() => {
-		if (!id) {
-		}
-
 		if (!project.defaultModelProvider || !project.defaultModel) {
 			getProjectDefaultModel(project.assistantID, project.id).then((res) => {
 				projectDefaultModelProvider = res.modelProvider;
@@ -306,23 +303,18 @@
 
 		// open created thread
 		if (id) {
-			handleNavigateToThread?.(id);
+			handleNavigateToThread?.();
 		}
 	}
 
-	function setCurrentThread(id: string) {
-		layout.items = [];
-		closeAll(layout);
-	}
-
 	// Select a thread by id
-	function handleNavigateToThread(threadId: string) {
+	function handleNavigateToThread() {
 		if (responsive.isMobile) {
 			layout.sidebarOpen = false;
 		}
 
+		layout.items = [];
 		closeAll(layout);
-		setCurrentThread(threadId);
 		focusChat();
 	}
 
