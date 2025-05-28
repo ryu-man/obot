@@ -552,8 +552,8 @@ export async function updateThread(
 	)) as Thread;
 }
 
-export async function createThread(assistantID: string, projectID: string): Promise<Thread> {
-	return (await doPost(`/assistants/${assistantID}/projects/${projectID}/threads`, {})) as Thread;
+export async function createThread(assistantID: string, projectID: string, body = {}): Promise<Thread> {
+	return (await doPost(`/assistants/${assistantID}/projects/${projectID}/threads`, body)) as Thread;
 }
 
 export async function getThread(
@@ -703,6 +703,9 @@ export async function createProject(
 export async function getProject(id: string, opts?: { fetch?: Fetcher }): Promise<Project> {
 	return (await doGet(`/projects/${id}`, opts)) as Project;
 }
+export async function getProjectDefaultModel(assistantId: string, projectId: string, opts?: { fetch?: Fetcher }): Promise<{ modelProvider: string, model: string }> {
+	return doGet(`/assistants/${assistantId}/projects/${projectId}/default-model`, opts) as Promise<{ modelProvider: string, model: string }>;
+}
 
 export async function deleteProject(assistantID: string, id: string) {
 	return doDelete(`/assistants/${assistantID}/projects/${id}`);
@@ -774,7 +777,7 @@ export function newMessageEventSource(
 	const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
 	return new EventSource(
 		baseURL +
-			`/assistants/${assistantID}/projects/${projectID}/threads/${opts?.threadID}/events${queryString}`
+		`/assistants/${assistantID}/projects/${projectID}/threads/${opts?.threadID}/events${queryString}`
 	);
 }
 
