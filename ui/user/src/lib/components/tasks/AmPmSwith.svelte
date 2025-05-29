@@ -9,34 +9,30 @@
 	};
 
 	let { class: klass, value = $bindable(), onchange, ...restProps }: Props = $props();
+
+	const items: { id: typeof value; text: string }[] = [
+		{ id: 'am', text: 'AM' },
+		{ id: 'pm', text: 'PM' }
+	];
 </script>
 
 <div
 	class={twMerge(
-		'ampm-switch bg-surface1/0 border-surface2 flex h-10 gap-1 rounded-full border p-1 text-xs leading-1',
+		'ampm-switch bg-surface1/0 border-surface2 leading-1 flex h-10 gap-1 rounded-full border p-1 text-xs',
 		klass
 	)}
 	{...restProps}
 >
-	<button
-		class={twMerge(
-			'switch-option bg-surface2 aspect-square h-full rounded-full p-1',
-			value === 'am' && 'bg-blue/10 text-blue'
-		)}
-		onclick={() => {
-			value = 'am';
-			onchange?.(value);
-		}}>AM</button
-	>
-
-	<button
-		class={twMerge(
-			'switch-option bg-surface2/50 aspect-square h-full rounded-full p-1',
-			value === 'pm' && 'bg-blue/10 text-blue'
-		)}
-		onclick={() => {
-			value = 'pm';
-			onchange?.(value);
-		}}>PM</button
-	>
+	{#each items as { id, text } (id)}
+		<button
+			class={twMerge(
+				'switch-option bg-surface2 aspect-square h-full rounded-md p-1',
+				value === id && 'bg-blue/10 text-blue'
+			)}
+			onclick={() => {
+				value = id;
+				onchange?.(value);
+			}}>{text}</button
+		>
+	{/each}
 </div>
