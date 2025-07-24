@@ -138,7 +138,7 @@
 		options: Record<string, unknown>
 	): Promise<string | number | null> {
 		if (key === 'userId') {
-			return AdminService.getUserById(options.userId as string).then((user) => {
+			return AdminService.getUser(options.userId as string).then((user) => {
 				return user.displayName ?? 'NA';
 			});
 		}
