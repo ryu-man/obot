@@ -32,7 +32,7 @@
 			},
 			{
 				label: 'MCP Server',
-				property: 'mcpServerDisplayName',
+				property: 'name',
 				values: {},
 				selected: filters?.mcpServerDisplayName ?? ''
 			},

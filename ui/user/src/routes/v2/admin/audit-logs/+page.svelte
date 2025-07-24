@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { fade } from 'svelte/transition';
+	import { page } from '$app/state';
 	import { browser } from '$app/environment';
 	import { afterNavigate, goto } from '$app/navigation';
 	import AuditDetails from '$lib/components/admin/audit-logs/AuditDetails.svelte';
@@ -8,7 +10,6 @@
 	import { type OrgUser, type AuditLogFilters, AdminService } from '$lib/services';
 	import { formatTimeRange, getTimeRangeShorthand } from '$lib/time';
 	import { Captions, X } from 'lucide-svelte';
-	import { fade } from 'svelte/transition';
 
 	const duration = PAGE_TRANSITION_DURATION;
 
@@ -51,7 +52,7 @@
 	} {
 		if (!browser) return {};
 
-		const url = new URL(window.location.href);
+		const url = page.url;
 
 		const mcpId = url.searchParams.get('mcpId');
 		const startTime = url.searchParams.get('startTime')
@@ -67,8 +68,8 @@
 		const callType = url.searchParams.get('callType');
 		const sessionId = url.searchParams.get('sessionId');
 
-		const mcpServerDisplayName = url.searchParams.get('mcpServerDisplayName')
-			? decodeURIComponent(url.searchParams.get('mcpServerDisplayName')!)
+		const mcpServerDisplayName = url.searchParams.get('name')
+			? decodeURIComponent(url.searchParams.get('name')!)
 			: null;
 		const mcpServerCatalogEntryName = url.searchParams.get('entryId')
 			? decodeURIComponent(url.searchParams.get('entryId')!)
@@ -105,7 +106,7 @@
 	}
 
 	function handleDateChange(value: DateRange) {
-		const url = new URL(window.location.href);
+		const url = page.url;
 
 		// make sure to preserve existing filters
 		Object.entries(currentFilters).forEach(([key, filterValue]) => {
@@ -166,15 +167,14 @@
 						<button
 							class="rounded-full p-1 transition-colors duration-200 hover:bg-blue-500/50"
 							onclick={() => {
-								const url = new URL(window.location.href);
+								const url = page.url;
 
-								let urlKey = key;
 								if (key === 'mcpServerDisplayName') {
-									urlKey = 'name';
-								} else if (key === 'mcpServerCatalogEntryName') {
-									urlKey = 'entryId';
+									url.searchParams.delete('name');
+								} else {
+									url.searchParams.delete(key);
 								}
-								url.searchParams.delete(urlKey);
+
 								goto(url.toString());
 							}}
 						>
