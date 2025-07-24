@@ -52,6 +52,7 @@
 		if (!browser) return {};
 
 		const url = new URL(window.location.href);
+
 		const mcpId = url.searchParams.get('mcpId');
 		const startTime = url.searchParams.get('startTime')
 			? decodeURIComponent(url.searchParams.get('startTime')!)
@@ -65,8 +66,9 @@
 			: null;
 		const callType = url.searchParams.get('callType');
 		const sessionId = url.searchParams.get('sessionId');
-		const mcpServerDisplayName = url.searchParams.get('name')
-			? decodeURIComponent(url.searchParams.get('name')!)
+
+		const mcpServerDisplayName = url.searchParams.get('mcpServerDisplayName')
+			? decodeURIComponent(url.searchParams.get('mcpServerDisplayName')!)
 			: null;
 		const mcpServerCatalogEntryName = url.searchParams.get('entryId')
 			? decodeURIComponent(url.searchParams.get('entryId')!)
