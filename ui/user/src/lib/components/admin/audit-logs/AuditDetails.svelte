@@ -600,7 +600,7 @@
 					class="icon-button disabled:opacity-50"
 					onclick={prevPage}
 					disabled={currentPage === 0}
-					use:tooltip={'Next Page'}
+					use:tooltip={'Previous Page'}
 				>
 					<ChevronsLeft class="size-5" />
 				</button>
@@ -608,7 +608,7 @@
 					class="icon-button disabled:opacity-50"
 					onclick={nextPage}
 					disabled={(currentPage + 1) * limit >= total}
-					use:tooltip={'Previous Page'}
+					use:tooltip={'Next Page'}
 				>
 					<ChevronsRight class="size-5" />
 				</button>
