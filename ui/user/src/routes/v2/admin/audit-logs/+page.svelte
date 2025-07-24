@@ -95,7 +95,7 @@
 		if (key === 'mcpId') return 'Server ID';
 		if (key === 'startTime') return 'Start Time';
 		if (key === 'endTime') return 'End Time';
-		if (key === 'userId') return 'User ID';
+		if (key === 'userId') return 'User Name';
 		if (key === 'client') return 'Client';
 		if (key === 'callType') return 'Call Type';
 		if (key === 'sessionId') return 'Session ID';
@@ -131,6 +131,20 @@
 
 		goto(url.toString());
 	}
+
+	function getFilterValue(
+		filters: typeof currentFilters,
+		key: string,
+		options: Record<string, unknown>
+	): Promise<string | number | null> {
+		if (key === 'userId') {
+			return AdminService.getUserById(options.userId as string).then((user) => {
+				return user.displayName ?? 'NA';
+			});
+		}
+
+		return Promise.resolve(filters[key as keyof typeof currentFilters] ?? null);
+	}
 </script>
 
 <Layout>
@@ -152,34 +166,39 @@
 	{#if hasFilters}
 		<div class="flex flex-wrap items-center gap-2">
 			{#each keys.filter((key) => key !== 'startTime' && key !== 'endTime' && key !== 'sortBy' && key !== 'sortOrder') as key (key)}
-				{@const value = currentFilters[key as keyof typeof currentFilters]}
-				{#if value}
-					<div
-						class="flex items-center gap-1 rounded-full border border-blue-500 bg-blue-500/33 px-4 py-2"
-					>
-						<p class="text-xs font-semibold">
-							{convertFilterDisplayLabel(key)}: <span class="font-light">{value}</span>
-						</p>
+				{@const valuePromise = getFilterValue(currentFilters, key, {
+					userId: currentFilters['userId']
+				})}
 
-						<button
-							class="rounded-full p-1 transition-colors duration-200 hover:bg-blue-500/50"
-							onclick={() => {
-								const url = new URL(window.location.href);
-
-								let urlKey = key;
-								if (key === 'mcpServerDisplayName') {
-									urlKey = 'name';
-								} else if (key === 'mcpServerCatalogEntryName') {
-									urlKey = 'entryId';
-								}
-								url.searchParams.delete(urlKey);
-								goto(url.toString());
-							}}
+				{#await valuePromise then value}
+					{#if value}
+						<div
+							class="flex items-center gap-1 rounded-full border border-blue-500 bg-blue-500/33 px-4 py-2"
 						>
-							<X class="size-3" />
-						</button>
-					</div>
-				{/if}
+							<p class="text-xs font-semibold">
+								{convertFilterDisplayLabel(key)}: <span class="font-light">{value}</span>
+							</p>
+
+							<button
+								class="rounded-full p-1 transition-colors duration-200 hover:bg-blue-500/50"
+								onclick={() => {
+									const url = new URL(window.location.href);
+
+									let urlKey = key;
+									if (key === 'mcpServerDisplayName') {
+										urlKey = 'name';
+									} else if (key === 'mcpServerCatalogEntryName') {
+										urlKey = 'entryId';
+									}
+									url.searchParams.delete(urlKey);
+									goto(url.toString());
+								}}
+							>
+								<X class="size-3" />
+							</button>
+						</div>
+					{/if}
+				{/await}
 			{/each}
 		</div>
 	{/if}

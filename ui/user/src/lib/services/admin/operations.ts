@@ -226,6 +226,7 @@ export async function getMCPCatalogServer(
 	)) as MCPCatalogServer;
 	return response;
 }
+
 export async function deconfigureMCPCatalogServer(
 	catalogID: string,
 	serverID: string,
@@ -237,6 +238,11 @@ export async function deconfigureMCPCatalogServer(
 export async function listUsers(opts?: { fetch?: Fetcher }): Promise<OrgUser[]> {
 	const response = (await doGet('/users', opts)) as ItemsResponse<OrgUser>;
 	return response.items ?? [];
+}
+
+export async function getUser(userId: string): Promise<OrgUser> {
+	const response = await doGet(`/users/${userId}`);
+	return response as OrgUser;
 }
 
 export async function updateUserRole(
