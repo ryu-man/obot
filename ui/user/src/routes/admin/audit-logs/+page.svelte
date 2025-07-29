@@ -17,9 +17,9 @@
 	import AuditLogDetails from '$lib/components/admin/audit-logs/AuditLogDetails.svelte';
 	import AuditFilters from '$lib/components/admin/audit-logs/AuditFilters.svelte';
 	import { tooltip } from '$lib/actions/tooltip.svelte';
-	import AuditLogsTable from './auditLogs.svelte';
-	import AuditLogsTimeline from './auditLogsTimeline.svelte';
-	import AuditLogCalendar from './auditLogCalendar.svelte';
+	import AuditLogsTable from './AuditLogs.svelte';
+	import AuditLogsTimeline from './AuditLogsTimeline.svelte';
+	import AuditLogCalendar from './AuditLogCalendar.svelte';
 
 	const duration = PAGE_TRANSITION_DURATION;
 
@@ -248,7 +248,7 @@
 				/>
 
 				<button
-					class="dark:bg-surface1 dark:hover:bg-surface2/70 dark:active:bg-surface2 dark:border-surface3 flex w-full items-center justify-center rounded-lg border border-transparent bg-white px-4 py-2 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto"
+					class="dark:bg-surface1 dark:hover:bg-surface2/70 dark:active:bg-surface2 dark:border-surface3 flex w-full items-center justify-center rounded-lg border border-transparent bg-white px-4 py-2 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none sm:w-auto"
 					onclick={() => {
 						showFilters = true;
 						selectedAuditLog = undefined;
@@ -312,7 +312,7 @@
 	bind:this={rightSidebar}
 	use:clickOutside={[handleRightSidebarClose, true]}
 	use:dialogAnimation={{ type: 'drawer' }}
-	class="dark:border-surface1 dark:bg-surface1 fixed! top-0! right-0! bottom-0! left-auto! outline-none! z-40 h-screen w-auto max-w-none rounded-none border-0 bg-white shadow-lg"
+	class="dark:border-surface1 dark:bg-surface1 fixed! top-0! right-0! bottom-0! left-auto! z-40 h-screen w-auto max-w-none rounded-none border-0 bg-white shadow-lg outline-none!"
 >
 	{#if selectedAuditLog}
 		<AuditLogDetails onClose={handleRightSidebarClose} auditLog={selectedAuditLog} />
@@ -341,7 +341,7 @@
 				{@const value = searchParamFilters[key as keyof typeof searchParamFilters]}
 				{#if value}
 					<div
-						class="bg-blue-500/33 flex items-center gap-1 rounded-lg border border-blue-500 px-4 py-2"
+						class="flex items-center gap-1 rounded-lg border border-blue-500 bg-blue-500/33 px-4 py-2"
 					>
 						<p class="text-xs font-semibold">
 							{convertFilterDisplayLabel(key)}: <span class="font-light">{value}</span>

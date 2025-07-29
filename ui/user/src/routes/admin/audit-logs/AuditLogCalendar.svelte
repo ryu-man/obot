@@ -67,7 +67,7 @@
 <div class="flex">
 	<div class="relative flex items-center">
 		<button
-			class="dark:border-surface3 dark:hover:bg-surface2/70 dark:active:bg-surface2 dark:bg-surface1 min-h-12.5 hover:bg-surface1/70 active:bg-surface1 flex flex-shrink-0 items-center gap-2 truncate rounded-l-lg border border-r-0 border-transparent bg-white px-2 text-sm shadow-sm transition-colors duration-200"
+			class="dark:border-surface3 dark:hover:bg-surface2/70 dark:active:bg-surface2 dark:bg-surface1 hover:bg-surface1/70 active:bg-surface1 flex min-h-12.5 flex-shrink-0 items-center gap-2 truncate rounded-l-lg border border-r-0 border-transparent bg-white px-2 text-sm shadow-sm transition-colors duration-200"
 			onpointerdown={() => {
 				if (quickAccessPopover?.open) {
 					quickAccessPopover?.close();
@@ -90,7 +90,9 @@
 
 		<dialog
 			use:clickOutside={[() => quickAccessPopover?.close(), true]}
-			class={twMerge('p-y absolute left-[unset] right-0 top-full z-50 m-0 mt-1 min-w-fit overflow-hidden')}
+			class={twMerge(
+				'p-y absolute top-full right-0 left-[unset] z-50 m-0 mt-1 min-w-fit overflow-hidden'
+			)}
 			{@attach (node) => node.close()}
 			{@attach (node) => (quickAccessPopover = node)}
 		>
@@ -109,7 +111,7 @@
 
 	<Calendar
 		compact
-		class="dark:border-surface3 hover:bg-surface1 dark:hover:bg-surface3 dark:bg-surface1 min-h-12.5 flex flex-shrink-0 items-center gap-2 truncate rounded-none rounded-r-lg border border-transparent bg-white px-4 text-sm shadow-sm"
+		class="dark:border-surface3 hover:bg-surface1 dark:hover:bg-surface3 dark:bg-surface1 flex min-h-12.5 flex-shrink-0 items-center gap-2 truncate rounded-none rounded-r-lg border border-transparent bg-white px-4 text-sm shadow-sm"
 		initialValue={{
 			start: new Date(start),
 			end: end ? new Date(end) : null

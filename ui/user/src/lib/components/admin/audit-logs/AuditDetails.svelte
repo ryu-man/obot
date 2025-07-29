@@ -294,9 +294,9 @@
 							}}
 							class={twMerge(
 								'border-surface3 border-r py-2 text-center transition-colors duration-200',
-								i === 0 && 'pl-8 pr-6',
+								i === 0 && 'pr-6 pl-8',
 								i > 0 && i < views.length - 1 && 'px-6',
-								i === views.length - 1 && 'pl-6 pr-8',
+								i === views.length - 1 && 'pr-8 pl-6',
 								view.id === graphView && 'dark:bg-surface3 bg-white',
 								view.id !== graphView && 'hover:bg-surface2 dark:hover:bg-surface2'
 							)}
@@ -576,7 +576,7 @@
 	{#if allowPagination}
 		{@const total = auditLogsResponse?.total ?? 0}
 		<div
-			class="bg-surface1 sticky bottom-0 left-0 right-0 mt-auto flex w-full items-center justify-end gap-2 p-4 dark:bg-black"
+			class="bg-surface1 sticky right-0 bottom-0 left-0 mt-auto flex w-full items-center justify-end gap-2 p-4 dark:bg-black"
 		>
 			<span class="text-sm font-light">Results per page</span>
 			<Select
@@ -635,7 +635,7 @@
 		bind:this={rightSidebar}
 		use:clickOutside={[handleRightSidebarClose, true]}
 		use:dialogAnimation={{ type: 'drawer' }}
-		class="dark:border-surface1 dark:bg-surface1 fixed! top-0! right-0! bottom-0! left-auto! outline-none! z-40 h-screen w-auto max-w-none rounded-none border-0 bg-white shadow-lg"
+		class="dark:border-surface1 dark:bg-surface1 fixed! top-0! right-0! bottom-0! left-auto! z-40 h-screen w-auto max-w-none rounded-none border-0 bg-white shadow-lg outline-none!"
 	>
 		{#if selectedAuditLog}
 			<AuditLogDetails onClose={handleRightSidebarClose} auditLog={selectedAuditLog} />

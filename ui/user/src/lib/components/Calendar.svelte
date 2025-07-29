@@ -251,7 +251,7 @@
 		use:clickOutside={[() => calendarPopover?.close(), true]}
 		bind:this={calendarPopover}
 		class={twMerge(
-			'default-dialog absolute left-12 top-full z-50 mt-1 min-w-[320px] -translate-x-full p-4',
+			'default-dialog absolute top-full left-12 z-50 mt-1 min-w-[320px] -translate-x-full p-4',
 			classes?.calendar
 		)}
 	>
