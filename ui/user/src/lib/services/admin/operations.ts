@@ -571,7 +571,7 @@ export async function listAuditLogFilterOptions(
 	const response = (await doGet(
 		`/mcp-audit-logs/filter-options/${filterId}`,
 		opts
-	)) as AuditLogUsageStats;
+	)) as {options: string[]};
 	return response;
 }
 

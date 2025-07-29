@@ -1,25 +1,18 @@
 <script lang="ts">
 	import { twMerge } from 'tailwind-merge';
 	import Select, { type SelectProps } from '$lib/components/Select.svelte';
-	import type { FilterSet } from './AuditFilters.svelte';
+	import type { FilterInput } from './AuditFilters.svelte';
 	import type { AuditLog } from '$lib/services';
-	import { listAuditLogFilterOptions } from '$lib/services/admin/operations';
 
 	interface Props {
-		filter: FilterSet;
+		filter: FilterInput;
 		onSelect?: SelectProps<AuditLog>['onSelect'];
 		onClear?: SelectProps<AuditLog>['onClear'];
 	}
 
 	let { filter, onSelect, onClear }: Props = $props();
 
-	let options = $state([]);
-
-	$effect(() => {
-		listAuditLogFilterOptions(filter.property).then((res) => {
-			console.log(res);
-		});
-	});
+	let options = $derived(filter.options ?? []);
 </script>
 
 <div class={twMerge('mb-2 flex flex-col gap-1', !options.length && 'opacity-50')}>

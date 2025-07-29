@@ -1,5 +1,5 @@
 <script module>
-	export type FilterKeys =
+	export type FilterKey =
 		| 'user_id'
 		| 'mcp_id'
 		| 'mcp_server_display_name'
@@ -10,14 +10,15 @@
 		| 'client_version'
 		| 'response_status'
 		| 'client_ip';
-	export type FilterSet = {
+
+	export type FilterInput = {
 		label: string;
 		property: string;
-		values: Record<string, FilterValue>;
-		selected: string;
+		selected: string | number;
+		options: { id: string; label: string }[];
 	};
 
-	export type FilterValue = {
+	export type FilterOption = {
 		label: string;
 		id: string;
 	};
@@ -25,136 +26,173 @@
 
 <script lang="ts">
 	import AuditFilter from './AuditFilter.svelte';
-	import { untrack } from 'svelte';
 	import { X } from 'lucide-svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import type { AuditLog, AuditLogFilters, OrgUser } from '$lib/services/admin/types';
+	import type { AuditLogFilters, OrgUser } from '$lib/services/admin/types';
+	import { AdminService } from '$lib/services';
+	import { untrack } from 'svelte';
 
 	interface Props {
-		auditLogs: (AuditLog & { user: string })[];
+		filters: AuditLogFilters;
 		onClose: () => void;
-		filters?: AuditLogFilters;
 		fetchUserById: (userId: string) => Promise<OrgUser | undefined>;
 	}
 
-	let { auditLogs, onClose, filters, fetchUserById }: Props = $props();
+	let { onClose, filters, fetchUserById }: Props = $props();
 
-	let filterInputs = $state<Record<FilterKeys, FilterSet>>({});
+	type FilterOptions = Record<FilterKey, FilterOption[]>;
+	let filtersOptions: FilterOptions = $state({} as FilterOptions);
+
+	type FilterInputs = Record<FilterKey, FilterInput>;
+	let filterInputs = {
+		user_id: {
+			label: 'User',
+			property: 'user_id',
+			get selected() {
+				return filters?.['user_id'] ?? '';
+			},
+			set selected(v) {
+				filters['user_id'] = v;
+			},
+			get options() {
+				return filtersOptions['user_id'];
+			}
+		},
+		mcp_server_display_name: {
+			label: 'MCP Server',
+			property: 'mcp_server_display_name',
+			get selected() {
+				return filters?.['mcp_server_display_name'] ?? '';
+			},
+			set selected(v) {
+				filters['mcp_server_display_name'] = v;
+			},
+			get options() {
+				return filtersOptions['mcp_server_display_name'];
+			}
+		},
+		mcp_server_catalog_entry_name: {
+			label: 'MCP Server Catalog Entry Name',
+			property: 'mcp_server_catalog_entry_name',
+			get selected() {
+				return filters?.['mcp_server_catalog_entry_name'] ?? '';
+			},
+			set selected(v) {
+				filters['mcp_server_catalog_entry_name'] = v;
+			},
+			get options() {
+				return filtersOptions['mcp_server_catalog_entry_name'];
+			}
+		},
+		call_type: {
+			label: 'Call Type',
+			property: 'call_type',
+			get selected() {
+				return filters?.['call_type'] ?? '';
+			},
+			set selected(v) {
+				filters['call_type'] = v;
+			},
+			get options() {
+				return filtersOptions['call_type'];
+			}
+		},
+		client_name: {
+			label: 'Client Name',
+			property: 'client_name',
+			get selected() {
+				return filters?.['client_name'] ?? '';
+			},
+			set selected(v) {
+				filters['client_name'] = v;
+			},
+			get options() {
+				return filtersOptions['client_name'];
+			}
+		},
+		client_version: {
+			label: 'Client Version',
+			property: 'client_version',
+			get selected() {
+				return filters?.['client_version'] ?? '';
+			},
+			set selected(v) {
+				filters['client_version'] = v;
+			},
+			get options() {
+				return filtersOptions['client_version'];
+			}
+		},
+		response_status: {
+			label: 'Response Status',
+			property: 'response_status',
+			get selected() {
+				return filters?.['response_status'] ?? '';
+			},
+			set selected(v) {
+				filters['response_status'] = v;
+			},
+			get options() {
+				return filtersOptions['response_status'];
+			}
+		},
+		session_id: {
+			label: 'Session ID',
+			property: 'session_id',
+			get selected() {
+				return filters?.['session_id'] ?? '';
+			},
+			set selected(v) {
+				filters['session_id'] = v;
+			},
+			get options() {
+				return filtersOptions['session_id'];
+			}
+		},
+		client_ip: {
+			label: 'Client IP',
+			property: 'client_ip',
+			get selected() {
+				return filters?.['client_ip'] ?? '';
+			},
+			set selected(v) {
+				filters['client_ip'] = v;
+			},
+			get options() {
+				return filtersOptions['client_ip'];
+			}
+		}
+	} as FilterInputs;
+
 	const filterInputsAsArray = $derived(Object.values(filterInputs));
 
 	$effect(() => {
-		if (filters || auditLogs) {
-			generateFilters(auditLogs, filters).then((res) => {
-				untrack(() => (filterInputs = { ...res }));
+		const processLog = async (filterId: string) => {
+			const response = await AdminService.listAuditLogFilterOptions(filterId);
+
+			if (filterId === 'user_id') {
+				return await Promise.all(
+					response.options
+						.map((d) => fetchUserById(d).then((user) => ({ id: d, label: user?.displayName ?? d })))
+						.filter(Boolean)
+				);
+			}
+
+			return response.options.map((d) => ({
+				id: d,
+				label: d
+			}));
+		};
+
+		Object.keys(filterInputs).forEach((id) => {
+			processLog(id).then((options) => {
+				untrack(() => {
+					filtersOptions[id] = options;
+				});
 			});
-		}
+		});
 	});
-
-	async function generateFilters(logs: typeof auditLogs, filters?: AuditLogFilters) {
-		const filterSets: Record<FilterKeys, FilterSet> = {
-			user_id: {
-				label: 'User',
-				property: 'user_id',
-				values: {},
-				selected: filters?.['user_id'] ?? ''
-			},
-			mcp_server_display_name: {
-				label: 'MCP Server',
-				property: 'mcp_server_display_name',
-				values: {},
-				selected: filters?.['mcp_server_display_name'] ?? ''
-			},
-			mcp_server_catalog_entry_name: {
-				label: 'MCP Server Catalog Entry Name',
-				property: 'mcp_server_catalog_entry_name',
-				values: {},
-				selected: filters?.['mcp_server_catalog_entry_name'] ?? ''
-			},
-			call_type: {
-				label: 'Call Type',
-				property: 'call_type',
-				values: {},
-				selected: filters?.['call_type'] ?? ''
-			},
-			client_name: {
-				label: 'Client Name',
-				property: 'client_name',
-				values: {},
-				selected: filters?.['client_name'] ?? ''
-			},
-			client_version: {
-				label: 'Client Version',
-				property: 'client_version',
-				values: {},
-				selected: filters?.['client_version'] ?? ''
-			},
-			// response_status: {
-			// 	label: 'Response Status',
-			// 	property: 'response_status',
-			// 	values: {},
-			// 	selected: filters?.client ?? ''
-			// },
-			session_id: {
-				label: 'Session ID',
-				property: 'session_id',
-				values: {},
-				selected: filters?.['session_id'] ?? ''
-			},
-			client_ip: {
-				label: 'Client IP',
-				property: 'client_ip',
-				values: {},
-				selected: filters?.['client_ip'] ?? ''
-			}
-		};
-
-		const processLog = async (filters: typeof filterSets, log) => {
-			const { userID, mcpServerDisplayName, client, callType, sessionID } = log;
-
-			if (userID) {
-				const user = await fetchUserById(userID);
-				if (user) {
-					filters['user_id'].values[userID] = {
-						label: user?.displayName ?? 'Unknown',
-						id: userID
-					};
-				}
-			}
-
-			if (mcpServerDisplayName) {
-				filters['mcp_server_display_name'].values[mcpServerDisplayName] = {
-					label: mcpServerDisplayName,
-					id: mcpServerDisplayName
-				};
-			}
-
-			if (client) {
-				filters['client_name'].values[client.name] = {
-					label: client.name,
-					id: client.name
-				};
-			}
-
-			if (callType) {
-				filters['call_type'].values[callType] = {
-					label: callType,
-					id: callType
-				};
-			}
-
-			if (sessionID) {
-				filters['session_id'].values[sessionID] = {
-					label: sessionID,
-					id: sessionID
-				};
-			}
-		};
-
-		await Promise.all(logs.map((log) => processLog(filterSets, log)));
-
-		return filterSets;
-	}
 
 	function handleApplyFilters() {
 		const url = page.url;
@@ -188,17 +226,6 @@
 			<AuditFilter
 				filter={filterInput}
 				onSelect={(_, value) => {
-					// filterInputsAsArray[index].selected = option.id.toString();
-					// const key = filterInputsAsArray[index].property;
-					// const values = new Set(
-					// 	filterInputs[key]?.selected
-					// 		?.split(',')
-					// 		.map((d) => d.trim())
-					// 		.filter(Boolean) ?? []
-					// );
-					// values.add(option.id.toString());
-					// filterInputs[key].selected = values.values().toArray().join(',');
-					// console.log(filterInputs[key].selected);
 					filterInput.selected = value ?? '';
 				}}
 				onClear={(_, value) => {
