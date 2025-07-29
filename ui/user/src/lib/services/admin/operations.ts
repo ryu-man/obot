@@ -564,6 +564,17 @@ export async function listAuditLogUsageStats(
 	return response;
 }
 
+export async function listAuditLogFilterOptions(
+	filterId: string,
+	opts?: { fetch?: Fetcher }
+) {
+	const response = (await doGet(
+		`/mcp-audit-logs/filter-options/${filterId}`,
+		opts
+	)) as AuditLogUsageStats;
+	return response;
+}
+
 type ServerOrInstanceAuditLogStatsFilters = {
 	startTime?: string;
 	endTime?: string;

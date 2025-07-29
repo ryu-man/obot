@@ -1,12 +1,5 @@
-<script lang="ts" generics="T extends { id: string | number; label: string }">
-	import { clickOutside } from '$lib/actions/clickoutside';
-	import { ChevronDown, X, Check } from 'lucide-svelte';
-	import type { Snippet } from 'svelte';
-	import { flip } from 'svelte/animate';
-	import { slide } from 'svelte/transition';
-	import { twMerge } from 'tailwind-merge';
-
-	interface Props {
+<script module>
+	export interface SelectProps<T> {
 		id?: string;
 		disabled?: boolean;
 		options: T[];
@@ -24,6 +17,14 @@
 		onClear?: (option?: T, value?: string | number) => void;
 		buttonStartContent?: Snippet;
 	}
+</script>
+
+<script lang="ts" generics="T extends { id: string | number; label: string }">
+	import { clickOutside } from '$lib/actions/clickoutside';
+	import { ChevronDown, X, Check } from 'lucide-svelte';
+	import type { Snippet } from 'svelte';
+	import { slide } from 'svelte/transition';
+	import { twMerge } from 'tailwind-merge';
 
 	let {
 		id,
@@ -37,7 +38,7 @@
 		position = 'bottom',
 		onClear,
 		buttonStartContent
-	}: Props = $props();
+	}: SelectProps<T> = $props();
 
 	const selectedValues = $derived.by(() => {
 		if (multiple) {
@@ -149,7 +150,7 @@
 		{#if !multiple && onClear}
 			<button
 				class={twMerge(
-					'button absolute top-1/2 right-12 -translate-y-1/2 p-1 transition-colors duration-300',
+					'button absolute right-12 top-1/2 -translate-y-1/2 p-1 transition-colors duration-300',
 					classes?.clear
 				)}
 				onclick={() => {
@@ -170,7 +171,7 @@
 		]}
 		bind:this={popover}
 		class={twMerge(
-			'default-scrollbar-thin absolute top-0 left-0 z-10 max-h-[300px] w-full overflow-y-auto rounded-sm',
+			'default-scrollbar-thin absolute left-0 top-0 z-10 max-h-[300px] w-full overflow-y-auto rounded-sm',
 			position === 'top' && 'translate-y-10',
 			position === 'bottom' && '-translate-y-full'
 		)}

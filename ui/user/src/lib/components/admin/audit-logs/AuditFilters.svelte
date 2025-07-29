@@ -1,13 +1,5 @@
-<script lang="ts">
-	import { untrack } from 'svelte';
-	import { X } from 'lucide-svelte';
-	import { twMerge } from 'tailwind-merge';
-	import { page } from '$app/state';
-	import { goto } from '$app/navigation';
-	import Select from '$lib/components/Select.svelte';
-	import type { AuditLog, AuditLogFilters, OrgUser } from '$lib/services/admin/types';
-
-	type FilterKeys =
+<script module>
+	export type FilterKeys =
 		| 'user_id'
 		| 'mcp_id'
 		| 'mcp_server_display_name'
@@ -18,6 +10,26 @@
 		| 'client_version'
 		| 'response_status'
 		| 'client_ip';
+	export type FilterSet = {
+		label: string;
+		property: string;
+		values: Record<string, FilterValue>;
+		selected: string;
+	};
+
+	export type FilterValue = {
+		label: string;
+		id: string;
+	};
+</script>
+
+<script lang="ts">
+	import AuditFilter from './AuditFilter.svelte';
+	import { untrack } from 'svelte';
+	import { X } from 'lucide-svelte';
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
+	import type { AuditLog, AuditLogFilters, OrgUser } from '$lib/services/admin/types';
 
 	interface Props {
 		auditLogs: (AuditLog & { user: string })[];
@@ -25,18 +37,6 @@
 		filters?: AuditLogFilters;
 		fetchUserById: (userId: string) => Promise<OrgUser | undefined>;
 	}
-
-	type FilterSet = {
-		label: string;
-		property: string;
-		values: Record<string, FilterValue>;
-		selected: string;
-	};
-
-	type FilterValue = {
-		label: string;
-		id: string;
-	};
 
 	let { auditLogs, onClose, filters, fetchUserById }: Props = $props();
 
@@ -174,10 +174,10 @@
 	}
 </script>
 
-<div class="dark:border-surface3 h-full w-screen border-l border-transparent md:w-sm">
+<div class="dark:border-surface3 md:w-sm h-full w-screen border-l border-transparent">
 	<div class="relative w-full text-center">
 		<h4 class="p-4 text-xl font-semibold">Filters</h4>
-		<button class="icon-button absolute top-1/2 right-4 -translate-y-1/2" onclick={onClose}>
+		<button class="icon-button absolute right-4 top-1/2 -translate-y-1/2" onclick={onClose}>
 			<X class="size-5" />
 		</button>
 	</div>
@@ -185,43 +185,27 @@
 		class="default-scrollbar-thin flex h-[calc(100%-60px)] flex-col gap-4 overflow-y-auto p-4 pt-0"
 	>
 		{#each filterInputsAsArray as filterInput, index (filterInput.property)}
-			{@const options = Object.values(filterInput.values)}
-
-			<div class={twMerge('mb-2 flex flex-col gap-1', !options.length && 'opacity-50')}>
-				<label for={filterInput.property} class="text-md font-light">
-					By {filterInput.label}
-				</label>
-
-				<Select
-					class="dark:border-surface3 bg-surface1 border border-transparent shadow-inner dark:bg-black"
-					classes={{
-						root: 'w-full',
-						clear: 'hover:bg-surface3 bg-transparent'
-					}}
-					{options}
-					selected={filterInput.selected}
-					multiple={true}
-					onSelect={(_, value) => {
-						// filterInputsAsArray[index].selected = option.id.toString();
-						// const key = filterInputsAsArray[index].property;
-						// const values = new Set(
-						// 	filterInputs[key]?.selected
-						// 		?.split(',')
-						// 		.map((d) => d.trim())
-						// 		.filter(Boolean) ?? []
-						// );
-						// values.add(option.id.toString());
-						// filterInputs[key].selected = values.values().toArray().join(',');
-						// console.log(filterInputs[key].selected);
-						filterInput.selected = value ?? '';
-					}}
-					onClear={(_, value) => {
-						const key = filterInputsAsArray[index].property;
-						filterInputs[key].selected = value;
-					}}
-					position="top"
-				/>
-			</div>
+			<AuditFilter
+				filter={filterInput}
+				onSelect={(_, value) => {
+					// filterInputsAsArray[index].selected = option.id.toString();
+					// const key = filterInputsAsArray[index].property;
+					// const values = new Set(
+					// 	filterInputs[key]?.selected
+					// 		?.split(',')
+					// 		.map((d) => d.trim())
+					// 		.filter(Boolean) ?? []
+					// );
+					// values.add(option.id.toString());
+					// filterInputs[key].selected = values.values().toArray().join(',');
+					// console.log(filterInputs[key].selected);
+					filterInput.selected = value ?? '';
+				}}
+				onClear={(_, value) => {
+					const key = filterInputsAsArray[index].property;
+					filterInputs[key].selected = value;
+				}}
+			></AuditFilter>
 		{/each}
 		<div class="mt-auto">
 			<button
