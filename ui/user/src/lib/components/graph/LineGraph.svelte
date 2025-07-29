@@ -23,7 +23,7 @@
 	});
 </script>
 
-<div class="group h-[300px] w-full">
+<div class="group h-full w-full">
 	{#key data.length}
 		<Chart
 			{data}

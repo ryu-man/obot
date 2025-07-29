@@ -1,13 +1,29 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
+	import { X } from 'lucide-svelte';
+	import { twMerge } from 'tailwind-merge';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import Select from '$lib/components/Select.svelte';
-	import type { AuditLog, AuditLogFilters } from '$lib/services/admin/types';
-	import { X } from 'lucide-svelte';
+	import type { AuditLog, AuditLogFilters, OrgUser } from '$lib/services/admin/types';
+
+	type FilterKeys =
+		| 'user_id'
+		| 'mcp_id'
+		| 'mcp_server_display_name'
+		| 'mcp_server_catalog_entry_name'
+		| 'call_type'
+		| 'session_id'
+		| 'client_name'
+		| 'client_version'
+		| 'response_status'
+		| 'client_ip';
 
 	interface Props {
 		auditLogs: (AuditLog & { user: string })[];
 		onClose: () => void;
 		filters?: AuditLogFilters;
+		fetchUserById: (userId: string) => Promise<OrgUser | undefined>;
 	}
 
 	type FilterSet = {
@@ -22,149 +38,190 @@
 		id: string;
 	};
 
-	function generateFilters(logs: typeof auditLogs, filters?: AuditLogFilters) {
-		const filterSets: FilterSet[] = [
-			{
-				label: 'User',
-				property: 'userId',
-				values: {},
-				selected: filters?.userId ?? ''
-			},
-			{
-				label: 'MCP Server',
-				property: 'mcpServerDisplayName',
-				values: {},
-				selected: filters?.mcpServerDisplayName ?? ''
-			},
-			{
-				label: 'Client',
-				property: 'client',
-				values: {},
-				selected: filters?.client ?? ''
-			},
-			{
-				label: 'Call Type',
-				property: 'callType',
-				values: {},
-				selected: filters?.callType ?? ''
-			},
-			{
-				label: 'Session ID',
-				property: 'sessionId',
-				values: {},
-				selected: filters?.sessionId ?? ''
-			}
-		];
+	let { auditLogs, onClose, filters, fetchUserById }: Props = $props();
 
-		for (const log of logs) {
-			const { userID, mcpServerDisplayName, client, callType, sessionID, user } = log;
+	let filterInputs = $state<Record<FilterKeys, FilterSet>>({});
+	const filterInputsAsArray = $derived(Object.values(filterInputs));
+
+	$effect(() => {
+		if (filters || auditLogs) {
+			generateFilters(auditLogs, filters).then((res) => {
+				untrack(() => (filterInputs = { ...res }));
+			});
+		}
+	});
+
+	async function generateFilters(logs: typeof auditLogs, filters?: AuditLogFilters) {
+		const filterSets: Record<FilterKeys, FilterSet> = {
+			user_id: {
+				label: 'User',
+				property: 'user_id',
+				values: {},
+				selected: filters?.['user_id'] ?? ''
+			},
+			mcp_server_display_name: {
+				label: 'MCP Server',
+				property: 'mcp_server_display_name',
+				values: {},
+				selected: filters?.['mcp_server_display_name'] ?? ''
+			},
+			mcp_server_catalog_entry_name: {
+				label: 'MCP Server Catalog Entry Name',
+				property: 'mcp_server_catalog_entry_name',
+				values: {},
+				selected: filters?.['mcp_server_catalog_entry_name'] ?? ''
+			},
+			call_type: {
+				label: 'Call Type',
+				property: 'call_type',
+				values: {},
+				selected: filters?.['call_type'] ?? ''
+			},
+			client_name: {
+				label: 'Client Name',
+				property: 'client_name',
+				values: {},
+				selected: filters?.['client_name'] ?? ''
+			},
+			client_version: {
+				label: 'Client Version',
+				property: 'client_version',
+				values: {},
+				selected: filters?.['client_version'] ?? ''
+			},
+			// response_status: {
+			// 	label: 'Response Status',
+			// 	property: 'response_status',
+			// 	values: {},
+			// 	selected: filters?.client ?? ''
+			// },
+			session_id: {
+				label: 'Session ID',
+				property: 'session_id',
+				values: {},
+				selected: filters?.['session_id'] ?? ''
+			},
+			client_ip: {
+				label: 'Client IP',
+				property: 'client_ip',
+				values: {},
+				selected: filters?.['client_ip'] ?? ''
+			}
+		};
+
+		const processLog = async (filters: typeof filterSets, log) => {
+			const { userID, mcpServerDisplayName, client, callType, sessionID } = log;
 
 			if (userID) {
-				filterSets[0].values[userID] = {
-					label: user ?? 'Unknown',
-					id: userID
-				};
+				const user = await fetchUserById(userID);
+				if (user) {
+					filters['user_id'].values[userID] = {
+						label: user?.displayName ?? 'Unknown',
+						id: userID
+					};
+				}
 			}
 
 			if (mcpServerDisplayName) {
-				filterSets[1].values[mcpServerDisplayName] = {
+				filters['mcp_server_display_name'].values[mcpServerDisplayName] = {
 					label: mcpServerDisplayName,
 					id: mcpServerDisplayName
 				};
 			}
 
 			if (client) {
-				filterSets[2].values[client.name] = {
+				filters['client_name'].values[client.name] = {
 					label: client.name,
 					id: client.name
 				};
 			}
 
 			if (callType) {
-				filterSets[3].values[callType] = {
+				filters['call_type'].values[callType] = {
 					label: callType,
 					id: callType
 				};
 			}
 
 			if (sessionID) {
-				filterSets[4].values[sessionID] = {
+				filters['session_id'].values[sessionID] = {
 					label: sessionID,
 					id: sessionID
 				};
 			}
-		}
+		};
+
+		await Promise.all(logs.map((log) => processLog(filterSets, log)));
 
 		return filterSets;
 	}
 
-	let { auditLogs, onClose, filters }: Props = $props();
-	let filterInputs = $state<FilterSet[]>(generateFilters(auditLogs, filters));
-
-	$effect(() => {
-		if (filters || auditLogs) {
-			filterInputs = generateFilters(auditLogs, filters);
-		}
-	});
-
 	function handleApplyFilters() {
-		const url = '/admin/audit-logs';
-		const params: string[] = [];
-		for (const filterInput of filterInputs) {
+		const url = page.url;
+
+		for (const filterInput of filterInputsAsArray) {
 			if (filterInput.selected) {
-				params.push(
-					`${filterInput.property}=${encodeURIComponent(filterInput.selected.toString())}`
+				url.searchParams.set(
+					filterInput.property,
+					encodeURIComponent(filterInput.selected.toString())
 				);
+			} else {
+				page.url.searchParams.delete(filterInput.property);
 			}
 		}
 
-		if (params.length > 0) {
-			goto(`${url}?${params.join('&')}`);
-		} else {
-			goto(url);
-		}
+		goto(url, { noScroll: true });
 	}
 </script>
 
-<div class="dark:border-surface3 h-full w-screen border-l border-transparent md:w-sm">
+<div class="dark:border-surface3 md:w-sm h-full w-screen border-l border-transparent">
 	<div class="relative w-full text-center">
 		<h4 class="p-4 text-xl font-semibold">Filters</h4>
-		<button class="icon-button absolute top-1/2 right-4 -translate-y-1/2" onclick={onClose}>
+		<button class="icon-button absolute right-4 top-1/2 -translate-y-1/2" onclick={onClose}>
 			<X class="size-5" />
 		</button>
 	</div>
 	<div
 		class="default-scrollbar-thin flex h-[calc(100%-60px)] flex-col gap-4 overflow-y-auto p-4 pt-0"
 	>
-		{#each filterInputs as filterInput, index (filterInput.property)}
+		{#each filterInputsAsArray as filterInput, index (filterInput.property)}
 			{@const options = Object.values(filterInput.values)}
-			{#if options.length > 0}
-				<div class="mb-2 flex flex-col gap-1">
-					<label for={filterInput.property} class="text-md font-light">
-						By {filterInput.label}
-					</label>
-					<Select
-						class="dark:border-surface3 bg-surface1 border border-transparent shadow-inner dark:bg-black"
-						classes={{
-							root: 'w-full',
-							clear: 'hover:bg-surface3 bg-transparent'
-						}}
-						{options}
-						selected={filterInput.selected}
-						onSelect={(option) => {
-							const updatedFilterInputs = [...filterInputs];
-							updatedFilterInputs[index].selected = option.id.toString();
-							filterInputs = updatedFilterInputs;
-						}}
-						onClear={() => {
-							const updatedFilterInputs = [...filterInputs];
-							updatedFilterInputs[index].selected = '';
-							filterInputs = updatedFilterInputs;
-						}}
-						position="top"
-					/>
-				</div>
-			{/if}
+
+			<div class={twMerge('mb-2 flex flex-col gap-1', !options.length && 'opacity-50')}>
+				<label for={filterInput.property} class="text-md font-light">
+					By {filterInput.label}
+				</label>
+
+				<Select
+					class="dark:border-surface3 bg-surface1 border border-transparent shadow-inner dark:bg-black"
+					classes={{
+						root: 'w-full',
+						clear: 'hover:bg-surface3 bg-transparent'
+					}}
+					{options}
+					selected={filterInput.selected}
+					multiple={true}
+					onSelect={(_, value) => {
+						// filterInputsAsArray[index].selected = option.id.toString();
+						// const key = filterInputsAsArray[index].property;
+						// const values = new Set(
+						// 	filterInputs[key]?.selected
+						// 		?.split(',')
+						// 		.map((d) => d.trim())
+						// 		.filter(Boolean) ?? []
+						// );
+						// values.add(option.id.toString());
+						// filterInputs[key].selected = values.values().toArray().join(',');
+						// console.log(filterInputs[key].selected);
+						filterInput.selected = value ?? '';
+					}}
+					onClear={(_, value) => {
+						const key = filterInputsAsArray[index].property;
+						filterInputs[key].selected = value;
+					}}
+					position="top"
+				/>
+			</div>
 		{/each}
 		<div class="mt-auto">
 			<button
