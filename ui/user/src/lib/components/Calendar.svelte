@@ -1,8 +1,18 @@
 <script lang="ts">
 	import { clickOutside } from '$lib/actions/clickoutside';
 	import { tooltip } from '$lib/actions/tooltip.svelte';
+	import {
+		differenceInHours,
+		endOfDay,
+		getHours,
+		getMinutes,
+		isSameDay,
+		startOfDay
+	} from 'date-fns';
 	import { ChevronLeft, ChevronRight, CalendarCog } from 'lucide-svelte';
 	import { twMerge } from 'tailwind-merge';
+	import TimeInput from './TimeInput.svelte';
+	import { slide } from 'svelte/transition';
 
 	export interface DateRange {
 		start: Date | null;
@@ -251,7 +261,7 @@
 		use:clickOutside={[() => calendarPopover?.close(), true]}
 		bind:this={calendarPopover}
 		class={twMerge(
-			'default-dialog absolute top-full left-12 z-50 mt-1 min-w-[320px] -translate-x-full p-4',
+			'default-dialog absolute left-12 top-full z-50 mt-1 min-w-[320px] -translate-x-full p-4',
 			classes?.calendar
 		)}
 	>
@@ -292,6 +302,40 @@
 				</button>
 			{/each}
 		</div>
+
+		{#if (start && !end) || (start && end && differenceInHours(end, start) <= 24)}
+			<!-- Render Time pickers -->
+			<div class="mt-4 flex flex-col gap-2">
+				<div class="flex flex-col gap-1">
+					<div class="text-xs text-gray-500">{start.toDateString()}</div>
+					<TimeInput
+						date={start}
+						onChange={(date) => {
+							start = date;
+						}}
+					/>
+				</div>
+
+				<div class="flex flex-col gap-1">
+					{#if !isSameDay(startOfDay(end ?? start), startOfDay(start))}
+						<div
+							class="text-xs text-gray-500"
+							in:slide={{ duration: 200 }}
+							out:slide={{ duration: 100 }}
+						>
+							{end?.toDateString()}
+						</div>
+					{/if}
+
+					<TimeInput
+						date={endOfDay(end ?? start)}
+						onChange={(date) => {
+							end = date;
+						}}
+					/>
+				</div>
+			</div>
+		{/if}
 
 		<div class="mt-4 flex justify-end gap-2">
 			<button class="button text-xs" onclick={handleCancel}>Cancel</button>
