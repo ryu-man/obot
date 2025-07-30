@@ -3,7 +3,6 @@
 	import { X, ChevronLeft, ChevronRight } from 'lucide-svelte';
 	import { throttle } from 'es-toolkit';
 	import { page } from '$app/state';
-	import { browser } from '$app/environment';
 	import { afterNavigate, goto } from '$app/navigation';
 	import { type DateRange } from '$lib/components/Calendar.svelte';
 	import Layout from '$lib/components/Layout.svelte';
@@ -72,10 +71,6 @@
 
 		return {};
 	});
-
-	let selectedSortOption = $derived(
-		sortFilters ? `${sortFilters.sortBy}_${sortFilters.sortOrder}` : undefined
-	);
 
 	let timeRangeFilters = $derived.by(() => {
 		if (searchParamFilters.start_time || searchParamFilters.end_time) {
@@ -155,51 +150,6 @@
 		users.set(id, remote);
 
 		return remote;
-	}
-
-	function compileSortAndFilters(): AuditLogFilters & {
-		mcpId?: string | null;
-		sortBy?: string | null;
-		sortOrder?: string | null;
-	} {
-		if (!browser) return {};
-
-		const url = new URL(window.location.href);
-		const mcpId = url.searchParams.get('mcpId');
-		const startTime = url.searchParams.get('startTime')
-			? decodeURIComponent(url.searchParams.get('startTime')!)
-			: null;
-		const endTime = url.searchParams.get('endTime')
-			? decodeURIComponent(url.searchParams.get('endTime')!)
-			: null;
-		const userId = url.searchParams.get('userId');
-		const client = url.searchParams.get('client')
-			? decodeURIComponent(url.searchParams.get('client')!)
-			: null;
-		const callType = url.searchParams.get('callType');
-		const sessionId = url.searchParams.get('sessionId');
-		const mcpServerDisplayName = url.searchParams.get('name')
-			? decodeURIComponent(url.searchParams.get('name')!)
-			: null;
-		const mcpServerCatalogEntryName = url.searchParams.get('entryId')
-			? decodeURIComponent(url.searchParams.get('entryId')!)
-			: null;
-		const sortBy = url.searchParams.get('sortBy');
-		const sortOrder = url.searchParams.get('sortOrder');
-
-		return {
-			mcpId,
-			startTime,
-			endTime,
-			userId,
-			client,
-			callType,
-			sessionId,
-			mcpServerDisplayName,
-			mcpServerCatalogEntryName,
-			sortBy,
-			sortOrder
-		};
 	}
 
 	function convertFilterDisplayLabel(key: string) {
