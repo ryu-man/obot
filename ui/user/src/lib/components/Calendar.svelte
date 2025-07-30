@@ -322,7 +322,7 @@
 
 				<div class="flex flex-col gap-1">
 					<!-- In case start and end dates in the same day do not render the label -->
-					{#if !isSameDay(startOfDay(end ?? start), startOfDay(start))}
+					{#if !isSameDay(end ?? start, start) && differenceInHours(end ?? start, start) < 24}
 						<div
 							class="text-xs text-gray-500"
 							in:slide={{ duration: 200 }}

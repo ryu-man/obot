@@ -1,31 +1,53 @@
 <script lang="ts">
-	import { getHours, getMinutes, setHours, setMinutes } from 'date-fns';
+	import { addMinutes, getHours, getMinutes, setHours, setMinutes, subMinutes } from 'date-fns';
 	import { twMerge } from 'tailwind-merge';
 
 	type Props = {
 		date: Date;
 		onChange?: (date: Date) => void;
 	};
+
 	let { date, onChange }: Props = $props();
 
 	const hours = $derived(getHours(date));
-	let isAm = $derived(getHours(date) < 12);
+	const minutes = $derived(getMinutes(date));
+	const isAm = $derived(getHours(date) < 12);
 </script>
 
-<div class="time-input flex h-14 items-center gap-2  bg-surface1/50 rounded-md">
+<div class="time-input bg-surface1/50 flex h-14 items-center gap-2 rounded-md">
 	<div class="flex min-h-full flex-1 text-xl">
 		<input
 			class="min-h-full w-full bg-transparent px-4 text-end"
 			type="number"
 			max="12"
 			min="0"
-			bind:value={
-				() => getHours(date) % 12,
-				(v) => {
-					date = setHours(date, v);
+			value={hours % 12}
+			onkeydown={(ev) => {
+				if (['ArrowDown', 'ArrowUp'].includes(ev.key)) {
+					ev.preventDefault();
+				}
+			}}
+			onkeyup={(ev) => {
+				if (ev.key === 'ArrowDown') {
+					ev.preventDefault();
+
+					date = subMinutes(date, 60);
+
 					onChange?.(date);
 				}
-			}
+
+				if (ev.key === 'ArrowUp') {
+					ev.preventDefault();
+
+					date = addMinutes(date, 60);
+					onChange?.(date);
+				}
+			}}
+			oninput={(ev) => {
+				const valueAsNumber = ev.currentTarget.valueAsNumber;
+				date = setHours(date, valueAsNumber % 12);
+				onChange?.(date);
+			}}
 		/>
 	</div>
 
@@ -35,19 +57,39 @@
 		<input
 			class="min-h-full w-full bg-transparent px-4"
 			type="number"
-			max="12"
+			max="60"
 			min="0"
-			bind:value={
-				() => getMinutes(date),
-				(v) => {
-					date = setMinutes(date, v);
+			value={minutes % 60}
+			onkeydown={(ev) => {
+				if (['ArrowDown', 'ArrowUp'].includes(ev.key)) {
+					ev.preventDefault();
+				}
+			}}
+			onkeyup={(ev) => {
+				if (ev.key === 'ArrowDown') {
+					ev.preventDefault();
+
+					date = subMinutes(date, 1);
+
 					onChange?.(date);
 				}
-			}
+
+				if (ev.key === 'ArrowUp') {
+					ev.preventDefault();
+
+					date = addMinutes(date, 1);
+					onChange?.(date);
+				}
+			}}
+			oninput={(ev) => {
+				const valueAsNumber = ev.currentTarget.valueAsNumber;
+				date = setMinutes(date, valueAsNumber % 60);
+				onChange?.(date);
+			}}
 		/>
 	</div>
 
-	<div class="flex h-full flex-col gap-1 text-xs p-1">
+	<div class="flex h-full flex-col gap-1 p-1 text-xs">
 		<button
 			class={twMerge(
 				'bg-surface3/30 flex-1 rounded-sm px-1',
