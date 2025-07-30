@@ -18,6 +18,7 @@
 	import AuditLogsTable from './AuditLogs.svelte';
 	import AuditLogsTimeline from './AuditLogsTimeline.svelte';
 	import AuditLogCalendar from './AuditLogCalendar.svelte';
+	import { endOfDay, set } from 'date-fns';
 
 	const duration = PAGE_TRANSITION_DURATION;
 
@@ -30,7 +31,12 @@
 	const numberOfPages = $derived(Math.ceil(auditLogsTotalItems / pageLimit));
 	const pageOffset = $derived(pageIndex * pageLimit);
 
-	const remoteAuditLogs = $derived(auditLogsResponse?.items ?? []);
+	const remoteAuditLogs = $derived(
+		(auditLogsResponse?.items ?? []).map(({ createdAt, ...restProps }) => ({
+			...restProps,
+			createdAt: new Date(createdAt.slice(0, -6))+'Z'
+		}))
+	);
 
 	const isReachedMax = $derived(pageIndex >= numberOfPages - 1);
 	const isReachedMin = $derived(pageIndex <= 0);
@@ -152,7 +158,7 @@
 		return remote;
 	}
 
-	function convertFilterDisplayLabel(key: string) {
+	function getFilterDisplayLabel(key: string) {
 		if (key === 'mcpServerDisplayName') return 'Server';
 		if (key === 'mcpServerCatalogEntryName') return 'Server ID';
 		if (key === 'mcpId') return 'Server ID';
@@ -166,6 +172,23 @@
 		return key.replace(/_(\w)/g, ' $1');
 	}
 
+	function getFilterValue(label: string, value: string | number) {
+		if (label === 'start_time' || label === 'end_time') {
+			return new Date(value).toLocaleString(undefined, {
+				year: 'numeric',
+				month: 'short',
+				day: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit',
+				second: '2-digit',
+				hour12: true,
+				timeZoneName: 'short'
+			});
+		}
+
+		return value + '';
+	}
+
 	function handleRightSidebarClose() {
 		rightSidebar?.close();
 		setTimeout(() => {
@@ -174,17 +197,17 @@
 		}, 300);
 	}
 
-	function handleDateChange(value: DateRange) {
+	function handleDateChange({ start, end }: DateRange) {
 		const url = page.url;
 
-		if (value.start) {
-			url.searchParams.set('start_time', value.start.toISOString());
+		if (start) {
+			url.searchParams.set('start_time', start.toISOString());
 
-			if (value.end) {
-				url.searchParams.set('end_time', value.end.toISOString());
+			if (end) {
+				url.searchParams.set('end_time', end.toISOString());
 			} else {
-				const endOfDay = new Date(value.start);
-				url.searchParams.set('end_time', endOfDay.toISOString());
+				const end = endOfDay(start);
+				url.searchParams.set('end_time', end.toISOString());
 			}
 		}
 
@@ -211,8 +234,12 @@
 				/>
 
 				<AuditLogCalendar
-					start={timeRangeFilters.start_time ? new Date(timeRangeFilters.start_time) : null}
-					end={timeRangeFilters.end_time ? new Date(timeRangeFilters.end_time) : null}
+					start={timeRangeFilters.start_time
+						? set(new Date(timeRangeFilters.start_time), { seconds: 0, milliseconds: 0 })
+						: null}
+					end={timeRangeFilters.end_time
+						? set(new Date(timeRangeFilters.end_time), { milliseconds: 0, seconds: 0 })
+						: null}
 					onChange={handleDateChange}
 				/>
 
@@ -253,8 +280,12 @@
 					<div class="flex h-40 items-center justify-center rounded-md text-gray-500">
 						<AuditLogsTimeline
 							data={remoteAuditLogs}
-							start={timeRangeFilters.start_time ? new Date(timeRangeFilters.start_time) : null}
-							end={timeRangeFilters.end_time ? new Date(timeRangeFilters.end_time) : null}
+							start={timeRangeFilters.start_time
+								? set(new Date(timeRangeFilters.start_time), { milliseconds: 0, seconds: 0 })
+								: null}
+							end={timeRangeFilters.end_time
+								? set(new Date(timeRangeFilters.end_time), { milliseconds: 0, seconds: 0 })
+								: null}
 						/>
 					</div>
 				</div>
@@ -337,13 +368,14 @@
 			out:slide={{ duration: 100 }}
 		>
 			{#each keys.filter((key) => key !== 'startTime' && key !== 'endTime' && key !== 'sortBy' && key !== 'sortOrder') as key (key)}
+				{@const displayLabel = getFilterDisplayLabel(key)}
 				{@const value = searchParamFilters[key as keyof typeof searchParamFilters]}
 				{#if value}
 					<div
 						class="bg-blue-500/33 flex items-center gap-1 rounded-lg border border-blue-500 px-4 py-2"
 					>
 						<p class="text-xs font-semibold">
-							{convertFilterDisplayLabel(key)}: <span class="font-light">{value}</span>
+							{displayLabel}: <span class="font-light">{getFilterValue(key, value)}</span>
 						</p>
 
 						<button
