@@ -7,11 +7,11 @@
 		onChange?: (date: Date) => void;
 	};
 
-	let { date, onChange }: Props = $props();
+	let { date = $bindable(), onChange }: Props = $props();
 
 	const hours = $derived(getHours(date));
 	const minutes = $derived(getMinutes(date));
-	const isAm = $derived(getHours(date) < 12);
+	const isAm = $derived(hours < 12);
 </script>
 
 <div class="time-input bg-surface1/50 flex h-14 items-center gap-2 rounded-md">
@@ -67,23 +67,21 @@
 			}}
 			onkeyup={(ev) => {
 				if (ev.key === 'ArrowDown') {
-					ev.preventDefault();
-
 					date = subMinutes(date, 1);
 
 					onChange?.(date);
 				}
 
 				if (ev.key === 'ArrowUp') {
-					ev.preventDefault();
-
 					date = addMinutes(date, 1);
+
 					onChange?.(date);
 				}
 			}}
 			oninput={(ev) => {
 				const valueAsNumber = ev.currentTarget.valueAsNumber;
 				date = setMinutes(date, valueAsNumber % 60);
+
 				onChange?.(date);
 			}}
 		/>
@@ -98,6 +96,7 @@
 			onclick={() => {
 				if (isAm) return;
 				date = setHours(date, hours - 12);
+				onChange?.(date);
 			}}>AM</button
 		>
 
@@ -108,7 +107,8 @@
 			)}
 			onclick={() => {
 				if (!isAm) return;
-				date = setHours(date, hours + 12);
+				date = setHours(date, (hours + 12) % 24);
+				onChange?.(date);
 			}}>PM</button
 		>
 	</div>

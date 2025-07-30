@@ -162,13 +162,13 @@
 
 		if (!start || (start && end)) {
 			// Start new range
-			newRange = { start: date, end: null };
+			newRange = { start: startOfDay(date), end: null };
 		} else {
 			// Complete the range
 			if (date < start) {
-				newRange = { start: date, end: start };
+				newRange = { start: startOfDay(date), end: endOfDay(start) };
 			} else {
-				newRange = { start: start, end: date };
+				newRange = { start: startOfDay(start), end: endOfDay(date) };
 			}
 		}
 
@@ -322,7 +322,7 @@
 
 				<div class="flex flex-col gap-1">
 					<!-- In case start and end dates in the same day do not render the label -->
-					{#if !isSameDay(end ?? start, start) && differenceInHours(end ?? start, start) < 24}
+					{#if !isSameDay(end ?? start, start) && differenceInHours(end ?? start, start) <= 24}
 						<div
 							class="text-xs text-gray-500"
 							in:slide={{ duration: 200 }}
@@ -333,7 +333,7 @@
 					{/if}
 
 					<TimeInput
-						date={endOfDay(end ?? start)}
+						date={end ?? endOfDay(start)}
 						onChange={(date) => {
 							end = date;
 						}}
