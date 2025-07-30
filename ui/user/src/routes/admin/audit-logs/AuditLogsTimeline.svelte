@@ -20,12 +20,9 @@
 		axisBottom,
 		rollup,
 		timeHour,
-		timeYear,
 		timeMonth,
 		timeDay,
-		timeWeek,
 		timeMinute,
-		timeSecond,
 		max,
 		min,
 		timeDays,
@@ -42,16 +39,16 @@
 		endOfMonth,
 		isWithinInterval,
 		startOfHour,
-		startOfWeek,
 		endOfHour,
-		endOfWeek,
 		startOfDay,
 		endOfDay,
 		startOfYear,
 		endOfYear,
-		type DateValues
+		type DateValues,
+		intervalToDuration
 	} from 'date-fns';
 	import type { AuditLog } from '$lib/services';
+	import { acceptCompletion } from '@codemirror/autocomplete';
 
 	interface Props<T> {
 		start: Date;
@@ -90,7 +87,7 @@
 			return 'daily';
 		}
 
-		if (duration >= MS_HOUR) {
+		if (duration > MS_HOUR) {
 			return 'hourly';
 		}
 
@@ -98,13 +95,13 @@
 	});
 
 	const boundaries = $derived.by(() => {
-		if (frame === 'base') return [startOfHour, endOfHour];
-
 		if (frame === 'hourly') return [startOfDay, endOfDay];
 
 		if (frame === 'daily') return [startOfMonth, endOfMonth];
 
-		return [startOfYear, endOfYear];
+		if (frame === 'monthly') return [startOfYear, endOfYear];
+
+		return [startOfHour, endOfHour];
 	});
 
 	const timeFrameDomain = $derived.by(() => {
@@ -157,12 +154,8 @@
 			| typeof timeWeeks
 			| typeof timeMonths;
 
-		let generator: Generator = timeDays;
+		let generator: Generator = timeMinutes;
 		let step = 1;
-
-		if (frame === 'base') {
-			generator = timeMinutes;
-		}
 
 		if (frame === 'hourly') {
 			generator = timeHours;
@@ -192,6 +185,8 @@
 
 	const xScale = $derived(scaleBand(xRange).domain(bands).paddingInner(0.1).paddingOuter(0.1));
 
+	$inspect(frame);
+
 	const xAxisTicks = $derived.by(() => {
 		let generator = timeMonth;
 		let step = 1;
@@ -203,6 +198,12 @@
 
 		if (frame === 'hourly') {
 			generator = timeHour;
+			const duration = intervalToDuration({ start, end });
+			const hours = duration.hours ?? 0;
+
+			if (hours >= 8) {
+				step = Math.ceil(12 / hours);
+			}
 		}
 
 		if (frame === 'daily') {
@@ -212,10 +213,6 @@
 				step = 2;
 			}
 		}
-
-		// if (frame === 'weekly') {
-		// 	generator = timeWeek;
-		// }
 
 		if (frame === 'monthly') {
 			generator = timeMonth;
@@ -292,25 +289,34 @@
 				class="x-axis text-on-surface3/10 dark:text-on-surface1/10"
 				transform="translate(0 {innerHeight})"
 				{@attach (node) => {
-					select(node)
+					const selection = select(node);
+					selection
 						.transition()
+						.duration(200)
 
-						.duration(100)
 						.call(axisBottom(timeScale).tickSizeOuter(0).ticks(xAxisTicks))
-
 						.selectAll('.tick')
-
 						.attr('transform', (d) => `translate(${timeScale(d) + xScale.bandwidth() / 2}, 0)`)
-						.attr('class', (d) => {
+						.attr('class', function (d) {
+							console.log(d);
 							const isActive = isWithinInterval(d, {
 								start,
 								end
 							});
 
-							return isActive ? 'text-on-surface3 dark:text-on-surface1' : '';
-						});
+							const className = this?.getAttribute('class') ?? '';
 
-					return () => select(node).selectAll('*').remove();
+							const activeClassName = ['text-on-surface3', 'dark:text-on-surface1'];
+
+							// Keep old class names
+							// Filter falsy values and join with a space
+							return [
+								activeClassName.reduce((acc, val) => acc.replace(val, ''), className),
+								isActive ? activeClassName.join(' ') : ''
+							]
+								.filter(Boolean)
+								.join(' ');
+						});
 				}}
 			></g>
 
@@ -368,7 +374,7 @@
 							// The actual value of this segment
 							item.value = d[1] - d[0];
 
-							item.date = new Date(d.data[0]).toDateString();
+							item.date = new Date(d.data[0]).toLocaleString();
 
 							currentItem = { ...item };
 
