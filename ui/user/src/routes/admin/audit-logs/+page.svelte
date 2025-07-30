@@ -34,7 +34,7 @@
 	const remoteAuditLogs = $derived(
 		(auditLogsResponse?.items ?? []).map(({ createdAt, ...restProps }) => ({
 			...restProps,
-			createdAt: new Date(createdAt.slice(0, -6))+'Z'
+			createdAt: new Date(createdAt.slice(0, -6)) + 'Z'
 		}))
 	);
 
@@ -295,9 +295,13 @@
 						<div>{Intl.NumberFormat().format(remoteAuditLogs.length)} results</div>
 
 						<div class="flex items-center">
-							<sapn>{Intl.NumberFormat().format(pageIndex + 1)}</sapn>/
-							<span>{Intl.NumberFormat().format(numberOfPages)}</span>
-							<span class="ml-1">pages</span>
+							{#if numberOfPages > 1}
+								<sapn>{Intl.NumberFormat().format(pageIndex + 1)}</sapn>/
+								<span>{Intl.NumberFormat().format(numberOfPages)}</span>
+								<span class="ml-1">pages</span>
+							{:else}
+								<span>1 page</span>
+							{/if}
 						</div>
 					</div>
 
