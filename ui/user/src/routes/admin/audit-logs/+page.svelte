@@ -1,16 +1,15 @@
 <script lang="ts">
 	import { fade, slide } from 'svelte/transition';
-	import { X } from 'lucide-svelte';
+	import { X, ChevronLeft, ChevronRight } from 'lucide-svelte';
 	import { throttle } from 'es-toolkit';
 	import { page } from '$app/state';
 	import { browser } from '$app/environment';
 	import { afterNavigate, goto } from '$app/navigation';
-	import Calendar, { type DateRange } from '$lib/components/Calendar.svelte';
+	import { type DateRange } from '$lib/components/Calendar.svelte';
 	import Layout from '$lib/components/Layout.svelte';
 	import Search from '$lib/components/Search.svelte';
 	import { PAGE_TRANSITION_DURATION } from '$lib/constants';
 	import { type OrgUser, type AuditLogFilters, AdminService, type AuditLog } from '$lib/services';
-	import { formatTimeRange, getTimeRangeShorthand } from '$lib/time';
 	import { getUser, type PaginatedResponse } from '$lib/services/admin/operations';
 	import { clickOutside } from '$lib/actions/clickoutside';
 	import { dialogAnimation } from '$lib/actions/dialogAnimation';
@@ -23,22 +22,38 @@
 
 	const duration = PAGE_TRANSITION_DURATION;
 
+	let auditLogsResponse = $state<PaginatedResponse<AuditLog>>();
+	const auditLogsTotalItems = $derived(auditLogsResponse?.total ?? 0);
+
+	let pageIndex = $state(0);
+	const pageLimit = $state(40);
+
+	const numberOfPages = $derived(Math.ceil(auditLogsTotalItems / pageLimit));
+	const pageOffset = $derived(pageIndex * pageLimit);
+
+	const remoteAuditLogs = $derived(auditLogsResponse?.items ?? []);
+
+	const isReachedMax = $derived(pageIndex >= numberOfPages - 1);
+	const isReachedMin = $derived(pageIndex <= 0);
+
+	let fragmentIndex = $state(0);
+	const fragmentLimit = $state(10);
+	const numberOfFragments = $derived(Math.ceil(remoteAuditLogs.length / fragmentLimit));
+	const fragmentSliceStart = $derived(0);
+	const fragmentSliceEnd = $derived(
+		Math.min(remoteAuditLogs.length, (fragmentIndex + 1) * fragmentLimit)
+	);
+
+	const fragmentedAuditLogs = $derived(remoteAuditLogs.slice(fragmentSliceStart, fragmentSliceEnd));
+	const haveMoreFragments = $derived(fragmentedAuditLogs.length < remoteAuditLogs.length);
+
 	const users = new Map<string, OrgUser>();
-	let currentPage = $state(0);
-	let pageLimit = $state(10000);
-	let pageSliceStart = $derived(currentPage * 10000);
-	let pageSliceEnd = $derived(pageSliceStart + pageLimit);
-
-	let auditLogs = $state<PaginatedResponse<AuditLog>>();
-
-	const paginatedAuditLogs = $derived(auditLogs?.items?.slice(pageSliceStart, pageSliceEnd) ?? []);
 
 	let showFilters = $state(false);
 	let selectedAuditLog = $state<AuditLog & { user: string }>();
 	let rightSidebar = $state<HTMLDialogElement>();
 
 	let query = $state('');
-	let inputElement = $state<HTMLInputElement | null>(null);
 
 	const searchParamFilters = $derived.by<AuditLogFilters & { mcpId?: string | null }>(() => {
 		return page.url.searchParams.entries().reduce((acc, [key, value]) => {
@@ -79,6 +94,8 @@
 	const allFilters = $derived({
 		...searchParamFilters,
 		...sortFilters,
+		limit: pageLimit,
+		offset: pageOffset,
 		query
 	});
 
@@ -93,7 +110,7 @@
 	$effect(() => {
 		if (!allFilters) return;
 
-		reload();
+		fetchAuditLogs({ ...allFilters });
 	});
 
 	// Throttle query update
@@ -101,31 +118,29 @@
 		query = value;
 	}, 100);
 
-	async function reload() {
-		currentPage = 0;
-
-		fetchAuditLogs({ ...allFilters, limit: pageLimit });
-	}
-
 	async function nextPage() {
-		currentPage = currentPage + 1;
+		if (isReachedMax) return;
 
-		fetchAuditLogs({ ...allFilters, limit: pageLimit });
+		pageIndex = Math.min(numberOfPages, pageIndex + 1);
+
+		fetchAuditLogs({ ...allFilters });
 	}
 
 	async function prevPage() {
-		currentPage = currentPage - 1;
+		if (isReachedMin) return;
 
-		fetchAuditLogs({ ...allFilters, limit: pageLimit });
+		pageIndex = Math.max(0, pageIndex - 1);
+
+		fetchAuditLogs({ ...allFilters });
 	}
 
 	async function fetchAuditLogs(filters: typeof searchParamFilters) {
 		const mcpId = filters.mcpId;
 
 		if (mcpId) {
-			auditLogs = await AdminService.listServerOrInstanceAuditLogs(mcpId, filters);
+			auditLogsResponse = await AdminService.listServerOrInstanceAuditLogs(mcpId, filters);
 		} else {
-			auditLogs = await AdminService.listAuditLogs(filters);
+			auditLogsResponse = await AdminService.listAuditLogs(filters);
 		}
 	}
 
@@ -287,20 +302,51 @@
 				<div class="px-4">
 					<div class="flex h-40 items-center justify-center rounded-md text-gray-500">
 						<AuditLogsTimeline
-							data={paginatedAuditLogs}
+							data={remoteAuditLogs}
 							start={timeRangeFilters.start_time ? new Date(timeRangeFilters.start_time) : null}
 							end={timeRangeFilters.end_time ? new Date(timeRangeFilters.end_time) : null}
 						/>
 					</div>
 				</div>
 				<hr class="dark:border-surface3 my-4 border" />
-				<p class="mt-2 px-4 pb-4 text-sm text-gray-600">
-					{Intl.NumberFormat().format(paginatedAuditLogs.length)} results
-				</p>
+				<div class="flex items-center justify-between gap-2 px-4 pb-4 text-xs text-gray-600">
+					<div class="flex gap-4">
+						<div>{Intl.NumberFormat().format(remoteAuditLogs.length)} results</div>
+
+						<div class="flex items-center">
+							<sapn>{Intl.NumberFormat().format(pageIndex + 1)}</sapn>/
+							<span>{Intl.NumberFormat().format(numberOfPages)}</span>
+							<span class="ml-1">pages</span>
+						</div>
+					</div>
+
+					<div class="flex gap-4">
+						<button class="flex items-center text-xs" disabled={isReachedMin} onclick={prevPage}>
+							<ChevronLeft class="size-[1.4em]" />
+							<div>Previous Page</div>
+						</button>
+
+						<button class="flex items-center text-xs" disabled={isReachedMax} onclick={nextPage}>
+							<div>Next Page</div>
+							<ChevronRight class="size-[1.4em]" />
+						</button>
+					</div>
+				</div>
 			</div>
 
 			<AuditLogsTable
-				data={paginatedAuditLogs}
+				data={fragmentedAuditLogs}
+				currentFragmentIndex={fragmentIndex}
+				getFragmentIndex={(rowIndex: number) => Math.floor(rowIndex / fragmentLimit)}
+				getFragmentRowIndex={(rowIndex: number) => {
+					const fragIndex = Math.floor(rowIndex / fragmentLimit);
+
+					return rowIndex - fragIndex * fragmentLimit;
+				}}
+				{haveMoreFragments}
+				onLoadNextFragment={(rowFragmentIndex: number) => {
+					fragmentIndex = Math.min(numberOfFragments - 1, rowFragmentIndex + 1);
+				}}
 				onSelectRow={(d) => {
 					selectedAuditLog = d;
 					showFilters = false;

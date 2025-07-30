@@ -1,61 +1,18 @@
 <script lang="ts">
+	import { slide } from 'svelte/transition';
 	import { twMerge } from 'tailwind-merge';
 
-	let { data = [], onSelectRow, emptyContent, fetchUserById } = $props();
-
-	// 	{
-	//     "id": 59,
-	//     "createdAt": "2025-07-24T13:02:29.776039125-04:00",
-	//     "userID": "2",
-	//     "mcpID": "ms14rtsg",
-	//     "mcpServerDisplayName": "Simple Server",
-	//     "mcpServerCatalogEntryName": "default-simple-server-cc9435a7c8srb",
-	//     "client": {
-	//         "name": "nanobot",
-	//         "version": "v0.0.0-dev"
-	//     },
-	//     "clientIP": "127.0.0.1",
-	//     "callType": "notifications/initialized",
-	//     "responseStatus": 200,
-	//     "processingTimeMs": 0,
-	//     "sessionID": "99d0cfb0-67f8-4c20-bb97-77694d62767a",
-	//     "requestID": "3c5ba0b3-477c-42d2-83f0-d1b0e64a1ea0",
-	//     "userAgent": "Go-http-client/1.1",
-	//     "requestHeaders": {
-	//         "Accept": [
-	//             "application/json, text/event-stream"
-	//         ],
-	//         "Accept-Encoding": [
-	//             "gzip"
-	//         ],
-	//         "Content-Length": [
-	//             "54"
-	//         ],
-	//         "Content-Type": [
-	//             "application/json"
-	//         ],
-	//         "Mcp-Session-Id": [
-	//             "99d0cfb0-67f8-4c20-bb97-77694d62767a"
-	//         ],
-	//         "User-Agent": [
-	//             "Go-http-client/1.1"
-	//         ]
-	//     },
-	//     "responseHeaders": {
-	//         "Vary": [
-	//             "Origin"
-	//         ],
-	//         "X-Ratelimit-Limit": [
-	//             "1000"
-	//         ],
-	//         "X-Ratelimit-Remaining": [
-	//             "997"
-	//         ],
-	//         "X-Ratelimit-Reset": [
-	//             "Thu, 24 Jul 2025 17:02:29 UTC"
-	//         ]
-	//     }
-	// }
+	let {
+		data = [],
+		onSelectRow,
+		emptyContent,
+		fetchUserById,
+		currentFragmentIndex = 0,
+		getFragmentIndex,
+		getFragmentRowIndex,
+		haveMoreFragments,
+		onLoadNextFragment
+	} = $props();
 </script>
 
 <!-- Data Table -->
@@ -68,68 +25,105 @@
 				<tr class="sticky top-0">
 					<th
 						scope="col"
-						class="sticky top-0 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						class="sticky top-0 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
 						>Timestamp</th
 					>
 					<th
 						scope="col"
-						class="sticky top-0 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						class="sticky top-0 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
 						>User</th
 					>
 					<th
 						scope="col"
-						class="sticky top-0 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						class="sticky top-0 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
 						>Server</th
 					>
 					<th
 						scope="col"
-						class="sticky top-0 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						class="sticky top-0 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
 						>Type</th
 					>
 					<th
 						scope="col"
-						class="sticky top-0 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						class="sticky top-0 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
 						>Identifier</th
 					>
 					<th
 						scope="col"
-						class="sticky top-0 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						class="sticky top-0 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
 						>Response Code</th
 					>
 					<th
 						scope="col"
-						class="sticky top-0 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						class="sticky top-0 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
 						>Response Time (ms)</th
 					>
 					<th
 						scope="col"
-						class="sticky top-0 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						class="sticky top-0 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
 						>Client</th
 					>
 					<th
 						scope="col"
-						class="sticky top-0 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						class="sticky top-0 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
 						>Client Version</th
 					>
 					<th
 						scope="col"
-						class="sticky top-0 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
+						class="sticky top-0 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
 						>IP Address</th
 					>
 				</tr>
 			</thead>
 
 			<tbody class="">
-				<!-- Sample Data Rows -->
-				{#each data as item (item.id)}
+				<!-- Audit Data Rows -->
+				{#each data as item, i (item.id)}
+					{@const fragmentIndex = getFragmentIndex?.(i)}
+					{@const fragmentRowIndex = getFragmentRowIndex?.(i)}
 					<tr
 						class={twMerge(
-							'border-surface2 dark:border-surface2 border-t shadow-xs transition-colors duration-300',
-							onSelectRow && ' hover:bg-surface1 dark:hover:bg-surface3 cursor-pointer'
+							'border-surface2 dark:border-surface2 shadow-xs border-t transition-colors duration-300',
+							onSelectRow && ' hover:bg-surface1 dark:hover:bg-surface3 cursor-pointer',
+							fragmentIndex && fragmentRowIndex === 0 && 'bg-surface3/50'
 						)}
+						data-fragment-index={fragmentIndex}
+						data-fragment-row-index={fragmentRowIndex}
 						onclick={() => onSelectRow?.(item)}
+						{@attach (node) => {
+							if (fragmentIndex < currentFragmentIndex) return;
+							if (fragmentRowIndex > 0) return;
+
+							const callback: IntersectionObserverCallback = (entries) => {
+								const isIntersection = entries.some(
+									(entry) => entry.target === node && entry.isIntersecting
+								);
+
+								console.log(entries);
+
+								if (isIntersection) {
+									onLoadNextFragment?.(fragmentIndex);
+								}
+							};
+
+							const rootElement = document.documentElement;
+
+							console.log(rootElement);
+
+							const observer = new IntersectionObserver(callback, {
+								// root: rootElement,
+								// rootMargin: '0px',
+								// threshold: 0
+							});
+
+							observer.observe(node);
+
+							return () => {
+								observer.disconnect();
+							};
+						}}
 					>
-						<td class="px-6 py-4 text-sm whitespace-nowrap"
+						<td class="whitespace-nowrap px-6 py-4 text-sm"
 							>{new Date(item.createdAt)
 								.toLocaleString(undefined, {
 									year: 'numeric',
@@ -143,23 +137,33 @@
 								})
 								.replace(/,/g, '')}</td
 						>
-						<td class="px-6 py-4 text-sm whitespace-nowrap">
+						<td class="whitespace-nowrap px-6 py-4 text-sm">
 							{#await fetchUserById(item.userID)}
 								<span class="text-gray-500">Loading...</span>
 							{:then user}
 								{user?.displayName || 'Unknown User'}
 							{/await}
 						</td>
-						<td class="px-6 py-4 text-sm whitespace-nowrap">{item.mcpServerDisplayName}</td>
-						<td class="px-6 py-4 text-sm whitespace-nowrap">{item.callType}</td>
-						<td class="px-6 py-4 text-sm whitespace-nowrap"></td>
-						<td class="px-6 py-4 text-sm whitespace-nowrap">{item.responseStatus}</td>
-						<td class="px-6 py-4 text-sm whitespace-nowrap">{item.processingTimeMs}</td>
-						<td class="px-6 py-4 text-sm whitespace-nowrap">{item.client?.name}</td>
-						<td class="px-6 py-4 text-sm whitespace-nowrap">{item.client?.version}</td>
-						<td class="px-6 py-4 text-sm whitespace-nowrap">{item.clientIP}</td>
+						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.mcpServerDisplayName}</td>
+						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.callType}</td>
+						<td class="whitespace-nowrap px-6 py-4 text-sm"></td>
+						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.responseStatus}</td>
+						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.processingTimeMs}</td>
+						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.client?.name}</td>
+						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.client?.version}</td>
+						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.clientIP}</td>
 					</tr>
 				{/each}
+
+				{#if haveMoreFragments}
+					<tr class="">
+						<td class="" colspan="10">
+							<div class="px-6 py-4 flex w-full" in:slide={{ duration: 100 }} out:slide={{ duration: 300, delay: 1000 }}>
+								<div>Loading more data...</div>
+							</div>
+						</td>
+					</tr>
+				{/if}
 			</tbody>
 		</table>
 	{:else}
