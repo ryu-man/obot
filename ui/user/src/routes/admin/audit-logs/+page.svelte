@@ -306,12 +306,20 @@
 					</div>
 
 					<div class="flex gap-4">
-						<button class="flex items-center text-xs" disabled={isReachedMin} onclick={prevPage}>
+						<button
+							class="hover:text-on-surface1/80 active:text-on-surface1/100 flex items-center text-xs transition-colors duration-100"
+							disabled={isReachedMin}
+							onclick={prevPage}
+						>
 							<ChevronLeft class="size-[1.4em]" />
 							<div>Previous Page</div>
 						</button>
 
-						<button class="flex items-center text-xs" disabled={isReachedMax} onclick={nextPage}>
+						<button
+							class="hover:text-on-surface1/80 active:text-on-surface1/100 flex items-center text-xs transition-colors duration-100"
+							disabled={isReachedMax}
+							onclick={nextPage}
+						>
 							<div>Next Page</div>
 							<ChevronRight class="size-[1.4em]" />
 						</button>
