@@ -12,10 +12,10 @@
 	let isAm = $derived(getHours(date) < 12);
 </script>
 
-<div class="time-input flex h-11 items-center gap-2">
-	<div class="bg-primary/10 border-primary flex min-h-full flex-1 rounded-md border text-xl">
+<div class="time-input flex h-14 items-center gap-2  bg-surface1/50 rounded-md">
+	<div class="flex min-h-full flex-1 text-xl">
 		<input
-			class="min-h-full w-full bg-transparent px-4"
+			class="min-h-full w-full bg-transparent px-4 text-end"
 			type="number"
 			max="12"
 			min="0"
@@ -31,7 +31,7 @@
 
 	<div class="text-4xl font-bold">:</div>
 
-	<div class="border-on-surface1/50 flex min-h-full flex-1 rounded-md border text-xl">
+	<div class=" flex min-h-full flex-1 rounded-md text-xl">
 		<input
 			class="min-h-full w-full bg-transparent px-4"
 			type="number"
@@ -47,10 +47,10 @@
 		/>
 	</div>
 
-	<div class="flex h-full flex-col gap-1 text-xs">
+	<div class="flex h-full flex-col gap-1 text-xs p-1">
 		<button
 			class={twMerge(
-				'border-on-surface1/50 flex-1 rounded-sm border px-1',
+				'bg-surface3/30 flex-1 rounded-sm px-1',
 				isAm && 'bg-primary/10 border-primary/50 text-primary'
 			)}
 			onclick={() => {
@@ -61,7 +61,7 @@
 
 		<button
 			class={twMerge(
-				'border-on-surface1/50 flex-1 rounded-sm border px-1',
+				'bg-surface3/30 flex-1 rounded-sm px-1',
 				!isAm && 'text-primary bg-primary/10'
 			)}
 			onclick={() => {

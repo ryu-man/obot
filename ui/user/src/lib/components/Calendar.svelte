@@ -305,7 +305,11 @@
 
 		{#if (start && !end) || (start && end && differenceInHours(end, start) <= 24)}
 			<!-- Render Time pickers -->
-			<div class="mt-4 flex flex-col gap-2">
+			<div
+				class="mt-4 flex flex-col gap-2"
+				in:slide={{ duration: 200 }}
+				out:slide={{ duration: 100 }}
+			>
 				<div class="flex flex-col gap-1">
 					<div class="text-xs text-gray-500">{start.toDateString()}</div>
 					<TimeInput
@@ -317,6 +321,7 @@
 				</div>
 
 				<div class="flex flex-col gap-1">
+					<!-- In case start and end dates in the same day do not render the label -->
 					{#if !isSameDay(startOfDay(end ?? start), startOfDay(start))}
 						<div
 							class="text-xs text-gray-500"
