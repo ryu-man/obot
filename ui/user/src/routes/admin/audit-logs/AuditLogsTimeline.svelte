@@ -306,7 +306,7 @@
 
 							const className = this?.getAttribute('class') ?? '';
 
-							const activeClassName = ['text-on-surface3', 'dark:text-on-surface1'];
+							const activeClassName = ['text-on-surface3', 'dark:text-on-surface1', 'duration-200', 'transiton-colors'];
 
 							// Keep old class names
 							// Filter falsy values and join with a space
