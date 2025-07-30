@@ -294,9 +294,12 @@
 				{@attach (node) => {
 					select(node)
 						.transition()
+						
 						.duration(100)
 						.call(axisBottom(timeScale).tickSizeOuter(0).ticks(xAxisTicks))
+						
 						.selectAll('.tick')
+						
 						.attr('transform', (d) => `translate(${timeScale(d) + xScale.bandwidth() / 2}, 0)`)
 						.attr('class', (d) => {
 							const isActive = isWithinInterval(d, {

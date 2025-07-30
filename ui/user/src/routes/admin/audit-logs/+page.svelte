@@ -24,10 +24,14 @@
 	const duration = PAGE_TRANSITION_DURATION;
 
 	const users = new Map<string, OrgUser>();
+	let currentPage = $state(0);
+	let pageLimit = $state(10000);
+	let pageSliceStart = $derived(currentPage * 10000);
+	let pageSliceEnd = $derived(pageSliceStart + pageLimit);
+
 	let auditLogs = $state<PaginatedResponse<AuditLog>>();
 
-	let currentPage = $state(0);
-	let limit = $state(10000);
+	const paginatedAuditLogs = $derived(auditLogs?.items?.slice(pageSliceStart, pageSliceEnd) ?? []);
 
 	let showFilters = $state(false);
 	let selectedAuditLog = $state<AuditLog & { user: string }>();
@@ -100,19 +104,19 @@
 	async function reload() {
 		currentPage = 0;
 
-		fetchAuditLogs({ ...allFilters, limit });
+		fetchAuditLogs({ ...allFilters, limit: pageLimit });
 	}
 
 	async function nextPage() {
 		currentPage = currentPage + 1;
 
-		fetchAuditLogs({ ...allFilters, limit });
+		fetchAuditLogs({ ...allFilters, limit: pageLimit });
 	}
 
 	async function prevPage() {
 		currentPage = currentPage - 1;
 
-		fetchAuditLogs({ ...allFilters, limit });
+		fetchAuditLogs({ ...allFilters, limit: pageLimit });
 	}
 
 	async function fetchAuditLogs(filters: typeof searchParamFilters) {
@@ -248,7 +252,7 @@
 				/>
 
 				<button
-					class="dark:bg-surface1 dark:hover:bg-surface2/70 dark:active:bg-surface2 dark:border-surface3 flex w-full items-center justify-center rounded-lg border border-transparent bg-white px-4 py-2 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none sm:w-auto"
+					class="dark:bg-surface1 dark:hover:bg-surface2/70 dark:active:bg-surface2 dark:border-surface3 flex w-full items-center justify-center rounded-lg border border-transparent bg-white px-4 py-2 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto"
 					onclick={() => {
 						showFilters = true;
 						selectedAuditLog = undefined;
@@ -283,7 +287,7 @@
 				<div class="px-4">
 					<div class="flex h-40 items-center justify-center rounded-md text-gray-500">
 						<AuditLogsTimeline
-							data={auditLogs?.items ?? []}
+							data={paginatedAuditLogs}
 							start={timeRangeFilters.start_time ? new Date(timeRangeFilters.start_time) : null}
 							end={timeRangeFilters.end_time ? new Date(timeRangeFilters.end_time) : null}
 						/>
@@ -291,12 +295,12 @@
 				</div>
 				<hr class="dark:border-surface3 my-4 border" />
 				<p class="mt-2 px-4 pb-4 text-sm text-gray-600">
-					{Intl.NumberFormat().format((auditLogs?.items ?? []).length)} results
+					{Intl.NumberFormat().format(paginatedAuditLogs.length)} results
 				</p>
 			</div>
 
 			<AuditLogsTable
-				data={auditLogs?.items ?? []}
+				data={paginatedAuditLogs}
 				onSelectRow={(d) => {
 					selectedAuditLog = d;
 					showFilters = false;
@@ -312,14 +316,13 @@
 	bind:this={rightSidebar}
 	use:clickOutside={[handleRightSidebarClose, true]}
 	use:dialogAnimation={{ type: 'drawer' }}
-	class="dark:border-surface1 dark:bg-surface1 fixed! top-0! right-0! bottom-0! left-auto! z-40 h-screen w-auto max-w-none rounded-none border-0 bg-white shadow-lg outline-none!"
+	class="dark:border-surface1 dark:bg-surface1 fixed! top-0! right-0! bottom-0! left-auto! outline-none! z-40 h-screen w-auto max-w-none rounded-none border-0 bg-white shadow-lg"
 >
 	{#if selectedAuditLog}
 		<AuditLogDetails onClose={handleRightSidebarClose} auditLog={selectedAuditLog} />
 	{/if}
 	{#if showFilters}
 		<AuditFilters
-			auditLogs={auditLogs?.items ?? []}
 			onClose={handleRightSidebarClose}
 			filters={{ ...searchParamFilters }}
 			{fetchUserById}
@@ -341,7 +344,7 @@
 				{@const value = searchParamFilters[key as keyof typeof searchParamFilters]}
 				{#if value}
 					<div
-						class="flex items-center gap-1 rounded-lg border border-blue-500 bg-blue-500/33 px-4 py-2"
+						class="bg-blue-500/33 flex items-center gap-1 rounded-lg border border-blue-500 px-4 py-2"
 					>
 						<p class="text-xs font-semibold">
 							{convertFilterDisplayLabel(key)}: <span class="font-light">{value}</span>
