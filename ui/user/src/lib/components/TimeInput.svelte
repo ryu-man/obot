@@ -20,7 +20,7 @@
 			max="12"
 			min="0"
 			bind:value={
-				() => getHours(date),
+				() => getHours(date) % 12,
 				(v) => {
 					date = setHours(date, v);
 					onChange?.(date);
