@@ -146,6 +146,8 @@
 					filterInput.selected = value ?? '';
 				}}
 				onClear={(_, value) => {
+					// This code section is called only when user click clear all
+					// single clear value is handled inside the component
 					const key = filterInputsAsArray[index].property;
 					filterInputs[key].selected = value;
 				}}

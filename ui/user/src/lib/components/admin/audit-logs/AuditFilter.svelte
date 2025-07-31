@@ -3,6 +3,7 @@
 	import Select, { type SelectProps } from '$lib/components/Select.svelte';
 	import type { FilterInput } from './AuditFilters.svelte';
 	import type { AuditLog } from '$lib/services';
+	import { fade } from 'svelte/transition';
 
 	interface Props {
 		filter: FilterInput;
@@ -16,9 +17,20 @@
 </script>
 
 <div class={twMerge('mb-2 flex flex-col gap-1', !options.length && 'opacity-50')}>
-	<label for={filter.property} class="text-md font-light">
-		By {filter.label}
-	</label>
+	<div class="flex items-center justify-between">
+		<label for={filter.property} class="text-md font-light">
+			By {filter.label}
+		</label>
+
+		{#if filter.selected}
+			<button
+				class="text-xs opacity-50 transition-opacity duration-200 hover:opacity-80 active:opacity-100"
+				onclick={() => onClear(undefined, '')}
+				in:fade={{ duration: 200 }}
+				out:fade={{ duration: 100, delay: 200 }}>Clear All</button
+			>
+		{/if}
+	</div>
 
 	<Select
 		class="dark:border-surface3 bg-surface1 border border-transparent shadow-inner dark:bg-black"
@@ -27,10 +39,9 @@
 			clear: 'hover:bg-surface3 bg-transparent'
 		}}
 		{options}
-		selected={filter.selected}
+		bind:selected={filter.selected}
 		multiple={true}
-		{onSelect}
-		{onClear}
 		position="top"
+		{onSelect}
 	/>
 </div>
