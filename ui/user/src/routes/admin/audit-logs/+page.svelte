@@ -18,7 +18,7 @@
 	import AuditLogsTable from './AuditLogs.svelte';
 	import AuditLogsTimeline from './AuditLogsTimeline.svelte';
 	import AuditLogCalendar from './AuditLogCalendar.svelte';
-	import { endOfDay, set } from 'date-fns';
+	import { endOfDay, set, subDays } from 'date-fns';
 
 	const duration = PAGE_TRANSITION_DURATION;
 
@@ -31,12 +31,7 @@
 	const numberOfPages = $derived(Math.ceil(auditLogsTotalItems / pageLimit));
 	const pageOffset = $derived(pageIndex * pageLimit);
 
-	const remoteAuditLogs = $derived(
-		(auditLogsResponse?.items ?? []).map(({ createdAt, ...restProps }) => ({
-			...restProps,
-			createdAt: new Date(createdAt.slice(0, -6)) + 'Z'
-		}))
-	);
+	const remoteAuditLogs = $derived(auditLogsResponse?.items ?? []);
 
 	const isReachedMax = $derived(pageIndex >= numberOfPages - 1);
 	const isReachedMin = $derived(pageIndex <= 0);
@@ -60,11 +55,20 @@
 
 	let query = $state('');
 
-	const searchParamFilters = $derived.by<AuditLogFilters & { mcpId?: string | null }>(() => {
-		return page.url.searchParams.entries().reduce((acc, [key, value]) => {
-			acc[key] = decodeURIComponent(value ?? '');
-			return acc;
-		}, {});
+	const searchParamFilters = $derived.by<AuditLogFilters & { mcp_id?: string | null }>(() => {
+		return page.url.searchParams
+			.entries()
+			.filter(([key]) => {
+				if (['query', 'offset', 'limit'].includes(key)) {
+					return false;
+				}
+
+				return true;
+			})
+			.reduce((acc, [key, value]) => {
+				acc[key] = decodeURIComponent(value ?? '');
+				return acc;
+			}, {});
 	});
 
 	let sortFilters = $derived.by(() => {
@@ -79,16 +83,18 @@
 	});
 
 	let timeRangeFilters = $derived.by(() => {
-		if (searchParamFilters.start_time || searchParamFilters.end_time) {
+		const { start_time, end_time } = searchParamFilters;
+
+		if (start_time || end_time) {
 			return {
-				start_time: searchParamFilters.start_time ?? '',
-				end_time: searchParamFilters.end_time ?? ''
+				start_time: set(new Date(start_time ?? Date.now()), { milliseconds: 0, seconds: 0 }),
+				end_time: end_time ? set(new Date(end_time), { milliseconds: 0, seconds: 0 }) : null
 			};
 		}
 
 		return {
-			start_time: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-			end_time: new Date().toISOString()
+			start_time: subDays(set(new Date(), { milliseconds: 0, seconds: 0 }), 7),
+			end_time: set(new Date(new Date()), { milliseconds: 0, seconds: 0 })
 		};
 	});
 
@@ -158,16 +164,19 @@
 		return remote;
 	}
 
-	function getFilterDisplayLabel(key: string) {
-		if (key === 'mcpServerDisplayName') return 'Server';
-		if (key === 'mcpServerCatalogEntryName') return 'Server ID';
-		if (key === 'mcpId') return 'Server ID';
-		if (key === 'startTime') return 'Start Time';
-		if (key === 'endTime') return 'End Time';
-		if (key === 'userId') return 'User ID';
-		if (key === 'client') return 'Client';
-		if (key === 'callType') return 'Call Type';
-		if (key === 'sessionId') return 'Session ID';
+	function getFilterDisplayLabel(key: keyof AuditLogFilters) {
+		if (key === 'mcp_server_display_name') return 'Server';
+		if (key === 'mcp_server_catalog_entry_name') return 'Server ID';
+		if (key === 'mcp_id') return 'Server ID';
+		if (key === 'start_time') return 'Start Time';
+		if (key === 'end_time') return 'End Time';
+		if (key === 'user_id') return 'User ID';
+		if (key === 'client_name') return 'Client Name';
+		if (key === 'client_version') return 'Client Version';
+		if (key === 'call_type') return 'Call Type';
+		if (key === 'session_id') return 'Session ID';
+		if (key === 'response_status') return 'Response Status';
+		if (key === 'client_ip') return 'Client IP';
 
 		return key.replace(/_(\w)/g, ' $1');
 	}
@@ -234,12 +243,8 @@
 				/>
 
 				<AuditLogCalendar
-					start={timeRangeFilters.start_time
-						? set(new Date(timeRangeFilters.start_time), { seconds: 0, milliseconds: 0 })
-						: null}
-					end={timeRangeFilters.end_time
-						? set(new Date(timeRangeFilters.end_time), { milliseconds: 0, seconds: 0 })
-						: null}
+					start={timeRangeFilters.start_time}
+					end={timeRangeFilters.end_time}
 					onChange={handleDateChange}
 				/>
 
@@ -280,12 +285,8 @@
 					<div class="flex h-40 items-center justify-center rounded-md text-gray-500">
 						<AuditLogsTimeline
 							data={remoteAuditLogs}
-							start={timeRangeFilters.start_time
-								? set(new Date(timeRangeFilters.start_time), { milliseconds: 0, seconds: 0 })
-								: null}
-							end={timeRangeFilters.end_time
-								? set(new Date(timeRangeFilters.end_time), { milliseconds: 0, seconds: 0 })
-								: null}
+							start={timeRangeFilters.start_time}
+							end={timeRangeFilters.end_time}
 						/>
 					</div>
 				</div>
@@ -365,6 +366,7 @@
 			onClose={handleRightSidebarClose}
 			filters={{ ...searchParamFilters }}
 			{fetchUserById}
+			{getFilterDisplayLabel}
 		/>
 	{/if}
 </dialog>
@@ -379,9 +381,10 @@
 			in:slide={{ duration: 200 }}
 			out:slide={{ duration: 100 }}
 		>
-			{#each keys.filter((key) => key !== 'startTime' && key !== 'endTime' && key !== 'sortBy' && key !== 'sortOrder') as key (key)}
+			{#each keys as key (key)}
 				{@const displayLabel = getFilterDisplayLabel(key)}
 				{@const value = searchParamFilters[key as keyof typeof searchParamFilters]}
+
 				{#if value}
 					<div
 						class="bg-blue-500/33 flex items-center gap-1 rounded-lg border border-blue-500 px-4 py-2"

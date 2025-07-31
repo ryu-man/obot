@@ -293,18 +293,21 @@ export interface AuditLogUsageStats {
 }
 
 export type AuditLogFilters = {
-	userId?: string | null;
-	mcpServerCatalogEntryName?: string | null;
-	mcpServerDisplayName?: string | null;
-	client?: string | null;
-	callType?: string | null; // tools/call, resources/read, prompts/get
-	sessionId?: string | null;
-	startTime?: string | null; // RFC3339 format (e.g., "2024-01-01T00:00:00Z"
-	endTime?: string | null;
+	user_id?: string | null;
+	mcp_server_catalog_entry_name?: string | null;
+	mcp_server_display_name?: string | null;
+	mcp_id?: string | null;
+	client_name?: string | null;
+	client_version?: string | null;
+	client_ip?: string | null;
+	call_type?: string | null; // tools/call, resources/read, prompts/get
+	session_id?: string | null;
+	start_time?: string | null; // RFC3339 format (e.g., "2024-01-01T00:00:00Z"
+	end_time?: string | null;
 	limit?: number | null;
 	offset?: number | null;
-	sortBy?: string | null; // Field to sort by (e.g., "created_at", "user_id", "call_type")
-	sortOrder?: string | null; // Sort order: "asc" or "desc"
+	query?: string | null;
+	response_status?: string | null;
 };
 
 export interface K8sServerEvent {
