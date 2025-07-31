@@ -392,7 +392,7 @@
 						.filter(Boolean) ?? []}
 
 				<div
-					class="bg-blue-500/33 flex items-center gap-1 rounded-lg border border-blue-500 px-4 py-2"
+					class="flex items-center gap-1 rounded-lg border border-blue-500/50 bg-blue-500/10 px-4 py-2 text-blue-600 dark:text-blue-300"
 				>
 					<div class="text-xs font-semibold">
 						<span>{displayLabel}</span>
@@ -415,7 +415,7 @@
 					</div>
 
 					<button
-						class="rounded-full p-1 transition-colors duration-200 hover:bg-blue-500/50"
+						class="rounded-full p-1 transition-colors duration-200 hover:bg-blue-500/25"
 						onclick={() => {
 							const url = page.url;
 							url.searchParams.delete(key);
