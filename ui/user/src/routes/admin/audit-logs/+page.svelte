@@ -309,7 +309,7 @@
 
 					<div class="flex gap-4">
 						<button
-							class="hover:text-on-surface1/80 active:text-on-surface1/100 flex items-center text-xs transition-colors duration-100"
+							class="hover:text-on-surface1/80 active:text-on-surface1/100 flex items-center text-xs disabled:opacity-50 transition-colors duration-100 disabled:pointer-events-none"
 							disabled={isReachedMin}
 							onclick={prevPage}
 						>
@@ -318,7 +318,7 @@
 						</button>
 
 						<button
-							class="hover:text-on-surface1/80 active:text-on-surface1/100 flex items-center text-xs transition-colors duration-100"
+							class="hover:text-on-surface1/80 active:text-on-surface1/100 flex items-center text-xs disabled:opacity-50 transition-colors duration-100 disabled:pointer-events-none"
 							disabled={isReachedMax}
 							onclick={nextPage}
 						>
