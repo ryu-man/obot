@@ -27,8 +27,14 @@
 				class="text-xs opacity-50 transition-opacity duration-200 hover:opacity-80 active:opacity-100"
 				onclick={() => onClear(undefined, '')}
 				in:fade={{ duration: 200 }}
-				out:fade={{ duration: 100, delay: 200 }}>Clear All</button
+				out:fade={{ duration: 100, delay: 200 }}
 			>
+				{#if filter.selected.toString()?.includes?.(',')}
+					Clear All
+				{:else}
+					Clear
+				{/if}
+			</button>
 		{/if}
 	</div>
 
