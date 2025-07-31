@@ -51,7 +51,6 @@
 	);
 
 	const fragmentedAuditLogs = $derived(remoteAuditLogs.slice(fragmentSliceStart, fragmentSliceEnd));
-	const haveMoreFragments = $derived(fragmentedAuditLogs.length < remoteAuditLogs.length);
 
 	const users = new Map<string, OrgUser>();
 
@@ -347,7 +346,6 @@
 
 					return rowIndex - fragIndex * fragmentLimit;
 				}}
-				{haveMoreFragments}
 				onLoadNextFragment={(rowFragmentIndex: number) => {
 					fragmentIndex = Math.min(numberOfFragments - 1, rowFragmentIndex + 1);
 				}}

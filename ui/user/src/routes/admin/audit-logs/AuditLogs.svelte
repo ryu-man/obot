@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { slide } from 'svelte/transition';
 	import { twMerge } from 'tailwind-merge';
 
 	let {
@@ -10,7 +9,6 @@
 		currentFragmentIndex = 0,
 		getFragmentIndex,
 		getFragmentRowIndex,
-		haveMoreFragments,
 		onLoadNextFragment
 	} = $props();
 </script>
@@ -148,20 +146,6 @@
 						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.clientIP}</td>
 					</tr>
 				{/each}
-
-				{#if haveMoreFragments}
-					<tr class="">
-						<td class="" colspan="10">
-							<div
-								class="flex w-full px-6 py-4"
-								in:slide={{ duration: 100 }}
-								out:slide={{ duration: 300, delay: 1000 }}
-							>
-								<div>Loading more data...</div>
-							</div>
-						</td>
-					</tr>
-				{/if}
 			</tbody>
 		</table>
 	{:else}
