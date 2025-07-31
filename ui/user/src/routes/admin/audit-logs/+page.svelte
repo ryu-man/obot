@@ -37,7 +37,7 @@
 		parse: (ls) => (ls ? parseInt(ls) : 0)
 	});
 	const pageIndex = $derived(pageIndexLocal.current ?? 0);
-	const pageLimit = $state(1000);
+	const pageLimit = $state(10000);
 
 	const numberOfPages = $derived(Math.ceil(auditLogsTotalItems / pageLimit));
 	const pageOffset = $derived(pageIndex * pageLimit);
@@ -48,7 +48,7 @@
 	const isReachedMin = $derived(pageIndex <= 0);
 
 	let fragmentIndex = $state(0);
-	const fragmentLimit = $state(100);
+	const fragmentLimit = $state(1000);
 	const numberOfFragments = $derived(Math.ceil(remoteAuditLogs.length / fragmentLimit));
 	const fragmentSliceStart = $derived(0);
 	const fragmentSliceEnd = $derived(
