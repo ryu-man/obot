@@ -63,7 +63,8 @@
 	let selectedAuditLog = $state<AuditLog & { user: string }>();
 	let rightSidebar = $state<HTMLDialogElement>();
 
-	let query = $state('');
+	console.log(page.url.searchParams.get('query'))
+	let query = $state(page.url.searchParams.get('query') ?? '');
 
 	const searchParamFilters = $derived.by<AuditLogURLFilters & { mcp_id?: string | null }>(() => {
 		return page.url.searchParams
@@ -140,6 +141,12 @@
 	// Throttle query update
 	const handleQueryChange = throttle((value: string) => {
 		query = value;
+
+		page.url.searchParams.set('query', value);
+
+		// Update the query search param without cause app to react
+		// Prevent losing focus from the input
+		history.replaceState(null, '', page.url);
 	}, 100);
 
 	async function nextPage() {
@@ -264,6 +271,7 @@
 					class="dark:bg-surface1 dark:border-surface3 border border-transparent bg-white shadow-sm"
 					onChange={handleQueryChange}
 					placeholder="Search..."
+					value={query}
 				/>
 
 				<AuditLogCalendar

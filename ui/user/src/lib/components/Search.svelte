@@ -9,6 +9,7 @@
 		onMouseDown?: (e: MouseEvent) => void;
 		onMouseUp?: (e: MouseEvent) => void;
 		compact?: boolean;
+		value?: String;
 	}
 
 	let {
@@ -18,6 +19,7 @@
 		onMouseDown,
 		onMouseUp,
 		compact,
+		value = '',
 		...restProps
 	}: Props = $props();
 	let searchTimeout: ReturnType<typeof setTimeout>;
@@ -46,10 +48,11 @@
 <div class="relative w-full" {...restProps}>
 	<input
 		bind:this={input}
+		{value}
 		type="text"
 		{placeholder}
 		class={twMerge(
-			'bg-surface1 peer w-full rounded-lg px-2.5 py-3 pl-12 ring-2 ring-transparent transition-all duration-200 hover:ring-2 hover:ring-blue-500 focus:w-full focus:ring-2 focus:ring-blue-500 focus:outline-hidden',
+			'bg-surface1 focus:outline-hidden peer w-full rounded-lg px-2.5 py-3 pl-12 ring-2 ring-transparent transition-all duration-200 hover:ring-2 hover:ring-blue-500 focus:w-full focus:ring-2 focus:ring-blue-500',
 			compact && 'py-2 pl-8',
 			klass
 		)}
@@ -59,7 +62,7 @@
 	/>
 	<button
 		class={twMerge(
-			'text-gray absolute top-1/2 left-4 -translate-y-1/2 peer-focus:text-blue-500',
+			'text-gray absolute left-4 top-1/2 -translate-y-1/2 peer-focus:text-blue-500',
 			compact && 'left-2.5'
 		)}
 		onclick={() => input?.focus()}
