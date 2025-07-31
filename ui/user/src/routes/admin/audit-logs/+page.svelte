@@ -143,7 +143,7 @@
 	}
 
 	async function fetchAuditLogs(filters: typeof searchParamFilters) {
-		const mcpId = filters.mcpId;
+		const { mcp_id: mcpId } = filters;
 
 		if (mcpId) {
 			auditLogsResponse = await AdminService.listServerOrInstanceAuditLogs(mcpId, filters);
