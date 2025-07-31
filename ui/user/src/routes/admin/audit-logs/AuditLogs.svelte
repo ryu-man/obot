@@ -92,7 +92,7 @@
 							if (fragmentIndex < currentFragmentIndex) return;
 							if (fragmentRowIndex > 0) return;
 
-							const callback: IntersectionObserverCallback = (entries) => {
+							const callback = (entries) => {
 								const isIntersection = entries.some(
 									(entry) => entry.target === node && entry.isIntersecting
 								);

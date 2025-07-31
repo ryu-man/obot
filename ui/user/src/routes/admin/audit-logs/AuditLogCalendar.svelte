@@ -3,7 +3,7 @@
 	import { tooltip } from '$lib/actions/tooltip.svelte';
 	import Calendar from '$lib/components/Calendar.svelte';
 	import { formatTimeRange, getTimeRangeShorthand } from '$lib/time';
-	import { endOfDay, set, startOfDay, subDays, subHours, subMonths } from 'date-fns';
+	import { set, startOfDay, subDays, subHours, subMonths } from 'date-fns';
 	import { twMerge } from 'tailwind-merge';
 
 	let { start, end, onChange } = $props();
@@ -98,7 +98,7 @@
 			{@attach (node) => (quickAccessPopover = node)}
 		>
 			<div class="flex flex-col items-start">
-				{#each actions as action}
+				{#each actions as action (action.label)}
 					<button
 						class="hover:bg-surface3 w-full min-w-max px-4 py-2 text-start"
 						onpointerdown={action.onpointerdown}

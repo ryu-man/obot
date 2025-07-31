@@ -1,14 +1,7 @@
 <script lang="ts">
 	import { clickOutside } from '$lib/actions/clickoutside';
 	import { tooltip } from '$lib/actions/tooltip.svelte';
-	import {
-		differenceInHours,
-		endOfDay,
-		getHours,
-		getMinutes,
-		isSameDay,
-		startOfDay
-	} from 'date-fns';
+	import { differenceInHours, endOfDay, isSameDay, startOfDay } from 'date-fns';
 	import { ChevronLeft, ChevronRight, CalendarCog } from 'lucide-svelte';
 	import { twMerge } from 'tailwind-merge';
 	import TimeInput from './TimeInput.svelte';

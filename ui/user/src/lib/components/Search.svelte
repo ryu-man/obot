@@ -9,7 +9,7 @@
 		onMouseDown?: (e: MouseEvent) => void;
 		onMouseUp?: (e: MouseEvent) => void;
 		compact?: boolean;
-		value?: String;
+		value?: string;
 	}
 
 	let {

@@ -31,7 +31,6 @@
 		timeMonths,
 		axisLeft
 	} from 'd3';
-	import { onMount } from 'svelte';
 	import {
 		set,
 		startOfMonth,
@@ -57,8 +56,6 @@
 	let { start, end, data }: Props<AuditLog> = $props();
 
 	let tooltipElement = $state<HTMLElement>();
-
-	let show = $state(false);
 
 	let paddingLeft = $state(24);
 	let paddingRight = $state(8);
@@ -237,20 +234,10 @@
 		return stacked(group);
 	});
 
-	// $inspect(bands, group);
-
 	const yDomain = $derived(extent(series.map((serie) => extent(serie.flat())).flat(), (d) => d));
 	const yScale = $derived(scaleLinear(yDomain, [innerHeight, 0]));
 
 	let currentItem = $state<{ key: string; value: string; date: string }>();
-
-	onMount(() => {
-		setTimeout(() => {
-			show = true;
-		}, 300);
-	});
-
-	// $inspect(series, 'Transformed Data');
 </script>
 
 <div bind:clientHeight bind:clientWidth class="group h-full w-full">
@@ -347,9 +334,11 @@
 						.attr('height', (d) => yScale(d[0]) - yScale(d[1]))
 						.attr('width', xScale.bandwidth())
 						.attr('cursor', 'pointer')
-						.on('mouseover', function (event, d) {
+						.on('mouseover', function () {
 							// Show tooltip
-							tooltipElement && select(tooltipElement).style('opacity', 1);
+							if (tooltipElement) {
+								select(tooltipElement).style('opacity', 1);
+							}
 
 							// Highlight the hovered bar
 							select(this).style('stroke', 'white').style('stroke-width', 2);
