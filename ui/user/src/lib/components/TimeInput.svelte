@@ -12,6 +12,7 @@
 	const hours = $derived(getHours(date));
 	const minutes = $derived(getMinutes(date));
 	const isAm = $derived(hours < 12);
+	const amPmAsNumber = $derived(+!isAm);
 </script>
 
 <div class="time-input bg-surface1/50 flex h-14 items-center gap-2 rounded-md">
@@ -45,7 +46,7 @@
 			}}
 			oninput={(ev) => {
 				const valueAsNumber = ev.currentTarget.valueAsNumber;
-				date = setHours(date, valueAsNumber % 12);
+				date = setHours(date, (valueAsNumber + amPmAsNumber * 12) % 24);
 				onChange?.(date);
 			}}
 		/>
