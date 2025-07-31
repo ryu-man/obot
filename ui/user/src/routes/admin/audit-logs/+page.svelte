@@ -63,7 +63,6 @@
 	let selectedAuditLog = $state<AuditLog & { user: string }>();
 	let rightSidebar = $state<HTMLDialogElement>();
 
-	console.log(page.url.searchParams.get('query'));
 	let query = $state(page.url.searchParams.get('query') ?? '');
 
 	const searchParamFilters = $derived.by<AuditLogURLFilters & { mcp_id?: string | null }>(() => {
