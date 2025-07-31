@@ -64,7 +64,7 @@
 		return page.url.searchParams
 			.entries()
 			.filter(([key]) => {
-				if (['query', 'offset', 'limit'].includes(key)) {
+				if (['query'].includes(key)) {
 					return false;
 				}
 
@@ -104,11 +104,11 @@
 	});
 
 	const allFilters = $derived({
-		...searchParamFilters,
-		...sortFilters,
 		limit: pageLimit,
 		offset: pageOffset,
-		query
+		...searchParamFilters,
+		...sortFilters,
+		query: encodeURIComponent(query)
 	});
 
 	afterNavigate(() => {
@@ -127,6 +127,8 @@
 
 	// Throttle query update
 	const handleQueryChange = throttle((value: string) => {
+		return;
+		// Disabled until search param issue is fixed
 		query = value;
 	}, 100);
 
@@ -246,7 +248,7 @@
 
 			<div class="flex gap-4">
 				<Search
-					class="dark:bg-surface1 dark:border-surface3 border border-transparent bg-white shadow-sm"
+					class="dark:bg-surface1 dark:border-surface3 pointer-events-none cursor-not-allowed border border-transparent bg-white opacity-50 shadow-sm"
 					onChange={handleQueryChange}
 					placeholder="Search..."
 				/>
