@@ -196,9 +196,10 @@
 
 		if (frame === 'daily') {
 			generator = timeDay;
+			step = 2;
 
-			if (duration > MS_MONTH) {
-				step = 2;
+			if (duration > 2 * MS_MONTH) {
+				step = 4;
 			}
 		}
 
@@ -278,11 +279,12 @@
 				transform="translate(0 {innerHeight})"
 				{@attach (node) => {
 					const selection = select(node);
+					const axis = axisBottom(timeScale).tickSizeOuter(0).ticks(xAxisTicks);
+
 					selection
 						.transition()
 						.duration(200)
-
-						.call(axisBottom(timeScale).tickSizeOuter(0).ticks(xAxisTicks))
+						.call(axis)
 						.selectAll('.tick')
 						.attr('transform', (d) => `translate(${timeScale(d) + xScale.bandwidth() / 2}, 0)`)
 						.selectAll('line, text')
