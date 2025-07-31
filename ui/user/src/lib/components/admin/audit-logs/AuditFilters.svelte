@@ -71,8 +71,6 @@
 		return acc;
 	}, {} as FilterInputs);
 
-	$inspect(filters);
-
 	const filterInputsAsArray = $derived(Object.values(filterInputs));
 
 	$effect(() => {
@@ -118,6 +116,17 @@
 
 		goto(url, { noScroll: true });
 	}
+
+	function handleClearAllFilters() {
+		const url = page.url;
+
+		Object.keys(filterInputs).forEach((filterId) => {
+			console.log(filterId);
+			page.url.searchParams.delete(filterId);
+		});
+
+		goto(url, { noScroll: true });
+	}
 </script>
 
 <div class="dark:border-surface3 md:w-sm h-full w-screen border-l border-transparent">
@@ -142,7 +151,11 @@
 				}}
 			></AuditFilter>
 		{/each}
-		<div class="mt-auto">
+		<div class="mt-auto flex flex-col gap-2">
+			<button
+				class="button-secondary text-md w-full rounded-lg px-4 py-2"
+				onclick={handleClearAllFilters}>Clear All</button
+			>
 			<button
 				class="button-primary text-md w-full rounded-lg px-4 py-2"
 				onclick={handleApplyFilters}>Apply Filters</button
