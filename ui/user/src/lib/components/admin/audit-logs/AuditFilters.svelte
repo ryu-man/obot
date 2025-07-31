@@ -129,10 +129,10 @@
 	}
 </script>
 
-<div class="dark:border-surface3 md:w-sm h-full w-screen border-l border-transparent">
+<div class="dark:border-surface3 h-full w-screen border-l border-transparent md:w-sm">
 	<div class="relative w-full text-center">
 		<h4 class="p-4 text-xl font-semibold">Filters</h4>
-		<button class="icon-button absolute right-4 top-1/2 -translate-y-1/2" onclick={onClose}>
+		<button class="icon-button absolute top-1/2 right-4 -translate-y-1/2" onclick={onClose}>
 			<X class="size-5" />
 		</button>
 	</div>

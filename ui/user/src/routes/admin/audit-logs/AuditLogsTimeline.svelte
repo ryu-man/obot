@@ -255,7 +255,7 @@
 
 <div bind:clientHeight bind:clientWidth class="group h-full w-full">
 	<div
-		class="tooltip pointer-events-none fixed left-0 top-0 flex flex-col"
+		class="tooltip pointer-events-none fixed top-0 left-0 flex flex-col"
 		style="opacity: 0;"
 		{@attach (node) => {
 			tooltipElement = node;

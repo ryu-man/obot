@@ -564,14 +564,10 @@ export async function listAuditLogUsageStats(
 	return response;
 }
 
-export async function listAuditLogFilterOptions(
-	filterId: string,
-	opts?: { fetch?: Fetcher }
-) {
-	const response = (await doGet(
-		`/mcp-audit-logs/filter-options/${filterId}`,
-		opts
-	)) as {options: string[]};
+export async function listAuditLogFilterOptions(filterId: string, opts?: { fetch?: Fetcher }) {
+	const response = (await doGet(`/mcp-audit-logs/filter-options/${filterId}`, opts)) as {
+		options: string[];
+	};
 	return response;
 }
 

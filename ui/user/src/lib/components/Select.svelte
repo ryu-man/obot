@@ -148,7 +148,7 @@
 		{#if onClear}
 			<button
 				class={twMerge(
-					'button absolute right-12 top-1/2 -translate-y-1/2 p-1 transition-colors duration-300',
+					'button absolute top-1/2 right-12 -translate-y-1/2 p-1 transition-colors duration-300',
 					classes?.clear
 				)}
 				onclick={() => {
@@ -169,7 +169,7 @@
 		]}
 		bind:this={popover}
 		class={twMerge(
-			'default-scrollbar-thin absolute left-0 top-0 z-10 max-h-[300px] w-full overflow-y-auto rounded-sm',
+			'default-scrollbar-thin absolute top-0 left-0 z-10 max-h-[300px] w-full overflow-y-auto rounded-sm',
 			position === 'top' && 'translate-y-10',
 			position === 'bottom' && '-translate-y-full'
 		)}

@@ -21,10 +21,9 @@ export function localState<T = string>(
 		untrack(() => {
 			if (storedValue) {
 				value = parse(storedValue) as T;
-			}else {
+			} else {
 				value = defaultVallue ?? ('' as T);
 			}
-
 
 			isReady = true;
 		});
