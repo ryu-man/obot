@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { twMerge } from 'tailwind-merge';
+	import { tooltip } from '$lib/actions/tooltip.svelte';
 
 	let {
 		data = [],
@@ -137,7 +138,7 @@
 						<td class="px-6 py-4 text-sm whitespace-nowrap">{item.responseStatus}</td>
 						<td class="px-6 py-4 text-sm whitespace-nowrap">{item.processingTimeMs}</td>
 						<td class="px-6 py-4 text-sm whitespace-nowrap">
-							<div class="max-w-[15ch] truncate">
+							<div class="max-w-[15ch] truncate" use:tooltip={item.client?.name}>
 								{item.client?.name}
 							</div>
 						</td>
