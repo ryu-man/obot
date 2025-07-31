@@ -4,7 +4,6 @@
 	const MS_HOUR = MS_MINUTE * 60;
 	const MS_DAY = MS_HOUR * 24;
 	const MS_MONTH = MS_DAY * 30.436875;
-	const MS_YEAR = MS_DAY * 365.25;
 </script>
 
 <script lang="ts">
@@ -48,8 +47,6 @@
 		intervalToDuration
 	} from 'date-fns';
 	import type { AuditLog } from '$lib/services';
-	import { acceptCompletion } from '@codemirror/autocomplete';
-
 	interface Props<T> {
 		start: Date;
 		end: Date;
@@ -172,20 +169,11 @@
 		return union(generator(start, end, step).map((d) => d.toISOString()));
 	});
 
-	// $inspect(bands, data.map(xAccessor));
-
-	const barsPerViewport = $state(50);
-
-	const barWidth = $derived(innerWidth / barsPerViewport);
-	// const xRange = $derived([0, barWidth * bands.size]);
-
 	const xRange = $derived([0, innerWidth]);
 
 	const timeScale = $derived(scaleTime(timeFrameDomain, xRange));
 
 	const xScale = $derived(scaleBand(xRange).domain(bands).paddingInner(0.1).paddingOuter(0.1));
-
-	$inspect(frame);
 
 	const xAxisTicks = $derived.by(() => {
 		let generator = timeMonth;
@@ -297,25 +285,30 @@
 						.call(axisBottom(timeScale).tickSizeOuter(0).ticks(xAxisTicks))
 						.selectAll('.tick')
 						.attr('transform', (d) => `translate(${timeScale(d) + xScale.bandwidth() / 2}, 0)`)
+						.selectAll('line, text')
 						.attr('class', function (d) {
-							console.log(d);
+							const element = this as SVGElement;
+
 							const isActive = isWithinInterval(d, {
 								start,
 								end
 							});
 
-							const className = this?.getAttribute('class') ?? '';
+							const classNames = new Set(element.classList);
+							const activeClassName = [
+								'text-on-surface3',
+								'dark:text-on-surface1',
+								'duration-1000',
+								'transiton-colors'
+							];
 
-							const activeClassName = ['text-on-surface3', 'dark:text-on-surface1', 'duration-200', 'transiton-colors'];
+							const callbackfn = (d: string) =>
+								isActive ? classNames.add(d) : classNames.delete(d);
+							activeClassName.forEach(callbackfn);
 
 							// Keep old class names
 							// Filter falsy values and join with a space
-							return [
-								activeClassName.reduce((acc, val) => acc.replace(val, ''), className),
-								isActive ? activeClassName.join(' ') : ''
-							]
-								.filter(Boolean)
-								.join(' ');
+							return classNames.values().toArray().join(' ');
 						});
 				}}
 			></g>
