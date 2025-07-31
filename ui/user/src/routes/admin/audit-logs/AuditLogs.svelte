@@ -99,21 +99,15 @@
 									(entry) => entry.target === node && entry.isIntersecting
 								);
 
-								console.log(entries);
-
 								if (isIntersection) {
 									onLoadNextFragment?.(fragmentIndex);
 								}
 							};
 
-							const rootElement = document.documentElement;
-
-							console.log(rootElement);
+							const rootElement = document.body;
 
 							const observer = new IntersectionObserver(callback, {
-								// root: rootElement,
-								// rootMargin: '0px',
-								// threshold: 0
+								root: rootElement
 							});
 
 							observer.observe(node);
@@ -158,7 +152,11 @@
 				{#if haveMoreFragments}
 					<tr class="">
 						<td class="" colspan="10">
-							<div class="px-6 py-4 flex w-full" in:slide={{ duration: 100 }} out:slide={{ duration: 300, delay: 1000 }}>
+							<div
+								class="flex w-full px-6 py-4"
+								in:slide={{ duration: 100 }}
+								out:slide={{ duration: 300, delay: 1000 }}
+							>
 								<div>Loading more data...</div>
 							</div>
 						</td>
