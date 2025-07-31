@@ -23,47 +23,47 @@
 				<tr class="sticky top-0">
 					<th
 						scope="col"
-						class="sticky top-0 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+						class="sticky top-0 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 						>Timestamp</th
 					>
 					<th
 						scope="col"
-						class="sticky top-0 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+						class="sticky top-0 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 						>User</th
 					>
 					<th
 						scope="col"
-						class="sticky top-0 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+						class="sticky top-0 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 						>Server</th
 					>
 					<th
 						scope="col"
-						class="sticky top-0 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+						class="sticky top-0 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 						>Type</th
 					>
 					<th
 						scope="col"
-						class="sticky top-0 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+						class="sticky top-0 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 						>Identifier</th
 					>
 					<th
 						scope="col"
-						class="sticky top-0 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+						class="sticky top-0 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 						>Response Code</th
 					>
 					<th
 						scope="col"
-						class="sticky top-0 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+						class="sticky top-0 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 						>Response Time (ms)</th
 					>
 					<th
 						scope="col"
-						class="sticky top-0 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+						class="sticky top-0 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 						>Client</th
 					>
 					<th
 						scope="col"
-						class="sticky top-0 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+						class="sticky top-0 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 						>IP Address</th
 					>
 				</tr>
@@ -76,7 +76,7 @@
 					{@const fragmentRowIndex = getFragmentRowIndex?.(i)}
 					<tr
 						class={twMerge(
-							'border-surface2 dark:border-surface2 shadow-xs border-t transition-colors duration-300',
+							'border-surface2 dark:border-surface2 border-t shadow-xs transition-colors duration-300',
 							onSelectRow && ' hover:bg-surface1 dark:hover:bg-surface3 cursor-pointer',
 							fragmentIndex && fragmentRowIndex === 0 && 'bg-surface3/50'
 						)}
@@ -110,7 +110,7 @@
 							};
 						}}
 					>
-						<td class="whitespace-nowrap px-6 py-4 text-sm"
+						<td class="px-6 py-4 text-sm whitespace-nowrap"
 							>{new Date(item.createdAt)
 								.toLocaleString(undefined, {
 									year: 'numeric',
@@ -124,20 +124,24 @@
 								})
 								.replace(/,/g, '')}</td
 						>
-						<td class="whitespace-nowrap px-6 py-4 text-sm">
+						<td class="px-6 py-4 text-sm whitespace-nowrap">
 							{#await fetchUserById(item.userID)}
 								<span class="text-gray-500">Loading...</span>
 							{:then user}
 								{user?.displayName || 'Unknown User'}
 							{/await}
 						</td>
-						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.mcpServerDisplayName}</td>
-						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.callType}</td>
-						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.callIdentifier}</td>
-						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.responseStatus}</td>
-						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.processingTimeMs}</td>
-						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.client?.name}</td>
-						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.clientIP}</td>
+						<td class="px-6 py-4 text-sm whitespace-nowrap">{item.mcpServerDisplayName}</td>
+						<td class="px-6 py-4 text-sm whitespace-nowrap">{item.callType}</td>
+						<td class="px-6 py-4 text-sm whitespace-nowrap">{item.callIdentifier}</td>
+						<td class="px-6 py-4 text-sm whitespace-nowrap">{item.responseStatus}</td>
+						<td class="px-6 py-4 text-sm whitespace-nowrap">{item.processingTimeMs}</td>
+						<td class="px-6 py-4 text-sm whitespace-nowrap">
+							<div class="max-w-[15ch] truncate">
+								{item.client?.name}
+							</div>
+						</td>
+						<td class="px-6 py-4 text-sm whitespace-nowrap">{item.clientIP}</td>
 					</tr>
 				{/each}
 			</tbody>
