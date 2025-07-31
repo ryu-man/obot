@@ -270,7 +270,7 @@
 	<svg width={clientWidth} height={clientHeight} viewBox={`0 0 ${clientWidth} ${clientHeight}`}>
 		<g transform="translate({paddingLeft}, {paddingTop})">
 			<g
-				class="x-axis text-on-surface3/10 dark:text-on-surface1/10"
+				class="x-axis text-on-surface3/20 dark:text-on-surface1/10"
 				transform="translate(0 {innerHeight})"
 				{@attach (node) => {
 					const selection = select(node);
@@ -311,7 +311,7 @@
 			></g>
 
 			<g
-				class="y-axis text-on-surface3/10 dark:text-on-surface1/10"
+				class="y-axis text-on-surface3/20 dark:text-on-surface1/10"
 				{@attach (node) => {
 					select(node)
 						.transition()
