@@ -46,6 +46,7 @@
 		intervalToDuration
 	} from 'date-fns';
 	import type { AuditLog } from '$lib/services';
+
 	interface Props<T> {
 		start: Date;
 		end: Date;
@@ -207,14 +208,21 @@
 		return generator.every(step);
 	});
 
+	const colorByCallType = {
+		initialize: '#14B8B8',
+		'notifications/initialized': '#16DB93',
+		'prompts/list': '#66E755',
+		'resources/list': '#C6E236',
+		'tools/call': '#EFEA5A',
+		'tools/list': '#F1C453'
+	};
+
+	const callTypesArray = $derived(callTypes.values().toArray());
 	const colorScale = $derived(
-		scaleOrdinal(callTypes.values().toArray(), [
-			'#4F46E5', // indigo-700
-			'#EC4899', // pink-600
-			'#F59E0B', // amber-500
-			'#10B981', // emerald-500
-			'#3B82F6' // blue-500
-		])
+		scaleOrdinal(
+			callTypesArray,
+			callTypesArray.map((d) => colorByCallType[d] ?? '#999999')
+		)
 	);
 
 	const group = $derived.by(() => {
