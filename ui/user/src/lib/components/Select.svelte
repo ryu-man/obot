@@ -73,8 +73,6 @@
 			.filter(Boolean)
 	);
 
-	$inspect(selectedOptions, selectedValues, selected);
-
 	let popover = $state<HTMLDialogElement>();
 
 	function onInput(e: Event) {
@@ -147,14 +145,14 @@
 			<ChevronDown class="size-5 flex-shrink-0" />
 		</button>
 
-		{#if !multiple && onClear}
+		{#if onClear}
 			<button
 				class={twMerge(
 					'button absolute right-12 top-1/2 -translate-y-1/2 p-1 transition-colors duration-300',
 					classes?.clear
 				)}
 				onclick={() => {
-					onClear();
+					onClear(undefined, '');
 				}}
 			>
 				<X class="size-4" />
