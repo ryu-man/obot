@@ -107,7 +107,7 @@
 					{#each selectedOptions as selectedOption (selectedOption.id)}
 						<div
 							class={twMerge(
-								'text-md dark:bg-surface2 flex items-center gap-1 truncate rounded-sm px-1',
+								'text-md bg-surface3/50 dark:bg-surface2 flex items-center gap-1 truncate rounded-sm px-1',
 								onClear && '',
 								classes?.buttonContent
 							)}
