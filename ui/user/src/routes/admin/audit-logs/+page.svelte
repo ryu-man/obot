@@ -128,13 +128,17 @@
 		if (!allFilters) return;
 		if (!pageIndexLocal.isReady) return;
 
-		fetchAuditLogs({ ...allFilters });
+		fetchAuditLogs({ ...allFilters }).then((res) => {
+			// Reset page and page fragment indexes when the total results are less than the current page offset
+			if (!res || pageOffset > (res?.total ?? 0)) {
+				pageIndexLocal.current = 0;
+				fragmentIndex = 0;
+			}
+		});
 	});
 
 	// Throttle query update
 	const handleQueryChange = throttle((value: string) => {
-		return;
-		// Disabled until search param issue is fixed
 		query = value;
 	}, 100);
 
@@ -162,10 +166,12 @@
 		const { mcp_id: mcpId } = filters;
 
 		if (mcpId) {
-			auditLogsResponse = await AdminService.listServerOrInstanceAuditLogs(mcpId, filters);
+			return (auditLogsResponse = await AdminService.listServerOrInstanceAuditLogs(mcpId, filters));
 		} else {
-			auditLogsResponse = await AdminService.listAuditLogs(filters);
+			return (auditLogsResponse = await AdminService.listAuditLogs(filters));
 		}
+
+		return undefined;
 	}
 
 	async function fetchUserById(id: string) {
@@ -255,7 +261,7 @@
 
 			<div class="flex gap-4">
 				<Search
-					class="dark:bg-surface1 dark:border-surface3 pointer-events-none cursor-not-allowed border border-transparent bg-white opacity-50 shadow-sm"
+					class="dark:bg-surface1 dark:border-surface3 border border-transparent bg-white shadow-sm"
 					onChange={handleQueryChange}
 					placeholder="Search..."
 				/>
