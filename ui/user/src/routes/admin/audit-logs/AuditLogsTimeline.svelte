@@ -209,12 +209,12 @@
 	});
 
 	const colorByCallType = {
-		initialize: '#637BE9',
-		'notifications/initialized': '#EB4773',
-		'prompts/list': '#F5B13D',
-		'resources/list': '#12D393',
-		'tools/call': '#1EB1FA',
-		'tools/list': '#EDEA26'
+		initialize: '#254993',
+		'notifications/initialized': '#D65C7C',
+		'prompts/list': '#D6A95C',
+		'resources/list': '#2EB88A',
+		'tools/call': '#47A3D1',
+		'tools/list': '#D0CE43'
 	};
 
 	const callTypesArray = $derived(callTypes.values().toArray());
