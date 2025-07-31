@@ -25,13 +25,18 @@
 	import AuditLogCalendar from './AuditLogCalendar.svelte';
 	import { endOfDay, set, subDays } from 'date-fns';
 	import { twMerge } from 'tailwind-merge';
+	import { localState } from '$lib/runes/localState.svelte';
 
 	const duration = PAGE_TRANSITION_DURATION;
 
 	let auditLogsResponse = $state<PaginatedResponse<AuditLog>>();
 	const auditLogsTotalItems = $derived(auditLogsResponse?.total ?? 0);
 
-	let pageIndex = $state(0);
+	let pageIndexLocal = localState('@obot/auditlogs/page-index', {
+		value: 0,
+		parse: (ls) => (ls ? parseInt(ls) : 0)
+	});
+	const pageIndex = $derived(pageIndexLocal.current ?? 0);
 	const pageLimit = $state(40);
 
 	const numberOfPages = $derived(Math.ceil(auditLogsTotalItems / pageLimit));
@@ -64,7 +69,7 @@
 		return page.url.searchParams
 			.entries()
 			.filter(([key]) => {
-				if (['query'].includes(key)) {
+				if (['query', 'limit', 'offset'].includes(key)) {
 					return false;
 				}
 
@@ -92,22 +97,22 @@
 
 		if (start_time || end_time) {
 			return {
-				start_time: set(new Date(start_time ?? Date.now()), { milliseconds: 0, seconds: 0 }),
-				end_time: end_time ? set(new Date(end_time), { milliseconds: 0, seconds: 0 }) : null
+				startTime: set(new Date(start_time ?? Date.now()), { milliseconds: 0, seconds: 0 }),
+				endTime: end_time ? set(new Date(end_time), { milliseconds: 0, seconds: 0 }) : null
 			};
 		}
 
 		return {
-			start_time: subDays(set(new Date(), { milliseconds: 0, seconds: 0 }), 7),
-			end_time: set(new Date(new Date()), { milliseconds: 0, seconds: 0 })
+			startTime: subDays(set(new Date(), { milliseconds: 0, seconds: 0 }), 7),
+			endTime: set(new Date(new Date()), { milliseconds: 0, seconds: 0 })
 		};
 	});
 
 	const allFilters = $derived({
-		limit: pageLimit,
-		offset: pageOffset,
 		...searchParamFilters,
 		...sortFilters,
+		limit: pageLimit,
+		offset: pageOffset,
 		query: encodeURIComponent(query)
 	});
 
@@ -121,6 +126,7 @@
 
 	$effect(() => {
 		if (!allFilters) return;
+		if (!pageIndexLocal.isReady) return;
 
 		fetchAuditLogs({ ...allFilters });
 	});
@@ -137,7 +143,7 @@
 
 		//Reset fragment index
 		fragmentIndex = 0;
-		pageIndex = Math.min(numberOfPages, pageIndex + 1);
+		pageIndexLocal.current = Math.min(numberOfPages, pageIndex + 1);
 
 		fetchAuditLogs({ ...allFilters });
 	}
@@ -147,7 +153,7 @@
 
 		//Reset fragment index
 		fragmentIndex = 0;
-		pageIndex = Math.max(0, pageIndex - 1);
+		pageIndexLocal.current = Math.max(0, pageIndex - 1);
 
 		fetchAuditLogs({ ...allFilters });
 	}
@@ -232,6 +238,7 @@
 		}
 
 		goto(url.toString(), { noScroll: true });
+		pageIndexLocal.current = 0;
 	}
 </script>
 
@@ -254,8 +261,8 @@
 				/>
 
 				<AuditLogCalendar
-					start={timeRangeFilters.start_time}
-					end={timeRangeFilters.end_time}
+					start={timeRangeFilters.startTime}
+					end={timeRangeFilters.endTime}
 					onChange={handleDateChange}
 				/>
 
@@ -296,8 +303,8 @@
 					<div class="flex h-40 items-center justify-center rounded-md text-gray-500">
 						<AuditLogsTimeline
 							data={remoteAuditLogs}
-							start={timeRangeFilters.start_time}
-							end={timeRangeFilters.end_time}
+							start={timeRangeFilters.startTime}
+							end={timeRangeFilters.endTime}
 						/>
 					</div>
 				</div>
