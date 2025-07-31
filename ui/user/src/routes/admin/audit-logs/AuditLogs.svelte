@@ -133,7 +133,7 @@
 						</td>
 						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.mcpServerDisplayName}</td>
 						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.callType}</td>
-						<td class="whitespace-nowrap px-6 py-4 text-sm"></td>
+						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.callIdentifier}</td>
 						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.responseStatus}</td>
 						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.processingTimeMs}</td>
 						<td class="whitespace-nowrap px-6 py-4 text-sm">{item.client?.name}</td>
