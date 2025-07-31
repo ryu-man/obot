@@ -1,4 +1,4 @@
-<script module>
+<script module lang="ts">
 	export type FilterKey = Exclude<
 		keyof AuditLogURLFilters,
 		'query' | 'offset' | 'limit' | 'start_time' | 'end_time'
