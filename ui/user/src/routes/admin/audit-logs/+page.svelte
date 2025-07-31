@@ -19,7 +19,6 @@
 	import AuditLogsTimeline from './AuditLogsTimeline.svelte';
 	import AuditLogCalendar from './AuditLogCalendar.svelte';
 	import { endOfDay, set, subDays } from 'date-fns';
-	import { split } from 'es-toolkit/compat';
 	import { twMerge } from 'tailwind-merge';
 
 	const duration = PAGE_TRANSITION_DURATION;
