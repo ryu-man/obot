@@ -1,6 +1,6 @@
 <script module>
 	export type FilterKey = Exclude<
-		keyof AuditLogFilters,
+		keyof AuditLogURLFilters,
 		'query' | 'offset' | 'limit' | 'start_time' | 'end_time'
 	>;
 
@@ -22,15 +22,15 @@
 	import { X } from 'lucide-svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import type { AuditLogFilters, OrgUser } from '$lib/services/admin/types';
+	import type { AuditLogURLFilters, OrgUser } from '$lib/services/admin/types';
 	import { AdminService } from '$lib/services';
 	import { untrack } from 'svelte';
 
 	interface Props {
-		filters: AuditLogFilters;
+		filters: AuditLogURLFilters;
 		onClose: () => void;
 		fetchUserById: (userId: string) => Promise<OrgUser | undefined>;
-		getFilterDisplayLabel?: (key: keyof AuditLogFilters) => string;
+		getFilterDisplayLabel?: (key: keyof AuditLogURLFilters) => string;
 	}
 
 	let { filters, onClose, fetchUserById, getFilterDisplayLabel }: Props = $props();

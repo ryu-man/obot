@@ -292,7 +292,7 @@ export interface AuditLogUsageStats {
 	uniqueUsers: number;
 }
 
-export type AuditLogFilters = {
+export type AuditLogURLFilters = {
 	user_id?: string | null;
 	mcp_server_catalog_entry_name?: string | null;
 	mcp_server_display_name?: string | null;

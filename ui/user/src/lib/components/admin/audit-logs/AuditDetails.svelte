@@ -12,7 +12,7 @@
 	import {
 		AdminService,
 		type AuditLog,
-		type AuditLogFilters,
+		type AuditLogURLFilters,
 		type AuditLogUsageStats,
 		type OrgUser
 	} from '$lib/services';
@@ -35,7 +35,7 @@
 		mcpCatalogEntryId?: string;
 		mcpServerDisplayName?: string;
 		users: OrgUser[];
-		filters?: AuditLogFilters;
+		filters?: AuditLogURLFilters;
 		sort?: {
 			sortBy: string;
 			sortOrder: 'asc' | 'desc';
@@ -85,7 +85,7 @@
 		}
 	});
 
-	async function fetchLogsAndUsers(filters?: AuditLogFilters, offset?: number, limit?: number) {
+	async function fetchLogsAndUsers(filters?: AuditLogURLFilters, offset?: number, limit?: number) {
 		const sortAndFilters = {
 			...filters,
 			...sort,

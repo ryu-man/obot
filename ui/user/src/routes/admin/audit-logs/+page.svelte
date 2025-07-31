@@ -8,7 +8,7 @@
 	import Layout from '$lib/components/Layout.svelte';
 	import Search from '$lib/components/Search.svelte';
 	import { PAGE_TRANSITION_DURATION } from '$lib/constants';
-	import { type OrgUser, type AuditLogFilters, AdminService, type AuditLog } from '$lib/services';
+	import { type OrgUser, type AuditLogURLFilters, AdminService, type AuditLog } from '$lib/services';
 	import { getUser, type PaginatedResponse } from '$lib/services/admin/operations';
 	import { clickOutside } from '$lib/actions/clickoutside';
 	import { dialogAnimation } from '$lib/actions/dialogAnimation';
@@ -56,7 +56,7 @@
 
 	let query = $state('');
 
-	const searchParamFilters = $derived.by<AuditLogFilters & { mcp_id?: string | null }>(() => {
+	const searchParamFilters = $derived.by<AuditLogURLFilters & { mcp_id?: string | null }>(() => {
 		return page.url.searchParams
 			.entries()
 			.filter(([key]) => {
@@ -165,7 +165,7 @@
 		return remote;
 	}
 
-	function getFilterDisplayLabel(key: keyof AuditLogFilters) {
+	function getFilterDisplayLabel(key: keyof AuditLogURLFilters) {
 		if (key === 'mcp_server_display_name') return 'Server';
 		if (key === 'mcp_server_catalog_entry_name') return 'Server ID';
 		if (key === 'mcp_id') return 'Server ID';
