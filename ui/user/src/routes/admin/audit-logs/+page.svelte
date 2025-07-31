@@ -19,6 +19,8 @@
 	import AuditLogsTimeline from './AuditLogsTimeline.svelte';
 	import AuditLogCalendar from './AuditLogCalendar.svelte';
 	import { endOfDay, set, subDays } from 'date-fns';
+	import { split } from 'es-toolkit/compat';
+	import { twMerge } from 'tailwind-merge';
 
 	const duration = PAGE_TRANSITION_DURATION;
 
@@ -383,29 +385,47 @@
 		>
 			{#each keys as key (key)}
 				{@const displayLabel = getFilterDisplayLabel(key)}
-				{@const value = searchParamFilters[key as keyof typeof searchParamFilters]}
+				{@const values =
+					searchParamFilters[key as keyof typeof searchParamFilters]
+						?.toString()
+						.split(',')
+						.filter(Boolean) ?? []}
 
-				{#if value}
-					<div
-						class="bg-blue-500/33 flex items-center gap-1 rounded-lg border border-blue-500 px-4 py-2"
-					>
-						<p class="text-xs font-semibold">
-							{displayLabel}: <span class="font-light">{getFilterValue(key, value)}</span>
-						</p>
+				<div
+					class="bg-blue-500/33 flex items-center gap-1 rounded-lg border border-blue-500 px-4 py-2"
+				>
+					<div class="text-xs font-semibold">
+						<span>{displayLabel}</span>
+						<span>:</span>
+						{#each values as value, i (value)}
+							{@const isMultiple = values.length > 1}
+							{@const isNotLastItem = i < values.length - 1}
 
-						<button
-							class="rounded-full p-1 transition-colors duration-200 hover:bg-blue-500/50"
-							onclick={() => {
-								const url = page.url;
-								url.searchParams.delete(key);
-
-								goto(url, { noScroll: true });
-							}}
-						>
-							<X class="size-3" />
-						</button>
+							{#if isMultiple}
+								<span class={twMerge('font-light', isMultiple && isNotLastItem && 'ml-1')}>
+									<span>{getFilterValue(key, value)}</span>
+									{#if isNotLastItem}
+										<span class="mr-1 font-bold">OR</span>
+									{/if}
+								</span>
+							{:else}
+								<span class={'font-light'}>{getFilterValue(key, value)}</span>
+							{/if}
+						{/each}
 					</div>
-				{/if}
+
+					<button
+						class="rounded-full p-1 transition-colors duration-200 hover:bg-blue-500/50"
+						onclick={() => {
+							const url = page.url;
+							url.searchParams.delete(key);
+
+							goto(url, { noScroll: true });
+						}}
+					>
+						<X class="size-3" />
+					</button>
+				</div>
 			{/each}
 		</div>
 	{/if}
