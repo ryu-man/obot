@@ -8,7 +8,12 @@
 	import Layout from '$lib/components/Layout.svelte';
 	import Search from '$lib/components/Search.svelte';
 	import { PAGE_TRANSITION_DURATION } from '$lib/constants';
-	import { type OrgUser, type AuditLogURLFilters, AdminService, type AuditLog } from '$lib/services';
+	import {
+		type OrgUser,
+		type AuditLogURLFilters,
+		AdminService,
+		type AuditLog
+	} from '$lib/services';
 	import { getUser, type PaginatedResponse } from '$lib/services/admin/operations';
 	import { clickOutside } from '$lib/actions/clickoutside';
 	import { dialogAnimation } from '$lib/actions/dialogAnimation';
@@ -129,6 +134,8 @@
 	async function nextPage() {
 		if (isReachedMax) return;
 
+		//Reset fragment index
+		fragmentIndex = 0;
 		pageIndex = Math.min(numberOfPages, pageIndex + 1);
 
 		fetchAuditLogs({ ...allFilters });
@@ -137,6 +144,8 @@
 	async function prevPage() {
 		if (isReachedMin) return;
 
+		//Reset fragment index
+		fragmentIndex = 0;
 		pageIndex = Math.max(0, pageIndex - 1);
 
 		fetchAuditLogs({ ...allFilters });
@@ -309,7 +318,7 @@
 
 					<div class="flex gap-4">
 						<button
-							class="hover:text-on-surface1/80 active:text-on-surface1/100 flex items-center text-xs disabled:opacity-50 transition-colors duration-100 disabled:pointer-events-none"
+							class="hover:text-on-surface1/80 active:text-on-surface1/100 flex items-center text-xs transition-colors duration-100 disabled:pointer-events-none disabled:opacity-50"
 							disabled={isReachedMin}
 							onclick={prevPage}
 						>
@@ -318,7 +327,7 @@
 						</button>
 
 						<button
-							class="hover:text-on-surface1/80 active:text-on-surface1/100 flex items-center text-xs disabled:opacity-50 transition-colors duration-100 disabled:pointer-events-none"
+							class="hover:text-on-surface1/80 active:text-on-surface1/100 flex items-center text-xs transition-colors duration-100 disabled:pointer-events-none disabled:opacity-50"
 							disabled={isReachedMax}
 							onclick={nextPage}
 						>
