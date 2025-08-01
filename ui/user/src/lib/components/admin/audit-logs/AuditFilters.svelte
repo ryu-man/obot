@@ -33,7 +33,9 @@
 		getFilterDisplayLabel?: (key: keyof AuditLogURLFilters) => string;
 	}
 
-	let { filters, onClose, fetchUserById, getFilterDisplayLabel }: Props = $props();
+	let { filters: externFilters, onClose, fetchUserById, getFilterDisplayLabel }: Props = $props();
+
+	let filters = $derived({ ...externFilters });
 
 	type FilterOptions = Record<FilterKey, FilterOption[]>;
 	let filtersOptions: FilterOptions = $state({} as FilterOptions);
@@ -124,7 +126,7 @@
 	}
 </script>
 
-<div class="dark:border-surface3 h-full w-screen border-l border-transparent md:w-sm">
+<div class="dark:border-surface3 h-full w-screen border-l border-transparent md:w-lg lg:w-xl">
 	<div class="relative w-full text-center">
 		<h4 class="p-4 text-xl font-semibold">Filters</h4>
 		<button class="icon-button absolute top-1/2 right-4 -translate-y-1/2" onclick={onClose}>
@@ -132,7 +134,7 @@
 		</button>
 	</div>
 	<div
-		class="default-scrollbar-thin flex h-[calc(100%-60px)] flex-col gap-4 overflow-y-auto p-4 pt-0"
+		class="default-scrollbar-thin flex h-[calc(100%-60px)] w-full flex-col gap-4 overflow-y-auto p-4 pt-0"
 	>
 		{#each filterInputsAsArray as filterInput, index (filterInput.property)}
 			<AuditFilter
