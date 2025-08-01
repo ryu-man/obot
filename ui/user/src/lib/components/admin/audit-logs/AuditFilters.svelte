@@ -118,14 +118,9 @@
 	}
 
 	function handleClearAllFilters() {
-		const url = page.url;
-
-		Object.keys(filterInputs).forEach((filterId) => {
-			console.log(filterId);
-			page.url.searchParams.delete(filterId);
+		filterInputsAsArray.forEach((filterInput) => {
+			filterInput.selected = '';
 		});
-
-		goto(url, { noScroll: true });
 	}
 </script>
 
