@@ -24,7 +24,6 @@
 	import AuditLogsTimeline from './AuditLogsTimeline.svelte';
 	import AuditLogCalendar from './AuditLogCalendar.svelte';
 	import { endOfDay, set, subDays } from 'date-fns';
-	import { twMerge } from 'tailwind-merge';
 	import { localState } from '$lib/runes/localState.svelte';
 
 	const duration = PAGE_TRANSITION_DURATION;
@@ -201,7 +200,7 @@
 		if (key === 'mcp_id') return 'Server ID';
 		if (key === 'start_time') return 'Start Time';
 		if (key === 'end_time') return 'End Time';
-		if (key === 'user_id') return 'User ID';
+		if (key === 'user_id') return 'User';
 		if (key === 'client_name') return 'Client Name';
 		if (key === 'client_version') return 'Client Version';
 		if (key === 'call_type') return 'Call Type';
@@ -212,21 +211,27 @@
 		return key.replace(/_(\w)/g, ' $1');
 	}
 
-	function getFilterValue(label: string, value: string | number) {
+	async function getFilterValue(label: keyof AuditLogURLFilters, value: string | number) {
 		if (label === 'start_time' || label === 'end_time') {
-			return new Date(value).toLocaleString(undefined, {
-				year: 'numeric',
-				month: 'short',
-				day: 'numeric',
-				hour: '2-digit',
-				minute: '2-digit',
-				second: '2-digit',
-				hour12: true,
-				timeZoneName: 'short'
-			});
+			return Promise.resolve(
+				new Date(value).toLocaleString(undefined, {
+					year: 'numeric',
+					month: 'short',
+					day: 'numeric',
+					hour: '2-digit',
+					minute: '2-digit',
+					second: '2-digit',
+					hour12: true,
+					timeZoneName: 'short'
+				})
+			);
 		}
 
-		return value + '';
+		if (label === 'user_id') {
+			return (await fetchUserById(value + '')).displayName;
+		}
+
+		return Promise.resolve(value + '');
 	}
 
 	function handleRightSidebarClose() {
@@ -427,20 +432,20 @@
 					<div class="text-xs font-semibold">
 						<span>{displayLabel}</span>
 						<span>:</span>
-						{#each values as value, i (value)}
+						{#each values as value (value)}
 							{@const isMultiple = values.length > 1}
-							{@const isNotLastItem = i < values.length - 1}
 
-							{#if isMultiple}
-								<span class={twMerge('font-light', isMultiple && isNotLastItem && 'ml-1')}>
-									<span>{getFilterValue(key, value)}</span>
-									{#if isNotLastItem}
-										<span class="mr-1 font-bold">OR</span>
-									{/if}
-								</span>
-							{:else}
-								<span class="font-light">{getFilterValue(key, value)}</span>
-							{/if}
+							{#await getFilterValue(key, value) then response}
+								{#if isMultiple}
+									<span class="font-light">
+										<span>{response}</span>
+									</span>
+
+									<span class="mx-1 font-bold last:hidden">OR</span>
+								{:else}
+									<span class="font-light">{response}</span>
+								{/if}
+							{/await}
 						{/each}
 					</div>
 
