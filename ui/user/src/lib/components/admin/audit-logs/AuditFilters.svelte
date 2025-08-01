@@ -6,7 +6,7 @@
 
 	export type FilterInput = {
 		label: string;
-		property: string;
+		property: FilterKey;
 		selected: string | number;
 		options: { id: string; label: string }[];
 	};
@@ -27,7 +27,7 @@
 	import { untrack } from 'svelte';
 
 	interface Props {
-		filters: AuditLogURLFilters;
+		filters?: AuditLogURLFilters;
 		onClose: () => void;
 		fetchUserById: (userId: string) => Promise<OrgUser | undefined>;
 		getFilterDisplayLabel?: (key: keyof AuditLogURLFilters) => string;
@@ -35,7 +35,7 @@
 
 	let { filters: externFilters, onClose, fetchUserById, getFilterDisplayLabel }: Props = $props();
 
-	let filters = $derived({ ...externFilters });
+	let filters = $derived({ ...(externFilters ?? {}) });
 
 	type FilterOptions = Record<FilterKey, FilterOption[]>;
 	let filtersOptions: FilterOptions = $state({} as FilterOptions);
@@ -93,7 +93,9 @@
 			}));
 		};
 
-		Object.keys(filterInputs).forEach((id) => {
+		const filterInputKeys = Object.keys(filterInputs) as FilterKey[];
+
+		filterInputKeys.forEach((id) => {
 			processLog(id).then((options) => {
 				untrack(() => {
 					filtersOptions[id] = options;

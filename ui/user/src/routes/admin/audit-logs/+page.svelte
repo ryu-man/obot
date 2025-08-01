@@ -63,7 +63,7 @@
 
 	let query = $state(page.url.searchParams.get('query') ?? '');
 
-	const searchParamFilters = $derived.by<AuditLogURLFilters & { mcp_id?: string | null }>(() => {
+	const searchParamFilters = $derived.by<AuditLogURLFilters>(() => {
 		return page.url.searchParams
 			.entries()
 			.filter(([key]) => {
@@ -73,30 +73,24 @@
 
 				return true;
 			})
-			.reduce((acc, [key, value]) => {
-				acc[key] = decodeURIComponent(value ?? '');
-				return acc;
-			}, {});
-	});
-
-	let sortFilters = $derived.by(() => {
-		if (searchParamFilters.sortBy && searchParamFilters.sortOrder) {
-			return {
-				sortBy: searchParamFilters.sortBy,
-				sortOrder: searchParamFilters.sortOrder as 'asc' | 'desc'
-			};
-		}
-
-		return {};
+			.reduce(
+				(acc, [key, value]) => {
+					acc[key] = decodeURIComponent(value ?? '');
+					return acc;
+				},
+				{} as Record<string, string>
+			);
 	});
 
 	let timeRangeFilters = $derived.by(() => {
 		const { start_time, end_time } = searchParamFilters;
 
 		if (start_time || end_time) {
+			const today = set(new Date(), { milliseconds: 0, seconds: 0 });
+
 			return {
-				startTime: set(new Date(start_time ?? Date.now()), { milliseconds: 0, seconds: 0 }),
-				endTime: end_time ? set(new Date(end_time), { milliseconds: 0, seconds: 0 }) : null
+				startTime: set(new Date(start_time ?? today), { milliseconds: 0, seconds: 0 }),
+				endTime: set(new Date(end_time ?? subDays(today, 7)), { milliseconds: 0, seconds: 0 })
 			};
 		}
 
@@ -108,7 +102,6 @@
 
 	const allFilters = $derived({
 		...searchParamFilters,
-		...sortFilters,
 		start_time: timeRangeFilters.startTime.toISOString(),
 		end_time: timeRangeFilters.endTime?.toISOString() ?? '',
 		limit: pageLimit,
@@ -378,13 +371,17 @@
 				onLoadNextFragment={(rowFragmentIndex: number) => {
 					fragmentIndex = Math.min(numberOfFragments - 1, rowFragmentIndex + 1);
 				}}
-				onSelectRow={(d) => {
+				onSelectRow={(d: typeof selectedAuditLog) => {
 					selectedAuditLog = d;
 					showFilters = false;
 					rightSidebar?.show();
 				}}
 				{fetchUserById}
-			/>
+			>
+				{#snippet emptyContent()}
+					<!-- Just to skip ts checker, have to added later -->
+				{/snippet}
+			</AuditLogsTable>
 		</div>
 	</div>
 </Layout>
@@ -409,7 +406,7 @@
 </dialog>
 
 {#snippet filters()}
-	{@const keys = Object.keys(searchParamFilters)}
+	{@const keys = Object.keys(searchParamFilters) as (keyof AuditLogURLFilters)[]}
 	{@const hasFilters = Object.values(searchParamFilters).some((value) => !!value)}
 
 	{#if hasFilters}

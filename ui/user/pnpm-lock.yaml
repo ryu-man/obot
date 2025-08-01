@@ -129,6 +129,9 @@ importers:
       '@types/d3':
         specifier: ^7.4.3
         version: 7.4.3
+      '@types/d3-time-format':
+        specifier: ^4.0.3
+        version: 4.0.3
       '@types/eslint':
         specifier: ^9.6.1
         version: 9.6.1

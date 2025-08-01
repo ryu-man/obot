@@ -2,12 +2,11 @@
 	import { twMerge } from 'tailwind-merge';
 	import Select, { type SelectProps } from '$lib/components/Select.svelte';
 	import type { FilterInput } from './AuditFilters.svelte';
-	import type { AuditLog } from '$lib/services';
 	import { fade } from 'svelte/transition';
 
 	interface Props {
 		filter: FilterInput;
-		onSelect?: SelectProps<AuditLog>['onSelect'];
+		onSelect: SelectProps<{ id: string; label: string }>['onSelect'];
 		onClearAll?: () => void;
 	}
 

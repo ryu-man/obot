@@ -29,7 +29,8 @@
 		timeWeeks,
 		timeMinutes,
 		timeMonths,
-		axisLeft
+		axisLeft,
+		type NumberValue
 	} from 'd3';
 	import { timeFormat } from 'd3-time-format';
 
@@ -49,7 +50,8 @@
 		startOfSecond,
 		startOfMinute,
 		startOfWeek,
-		getDay
+		getDay,
+		subDays
 	} from 'date-fns';
 	import type { AuditLog } from '$lib/services';
 
@@ -105,26 +107,10 @@
 		return [startOfHour, endOfHour];
 	});
 
-	const timeFrameDomain = $derived.by(() => {
+	const timeFrameDomain: [Date, Date] = $derived.by(() => {
 		const [setStartBoundary, setEndBoundary] = boundaries;
 
-		if (!start && !end) {
-			const [mn, mx] = extent(data, (d) => new Date(d.createdAt));
-
-			return [mn ? setStartBoundary(mn) : mn, mx ? setEndBoundary(mx) : mx];
-		}
-
-		if (start && end) {
-			return [setStartBoundary(start), setEndBoundary(end)];
-		}
-
-		if (start) {
-			const mx = max(data, (d) => new Date(d.createdAt));
-			return [setStartBoundary(start), mx ? setEndBoundary(mx) : max];
-		}
-
-		const mn = min(data, (d) => new Date(d.createdAt));
-		return [setStartBoundary(mn ?? new Date()), end ? setEndBoundary(end) : end];
+		return [setStartBoundary(start), setEndBoundary(end)];
 	});
 
 	const xAccessor = $derived.by(() => {
@@ -214,7 +200,7 @@
 		return generator.every(step);
 	});
 
-	const colorByCallType = {
+	const colorByCallType: Record<string, string> = {
 		initialize: '#254993',
 		'notifications/initialized': '#D65C7C',
 		'prompts/list': '#D6A95C',
@@ -243,12 +229,16 @@
 	const series = $derived.by(() => {
 		const stacked = stack()
 			.keys(callTypes)
-			.value((d, key) => d[1].get(key) ?? 0);
+			.value((d, key) => (d[1] as unknown as Map<string, number>).get(key) ?? 0);
 
-		return stacked(group);
+		return stacked(group as Iterable<{ [key: string]: number }>);
 	});
 
-	const yDomain = $derived(extent(series.map((serie) => extent(serie.flat())).flat(), (d) => d));
+	const yDomain = $derived.by(() => {
+		const [mn, mx] = extent(series.map((serie) => extent(serie.flat())).flat(), (d) => d);
+
+		return [mn ?? 0, mx ?? 0];
+	});
 	const yScale = $derived(scaleLinear(yDomain, [innerHeight, 0]));
 
 	let currentItem = $state<{ key: string; value: string; date: string }>();
@@ -292,7 +282,8 @@
 						formatMonth = format('%B'),
 						formatYear = format('%Y');
 
-					function tickFormat(date: Date) {
+					function tickFormat(domainValue: Date | NumberValue) {
+						const date = domainValue as Date;
 						const fn = (() => {
 							if (startOfSecond(date) < date) return formatMillisecond;
 
@@ -330,12 +321,15 @@
 						.duration(200)
 						.call(axis)
 						.selectAll('.tick')
-						.attr('transform', (d) => `translate(${timeScale(d) + xScale.bandwidth() / 2}, 0)`)
+						.attr(
+							'transform',
+							(d) => `translate(${timeScale(d as Date) + xScale.bandwidth() / 2}, 0)`
+						)
 						.selectAll('line, text')
 						.attr('class', function (d) {
 							const element = this as SVGElement;
 
-							const isActive = isWithinInterval(d, {
+							const isActive = isWithinInterval(d as Date, {
 								start,
 								end
 							});
@@ -361,7 +355,7 @@
 
 			<g
 				class="y-axis text-on-surface3/20 dark:text-on-surface1/10"
-				{@attach (node) => {
+				{@attach (node: SVGGElement) => {
 					select(node)
 						.transition()
 						.duration(100)
@@ -375,7 +369,7 @@
 
 			<g
 				class="data"
-				{@attach (node) => {
+				{@attach (node: SVGGElement) => {
 					select(node)
 						.selectAll('g')
 						.data(series)
@@ -386,7 +380,7 @@
 						.selectAll('rect')
 						.data((d) => d)
 						.join('rect')
-						.attr('x', (d) => xScale(d.data[0]))
+						.attr('x', (d) => xScale((d.data[0] ?? '') as unknown as string) ?? 0)
 						.attr('y', (d) => yScale(d[1]))
 						.attr('height', (d) => yScale(d[0]) - yScale(d[1]))
 						.attr('width', xScale.bandwidth())
@@ -403,21 +397,29 @@
 						.on('mousemove', function (event, d) {
 							if (!tooltipElement) return;
 
+							const element = this as SVGRectElement;
+
 							const t = select(tooltipElement);
 
-							const item = {};
+							const item: { key?: string; value?: string; date?: string } = {};
 
-							const parentData = select(this.parentNode).datum();
+							const parentData = select(element.parentNode as SVGElement).datum() as {
+								key: string;
+							};
 
 							// Update tooltip content and position
 							item.key = parentData.key;
 
 							// The actual value of this segment
-							item.value = d[1] - d[0];
+							item.value = d[1] - d[0] + '';
 
 							item.date = new Date(d.data[0]).toLocaleString();
 
-							currentItem = { ...item };
+							currentItem = { ...item } as {
+								key: string;
+								value: string;
+								date: string;
+							};
 
 							t.style('left', event.pageX + 10 + 'px').style('top', event.pageY - 28 + 'px');
 						})

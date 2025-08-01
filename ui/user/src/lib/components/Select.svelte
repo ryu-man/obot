@@ -71,7 +71,7 @@
 	let selectedOptions = $derived(
 		selectedValues
 			.map((selectedValue) => options.find((option) => option.id === selectedValue))
-			.filter(Boolean)
+			.filter(Boolean) as T[]
 	);
 
 	let popover = $state<HTMLDialogElement>();
