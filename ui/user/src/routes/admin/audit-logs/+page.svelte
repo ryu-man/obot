@@ -128,8 +128,6 @@
 		if (!allFilters) return;
 		if (!pageIndexLocal.isReady) return;
 
-		console.log(allFilters);
-
 		fetchAuditLogs({ ...allFilters }).then((res) => {
 			// Reset page and page fragment indexes when the total results are less than the current page offset
 			if (!res || pageOffset > (res?.total ?? 0)) {
