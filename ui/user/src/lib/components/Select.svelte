@@ -228,10 +228,3 @@
 		{/each}
 	</dialog>
 </div>
-
-<!-- <style>
-	.options-grid{
-		display: grid;
-		grid-template-columns: ;
-	}
-</style> -->
