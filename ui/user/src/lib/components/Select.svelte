@@ -102,43 +102,52 @@
 		>
 			<div class="no-scrollbar inset-0 flex flex-1 items-center justify-start overflow-x-scroll">
 				<div class="flex items-center justify-center gap-2">
-					{#each selectedOptions as selectedOption (selectedOption.id)}
-						<div
-							class={twMerge(
-								'text-md bg-surface3/50 dark:bg-surface2 flex items-center gap-1 truncate rounded-sm px-1',
-								onClear && '',
-								classes?.buttonContent
-							)}
-							in:slide={{ duration: 100, axis: 'x' }}
-							out:slide={{ duration: 50, axis: 'x' }}
-						>
+					{#if multiple}
+						{#each selectedOptions as selectedOption (selectedOption.id)}
+							<div
+								class={twMerge(
+									'text-md bg-surface3/50 dark:bg-surface2 flex items-center gap-1 truncate rounded-sm px-1',
+									onClear && '',
+									classes?.buttonContent
+								)}
+								in:slide={{ duration: 100, axis: 'x' }}
+								out:slide={{ duration: 50, axis: 'x' }}
+							>
+								{#if buttonStartContent}
+									{@render buttonStartContent()}
+								{/if}
+								<di>{selectedOption?.label ?? ''}</di>
+
+								<div
+									class={twMerge(
+										'button rounded-xs p-0 transition-colors duration-300',
+										classes?.clear
+									)}
+									role="button"
+									tabindex="0"
+									onclick={(ev) => {
+										ev.stopPropagation();
+
+										const filteredValues = selectedValues.filter((d) => d !== selectedOption.id);
+
+										selected = filteredValues.join(',');
+
+										onClear?.(selectedOption, selected);
+									}}
+									onkeydown={() => {}}
+								>
+									<X class="size-4" />
+								</div>
+							</div>
+						{/each}
+					{:else}
+						<div class="flex items-center gap-2">
 							{#if buttonStartContent}
 								{@render buttonStartContent()}
 							{/if}
-							<di>{selectedOption?.label ?? ''}</di>
-
-							<div
-								class={twMerge(
-									'button rounded-xs p-0 transition-colors duration-300',
-									classes?.clear
-								)}
-								role="button"
-								tabindex="0"
-								onclick={(ev) => {
-									ev.stopPropagation();
-
-									const filteredValues = selectedValues.filter((d) => d !== selectedOption.id);
-
-									selected = filteredValues.join(',');
-
-									onClear?.(selectedOption, selected);
-								}}
-								onkeydown={() => {}}
-							>
-								<X class="size-4" />
-							</div>
+							<di>{selectedOptions[0]?.label ?? ''}</di>
 						</div>
-					{/each}
+					{/if}
 				</div>
 			</div>
 
