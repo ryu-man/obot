@@ -204,15 +204,12 @@
 					e.stopPropagation();
 
 					const key = option.id.toString();
-					const values = new Set(selectedValues);
 
 					if (isSelected) {
-						values.delete(key);
+						selected = selectedValues.filter((d) => d !== key).join(',');
 					} else {
-						values.add(key);
+						selected = [key, ...selectedValues].join(',');
 					}
-
-					selected = values.values().toArray().toReversed().join(',');
 
 					onSelect(option, selected);
 
