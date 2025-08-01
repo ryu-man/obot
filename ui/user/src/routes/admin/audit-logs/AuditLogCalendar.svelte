@@ -53,7 +53,7 @@
 			}
 		},
 		{
-			label: 'Last Month',
+			label: 'Last 30 Days',
 			onpointerdown: () => {
 				end = set(new Date(), { milliseconds: 0, seconds: 0 });
 				start = startOfDay(subMonths(end, 1));
