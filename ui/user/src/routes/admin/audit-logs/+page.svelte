@@ -19,7 +19,6 @@
 	import { dialogAnimation } from '$lib/actions/dialogAnimation';
 	import AuditLogDetails from '$lib/components/admin/audit-logs/AuditLogDetails.svelte';
 	import AuditFilters from '$lib/components/admin/audit-logs/AuditFilters.svelte';
-	import { tooltip } from '$lib/actions/tooltip.svelte';
 	import AuditLogsTable from './AuditLogs.svelte';
 	import AuditLogsTimeline from './AuditLogsTimeline.svelte';
 	import AuditLogCalendar from './AuditLogCalendar.svelte';
@@ -291,16 +290,15 @@
 				/>
 
 				<button
-					class="dark:bg-surface1 dark:hover:bg-surface2/70 dark:active:bg-surface2 dark:border-surface3 flex w-full items-center justify-center rounded-lg border border-transparent bg-white px-4 py-2 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none sm:w-auto"
+					class="dark:bg-surface1 dark:hover:bg-surface2/70 dark:active:bg-surface2 dark:border-surface3 flex w-full items-center justify-center gap-1 rounded-lg border border-transparent bg-white px-4 py-2 shadow-sm hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none sm:w-auto"
 					onclick={() => {
 						showFilters = true;
 						selectedAuditLog = undefined;
 						rightSidebar?.show();
 					}}
-					use:tooltip={'Filter Logs'}
 				>
 					<svg
-						class="mr-2 h-5 w-5"
+						class="size-4"
 						xmlns="http://www.w3.org/2000/svg"
 						viewBox="0 0 24 24"
 						fill="none"
