@@ -12,7 +12,7 @@
 	import {
 		AdminService,
 		type AuditLog,
-		type AuditLogURLFilters,
+		type AuditLogFilters,
 		type AuditLogUsageStats,
 		type OrgUser
 	} from '$lib/services';
@@ -35,7 +35,7 @@
 		mcpCatalogEntryId?: string;
 		mcpServerDisplayName?: string;
 		users: OrgUser[];
-		filters?: AuditLogURLFilters;
+		filters?: AuditLogFilters;
 		sort?: {
 			sortBy: string;
 			sortOrder: 'asc' | 'desc';
@@ -85,7 +85,7 @@
 		}
 	});
 
-	async function fetchLogsAndUsers(filters?: AuditLogURLFilters, offset?: number, limit?: number) {
+	async function fetchLogsAndUsers(filters?: AuditLogFilters, offset?: number, limit?: number) {
 		const sortAndFilters = {
 			...filters,
 			...sort,
@@ -102,8 +102,8 @@
 		} else {
 			listAuditLogs = AdminService.listAuditLogs({
 				...sortAndFilters,
-				mcpServerCatalogEntryName: mcpCatalogEntryId,
-				mcpServerDisplayName
+				mcp_server_catalog_entry_name: mcpCatalogEntryId,
+				mcp_server_display_name: mcpServerDisplayName
 			});
 			listUsageStats = AdminService.listAuditLogUsageStats({
 				...filters,
@@ -641,7 +641,12 @@
 			<AuditLogDetails onClose={handleRightSidebarClose} auditLog={selectedAuditLog} />
 		{/if}
 		{#if showFilters}
-			<AuditFilters {auditLogs} onClose={handleRightSidebarClose} {filters} />
+			<AuditFilters
+				onClose={handleRightSidebarClose}
+				{filters}
+				getFilterDisplayLabel={(d) => d}
+				fetchUserById={(id) => Promise.resolve({ id: id, displayName: id } as OrgUser)}
+			/>
 		{/if}
 	</dialog>
 {/await}

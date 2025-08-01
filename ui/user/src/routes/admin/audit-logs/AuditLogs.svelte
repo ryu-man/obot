@@ -88,21 +88,22 @@
 							if (fragmentIndex < currentFragmentIndex) return;
 							if (fragmentRowIndex > 0) return;
 
-							const callback = (entries) => {
-								const isIntersection = entries.some(
-									(entry) => entry.target === node && entry.isIntersecting
-								);
-
-								if (isIntersection) {
-									onLoadNextFragment?.(fragmentIndex);
-								}
-							};
-
 							const rootElement = document.body;
 
-							const observer = new IntersectionObserver(callback, {
-								root: rootElement
-							});
+							const observer = new IntersectionObserver(
+								(entries) => {
+									const isIntersection = entries.some(
+										(entry) => entry.target === node && entry.isIntersecting
+									);
+
+									if (isIntersection) {
+										onLoadNextFragment?.(fragmentIndex);
+									}
+								},
+								{
+									root: rootElement
+								}
+							);
 
 							observer.observe(node);
 

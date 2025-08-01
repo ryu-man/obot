@@ -22,8 +22,6 @@
 		timeMonth,
 		timeDay,
 		timeMinute,
-		max,
-		min,
 		timeDays,
 		timeHours,
 		timeWeeks,
@@ -50,8 +48,7 @@
 		startOfSecond,
 		startOfMinute,
 		startOfWeek,
-		getDay,
-		subDays
+		getDay
 	} from 'date-fns';
 	import type { AuditLog } from '$lib/services';
 
