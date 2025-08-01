@@ -8,10 +8,10 @@
 	interface Props {
 		filter: FilterInput;
 		onSelect?: SelectProps<AuditLog>['onSelect'];
-		onClear?: SelectProps<AuditLog>['onClear'];
+		onClearAll?: () => void;
 	}
 
-	let { filter, onSelect, onClear }: Props = $props();
+	let { filter, onSelect, onClearAll }: Props = $props();
 
 	let options = $derived(filter.options ?? []);
 </script>
@@ -25,7 +25,7 @@
 		{#if filter.selected}
 			<button
 				class="text-xs opacity-50 transition-opacity duration-200 hover:opacity-80 active:opacity-100"
-				onclick={() => onClear(undefined, '')}
+				onclick={() => onClearAll?.()}
 				in:fade={{ duration: 200 }}
 				out:fade={{ duration: 100, delay: 200 }}
 			>

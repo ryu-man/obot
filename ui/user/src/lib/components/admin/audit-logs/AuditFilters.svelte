@@ -140,11 +140,11 @@
 				onSelect={(_, value) => {
 					filterInput.selected = value ?? '';
 				}}
-				onClear={(_, value) => {
+				onClearAll={() => {
 					// This code section is called only when user click clear all
 					// single clear value is handled inside the component
 					const key = filterInputsAsArray[index].property;
-					filterInputs[key].selected = value;
+					filterInputs[key].selected = '';
 				}}
 			></AuditFilter>
 		{/each}
