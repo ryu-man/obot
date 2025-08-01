@@ -206,8 +206,6 @@
 
 					selected = values.values().toArray().toReversed().join(',');
 
-					console.log(selected);
-
 					onSelect(option, selected);
 
 					popover?.close();
