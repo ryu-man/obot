@@ -23,7 +23,8 @@
 	import { clickOutside } from '$lib/actions/clickoutside';
 	import { ChevronDown, X, Check } from 'lucide-svelte';
 	import type { Snippet } from 'svelte';
-	import { slide } from 'svelte/transition';
+	import { flip } from 'svelte/animate';
+	import { fade } from 'svelte/transition';
 	import { twMerge } from 'tailwind-merge';
 
 	let {
@@ -92,7 +93,7 @@
 			)}
 			placeholder="Enter a task"
 			oninput={onInput}
-			onpointerdown={() => {
+			onclick={() => {
 				if (popover?.open) {
 					popover?.close();
 				} else {
@@ -100,43 +101,50 @@
 				}
 			}}
 		>
-			<div class="no-scrollbar inset-0 flex flex-1 items-center justify-start overflow-x-scroll">
-				<div class="flex items-center justify-center gap-2">
+			<div class="flex flex-1 flex-wrap items-center justify-start">
+				<div class="flex flex-wrap items-center justify-start gap-2 whitespace-break-spaces">
 					{#if multiple}
 						{#each selectedOptions as selectedOption (selectedOption.id)}
 							<div
 								class={twMerge(
-									'text-md bg-surface3/50 dark:bg-surface2 flex items-center gap-1 truncate rounded-sm px-1',
+									'text-md bg-surface3/50 dark:bg-surface2 inline-flex items-center gap-1 rounded-sm px-1',
 									onClear && '',
 									classes?.buttonContent
 								)}
-								in:slide={{ duration: 100, axis: 'x' }}
-								out:slide={{ duration: 50, axis: 'x' }}
+								in:fade={{ duration: 100 }}
+								out:fade={{ duration: 0 }}
+								animate:flip={{ duration: 100 }}
 							>
 								{#if buttonStartContent}
 									{@render buttonStartContent()}
 								{/if}
-								<di>{selectedOption?.label ?? ''}</di>
 
-								<div
-									class={twMerge(
-										'button rounded-xs p-0 transition-colors duration-300',
-										classes?.clear
-									)}
-									role="button"
-									tabindex="0"
-									onclick={(ev) => {
-										ev.stopPropagation();
+								<div class="flex flex-1 break-all">
+									{selectedOption?.label ?? ''}
+								</div>
 
-										const filteredValues = selectedValues.filter((d) => d !== selectedOption.id);
+								<div class="flex h-[22.5px] items-center place-self-start">
+									<div
+										class={twMerge(
+											'button rounded-xs p-0 transition-colors duration-300',
+											classes?.clear
+										)}
+										role="button"
+										tabindex="0"
+										onclick={(ev) => {
+											ev.preventDefault();
+											ev.stopImmediatePropagation();
 
-										selected = filteredValues.join(',');
+											const filteredValues = selectedValues.filter((d) => d !== selectedOption.id);
 
-										onClear?.(selectedOption, selected);
-									}}
-									onkeydown={() => {}}
-								>
-									<X class="size-4" />
+											selected = filteredValues.join(',');
+
+											onClear?.(selectedOption, selected);
+										}}
+										onkeydown={() => {}}
+									>
+										<X class="size-4 " />
+									</div>
 								</div>
 							</div>
 						{/each}
@@ -151,7 +159,7 @@
 				</div>
 			</div>
 
-			<ChevronDown class="size-5 flex-shrink-0" />
+			<ChevronDown class="size-5 flex-shrink-0 self-start" />
 		</button>
 
 		{#if onClear}
@@ -179,7 +187,7 @@
 		bind:this={popover}
 		class={twMerge(
 			'default-scrollbar-thin absolute top-0 left-0 z-10 max-h-[300px] w-full overflow-y-auto rounded-sm',
-			position === 'top' && 'translate-y-10',
+			position === 'top' && 'top-full translate-y-1',
 			position === 'bottom' && '-translate-y-full'
 		)}
 	>
@@ -188,7 +196,7 @@
 
 			<button
 				class={twMerge(
-					'dark:hover:bg-surface3 hover:bg-surface2 text-md flex w-full items-center px-4 py-2 text-left transition-colors duration-100',
+					'dark:hover:bg-surface3 hover:bg-surface2 text-md flex w-full items-center px-4 py-2 text-left break-all transition-colors duration-100',
 					isSelected && 'dark:bg-surface1 bg-surface2',
 					classes?.option
 				)}
@@ -220,3 +228,10 @@
 		{/each}
 	</dialog>
 </div>
+
+<!-- <style>
+	.options-grid{
+		display: grid;
+		grid-template-columns: ;
+	}
+</style> -->
