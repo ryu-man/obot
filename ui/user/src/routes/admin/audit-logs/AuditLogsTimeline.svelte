@@ -31,6 +31,8 @@
 		timeMonths,
 		axisLeft
 	} from 'd3';
+	import { timeFormat } from 'd3-time-format';
+
 	import {
 		set,
 		startOfMonth,
@@ -43,7 +45,11 @@
 		startOfYear,
 		endOfYear,
 		type DateValues,
-		intervalToDuration
+		intervalToDuration,
+		startOfSecond,
+		startOfMinute,
+		startOfWeek,
+		getDay
 	} from 'date-fns';
 	import type { AuditLog } from '$lib/services';
 
@@ -272,9 +278,52 @@
 			<g
 				class="x-axis text-on-surface3/20 dark:text-on-surface1/10"
 				transform="translate(0 {innerHeight})"
-				{@attach (node) => {
+				{@attach (node: SVGGElement) => {
 					const selection = select(node);
-					const axis = axisBottom(timeScale).tickSizeOuter(0).ticks(xAxisTicks);
+
+					const format = timeFormat;
+
+					const formatMillisecond = format('.%L'),
+						formatSecond = format(':%S'),
+						formatMinute = format('%I:%M'),
+						formatHour = format('%I %p'),
+						formatDayOfWeek = format('%a %d'),
+						formatDayOfMonth = format('%d'),
+						formatMonth = format('%B'),
+						formatYear = format('%Y');
+
+					function tickFormat(date: Date) {
+						const fn = (() => {
+							if (startOfSecond(date) < date) return formatMillisecond;
+
+							if (startOfMinute(date) < date) return formatSecond;
+
+							if (startOfHour(date) < date) return formatMinute;
+
+							if (startOfDay(date) < date) return formatHour;
+
+							if (startOfMonth(date) < date) {
+								if (startOfWeek(date) < date) {
+									if (getDay(date) === 1) {
+										return formatDayOfWeek;
+									}
+								}
+
+								return formatDayOfMonth;
+							}
+
+							if (startOfYear(date) < date) return formatMonth;
+
+							return formatYear;
+						})();
+
+						return fn(date);
+					}
+
+					const axis = axisBottom(timeScale)
+						.tickSizeOuter(0)
+						.ticks(xAxisTicks)
+						.tickFormat(tickFormat);
 
 					selection
 						.transition()
