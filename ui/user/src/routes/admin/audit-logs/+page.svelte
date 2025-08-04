@@ -106,7 +106,7 @@
 		end_time: timeRangeFilters.endTime?.toISOString() ?? '',
 		limit: pageLimit,
 		offset: pageOffset,
-		query: encodeURIComponent(query)
+		query: query
 	});
 
 	afterNavigate(() => {
@@ -133,9 +133,10 @@
 	// Throttle query update
 	const handleQueryChange = throttle((value: string) => {
 		query = value;
+		console.log('Query changed:', value, encodeURIComponent(value));
 
 		if (value) {
-			page.url.searchParams.set('query', value);
+			page.url.searchParams.set('query', encodeURIComponent(value));
 		} else {
 			page.url.searchParams.delete('query');
 		}
