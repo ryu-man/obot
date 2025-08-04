@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { twMerge } from 'tailwind-merge';
 	import { tooltip } from '$lib/actions/tooltip.svelte';
+	import type { OrgUser } from '$lib/services';
 
 	let {
 		data = [],
@@ -12,6 +13,11 @@
 		getFragmentRowIndex,
 		onLoadNextFragment
 	} = $props();
+
+	function getUserDisplayName(userId: string): Promise<string> {
+		const trimmedId = userId.trim();
+		return fetchUserById(trimmedId)!.then((user: OrgUser) => user?.displayName || 'Unknown User');
+	}
 </script>
 
 <!-- Data Table -->
@@ -127,10 +133,10 @@
 								.replace(/,/g, '')}</td
 						>
 						<td class="px-6 py-4 text-sm whitespace-nowrap">
-							{#await fetchUserById(item.userID)}
+							{#await getUserDisplayName(item.userID)}
 								<span class="text-gray-500">Loading...</span>
-							{:then user}
-								{user?.displayName || 'Unknown User'}
+							{:then displayName}
+								{displayName}
 							{/await}
 						</td>
 						<td class="px-6 py-4 text-sm whitespace-nowrap">{item.mcpServerDisplayName}</td>

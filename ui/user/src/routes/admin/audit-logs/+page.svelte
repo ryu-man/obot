@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { fade, slide } from 'svelte/transition';
 	import { X, ChevronLeft, ChevronRight } from 'lucide-svelte';
-	import { throttle } from 'es-toolkit';
+	import { delay, throttle } from 'es-toolkit';
 	import { page } from '$app/state';
 	import { afterNavigate, goto } from '$app/navigation';
 	import { type DateRange } from '$lib/components/Calendar.svelte';
@@ -175,17 +175,40 @@
 		}
 	}
 
-	async function fetchUserById(id: string) {
-		const cache = users.get(id);
+	let fetchUserPromises: Map<string, Promise<OrgUser>> = new Map<string, Promise<OrgUser>>();
 
-		if (cache) {
-			return cache;
+	async function fetchUserById(id: string): Promise<OrgUser | undefined> {
+		// Input validation
+		if (!id || typeof id !== 'string' || id.trim() === '') {
+			console.warn('fetchUserById: Invalid user ID provided:', id);
+			return undefined;
 		}
 
-		const remote = await getUser(id);
-		users.set(id, remote);
+		const trimmedId = id.trim();
 
-		return remote;
+		if (users.has(trimmedId)) {
+			return users.get(trimmedId);
+		}
+
+		if (!fetchUserPromises.has(trimmedId)) {
+			fetchUserPromises.set(trimmedId, getUser(trimmedId, { dontLogErrors: true }));
+		}
+
+		const fetchUserPromise = fetchUserPromises.get(trimmedId)!;
+		try {
+			const remote = await fetchUserPromise;
+
+			users.set(trimmedId, remote);
+
+			// Invalidate promise cache after 1 minute
+			delay(1000 * 60).then(() => {
+				fetchUserPromises.delete(trimmedId);
+			});
+
+			return remote;
+		} catch (_) {
+			return undefined;
+		}
 	}
 
 	function getFilterDisplayLabel(key: keyof AuditLogURLFilters) {
@@ -222,7 +245,7 @@
 		}
 
 		if (label === 'user_id') {
-			return (await fetchUserById(value + '')).displayName;
+			return (await fetchUserById(value + ''))?.displayName;
 		}
 
 		return Promise.resolve(value + '');
