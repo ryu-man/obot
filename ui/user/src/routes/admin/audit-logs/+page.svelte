@@ -178,7 +178,7 @@
 
 	function getUserDisplayName(id: string): string {
 		const user = users.get(id);
-		return user?.displayName ?? 'Unknown User';
+		return user?.displayName ?? user?.username ?? user?.email ?? 'Unknown User';
 	}
 
 	function getFilterDisplayLabel(key: keyof AuditLogURLFilters) {
