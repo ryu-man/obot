@@ -5,6 +5,7 @@
 	import { flip } from 'svelte/animate';
 	import { X, ChevronLeft, ChevronRight, Funnel, Captions } from 'lucide-svelte';
 	import { throttle } from 'es-toolkit';
+	import { set, endOfDay, isBefore, startOfDay, subDays } from 'date-fns';
 	import { page } from '$app/state';
 	import { afterNavigate, goto } from '$app/navigation';
 	import { type DateRange } from '$lib/components/Calendar.svelte';
@@ -23,7 +24,6 @@
 	import AuditLogsTable from './AuditLogs.svelte';
 	import AuditLogsTimeline from './AuditLogsTimeline.svelte';
 	import AuditLogCalendar from './AuditLogCalendar.svelte';
-	import { endOfDay, isBefore, set, startOfDay, subDays } from 'date-fns';
 	import { localState } from '$lib/runes/localState.svelte';
 
 	interface Props {
@@ -88,18 +88,33 @@
 		'end_time'
 	];
 
+	const searchParamsAsArray = $derived(
+		supportedFilters.map((d) => [d, page.url.searchParams.get(d)])
+	);
+
 	// Extract search supported params from the URL and convert them to AuditLogURLFilters
 	// This is used to filter the audit logs based on the URL parameters
 	const searchParamFilters = $derived.by<AuditLogURLFilters>(() => {
-		const entries = supportedFilters.map((d) => [d, page.url.searchParams.get(d)]);
-
-		return entries.reduce(
+		return searchParamsAsArray.reduce(
 			(acc, [key, value]) => {
 				acc[key!] = decodeURIComponent(value ?? '');
 				return acc;
 			},
 			{} as Record<string, unknown>
 		);
+	});
+
+	// Keep only filters with defined values
+	const prunedSearchParamFilters = $derived.by(() => {
+		return searchParamsAsArray
+			.filter(([, value]) => !!value)
+			.reduce(
+				(acc, [key, value]) => {
+					acc[key!] = decodeURIComponent(value ?? '');
+					return acc;
+				},
+				{} as Record<string, unknown>
+			);
 	});
 
 	const propsFilters = $derived.by(() => {
@@ -115,6 +130,18 @@
 				.filter(([, value]) => value !== undefined)
 				.reduce((acc, [key, value]) => ((acc[key] = value!), acc), {} as Record<string, unknown>)
 		);
+	});
+
+	// Filters to be used in the audit logs slideover
+	// Exclude filters that are set via props and not undefined
+	const auditLogsSlideoverFilters = $derived.by(() => {
+		const clone = { ...searchParamFilters };
+
+		for (const key of [...Object.keys(propsFilters), 'start_time', 'end_time']) {
+			delete clone[key as keyof AuditLogURLFilters];
+		}
+
+		return { ...clone };
 	});
 
 	let timeRangeFilters = $derived.by(() => {
@@ -158,34 +185,12 @@
 		};
 	});
 
-	// Base filters without time filters
-	const baseFilters = $derived.by(() => {
-		const clone = { ...searchParamFilters };
-		delete clone['start_time'];
-		delete clone['end_time'];
-
-		return {
-			...clone
-		};
-	});
-
-	// Filters to be used in the audit logs slideover
-	// Exclude filters that are set via props and not undefined
-	const auditLogsSlideoverFilters = $derived.by(() => {
-		const clone = { ...baseFilters };
-
-		for (const key of Object.keys(propsFilters)) {
-			delete clone[key as keyof AuditLogURLFilters];
-		}
-
-		return { ...clone };
-	});
-
 	let query = $state(page.url.searchParams.get('query') ?? '');
 
 	// Base filters with time filters and query and pagination
 	const allFilters = $derived({
-		...baseFilters,
+		...prunedSearchParamFilters,
+		...propsFilters,
 		start_time: timeRangeFilters.startTime.toISOString(),
 		end_time: timeRangeFilters.endTime?.toISOString(),
 		limit: pageLimit,
@@ -219,7 +224,7 @@
 		query = value;
 
 		if (value) {
-			page.url.searchParams.set('query', encodeURIComponent(value));
+			page.url.searchParams.set('query', value);
 		} else {
 			page.url.searchParams.delete('query');
 		}

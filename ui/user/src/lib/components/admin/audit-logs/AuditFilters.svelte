@@ -28,7 +28,6 @@
 
 	interface Props {
 		filters?: AuditLogURLFilters;
-		supportedFilters?: FilterKey[];
 		onClose: () => void;
 		getUserDisplayName: (userId: string) => string;
 		getFilterDisplayLabel?: (key: keyof AuditLogURLFilters) => string;
@@ -36,7 +35,6 @@
 
 	let {
 		filters: externFilters,
-		supportedFilters = Object.keys(externFilters ?? {}) as FilterKey[],
 		onClose,
 		getUserDisplayName,
 		getFilterDisplayLabel
@@ -48,24 +46,26 @@
 	let filtersOptions: FilterOptions = $state({} as FilterOptions);
 
 	type FilterInputs = Record<FilterKey, FilterInput>;
-	let filterInputs = supportedFilters.reduce((acc, filterId) => {
-		acc[filterId] = {
-			property: filterId,
-			label: getFilterDisplayLabel?.(filterId) ?? filterId.replace(/_(\w)/, ' $1'),
-			get selected() {
-				return filters?.[filterId] ?? '';
-			},
-			set selected(v) {
-				filters[filterId] = v ?? '';
-				// Force Component to react
-				filters = { ...filters };
-			},
-			get options() {
-				return filtersOptions[filterId];
-			}
-		};
-		return acc;
-	}, {} as FilterInputs);
+	let filterInputs = $derived(
+		(Object.keys(filters ?? {}) as FilterKey[]).reduce((acc, filterId) => {
+			acc[filterId] = {
+				property: filterId,
+				label: getFilterDisplayLabel?.(filterId) ?? filterId.replace(/_(\w)/, ' $1'),
+				get selected() {
+					return filters?.[filterId] ?? '';
+				},
+				set selected(v) {
+					filters[filterId] = v ?? '';
+					// Force Component to react
+					filters = { ...filters };
+				},
+				get options() {
+					return filtersOptions[filterId];
+				}
+			};
+			return acc;
+		}, {} as FilterInputs)
+	);
 
 	const filterInputsAsArray = $derived(Object.values(filterInputs));
 
@@ -74,18 +74,22 @@
 			const response = await AdminService.listAuditLogFilterOptions(filterId);
 
 			if (filterId === 'user_id') {
-				return response.options
-					.map((d) => ({
-						id: d,
-						label: getUserDisplayName(d)
-					}))
-					.filter(Boolean);
+				return (
+					response.options
+						?.map((d) => ({
+							id: d,
+							label: getUserDisplayName(d)
+						}))
+						?.filter(Boolean) ?? []
+				);
 			}
 
-			return response.options.map((d) => ({
-				id: d,
-				label: d
-			}));
+			return (
+				response?.options?.map((d) => ({
+					id: d,
+					label: d
+				})) ?? []
+			);
 		};
 
 		const filterInputKeys = Object.keys(filterInputs) as FilterKey[];
