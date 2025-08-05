@@ -22,18 +22,23 @@
 	import { X } from 'lucide-svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import type { AuditLogURLFilters, OrgUser } from '$lib/services/admin/types';
+	import type { AuditLogURLFilters } from '$lib/services/admin/types';
 	import { AdminService } from '$lib/services';
 	import { untrack } from 'svelte';
 
 	interface Props {
 		filters?: AuditLogURLFilters;
-		users?: Map<string, OrgUser>;
 		onClose: () => void;
+		getUserDisplayName: (userId: string) => string;
 		getFilterDisplayLabel?: (key: keyof AuditLogURLFilters) => string;
 	}
 
-	let { filters: externFilters, onClose, users, getFilterDisplayLabel }: Props = $props();
+	let {
+		filters: externFilters,
+		onClose,
+		getUserDisplayName,
+		getFilterDisplayLabel
+	}: Props = $props();
 
 	let filters = $derived({ ...(externFilters ?? {}) });
 
@@ -81,13 +86,10 @@
 
 			if (filterId === 'user_id') {
 				return response.options
-					.map((d) => {
-						const user = users?.get(d);
-						return {
-							id: d,
-							label: user?.displayName ?? 'Unknown User'
-						};
-					})
+					.map((d) => ({
+						id: d,
+						label: getUserDisplayName(d)
+					}))
 					.filter(Boolean);
 			}
 

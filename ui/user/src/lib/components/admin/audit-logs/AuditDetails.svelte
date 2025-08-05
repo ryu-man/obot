@@ -645,7 +645,7 @@
 				onClose={handleRightSidebarClose}
 				{filters}
 				getFilterDisplayLabel={(d) => d}
-				users={usersMap}
+				getUserDisplayName={(id) => usersMap.get(id)?.displayName ?? 'Unknown User'}
 			/>
 		{/if}
 	</dialog>

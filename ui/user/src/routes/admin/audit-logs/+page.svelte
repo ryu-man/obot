@@ -176,8 +176,9 @@
 		}
 	}
 
-	async function fetchUserById(id: string): Promise<OrgUser | undefined> {
-		return users.get(id);
+	function getUserDisplayName(id: string): string {
+		const user = users.get(id);
+		return user?.displayName ?? 'Unknown User';
 	}
 
 	function getFilterDisplayLabel(key: keyof AuditLogURLFilters) {
@@ -212,9 +213,7 @@
 		}
 
 		if (label === 'user_id') {
-			const user = users.get(value + '');
-
-			return user?.displayName;
+			return getUserDisplayName(value + '');
 		}
 
 		return value + '';
@@ -357,7 +356,7 @@
 						showFilters = false;
 						rightSidebar?.show();
 					}}
-					{fetchUserById}
+					{getUserDisplayName}
 				>
 					{#snippet emptyContent()}
 						<!-- Just to skip ts checker, have to added later -->
@@ -390,7 +389,7 @@
 		<AuditFilters
 			onClose={handleRightSidebarClose}
 			filters={{ ...searchParamFilters }}
-			{users}
+			{getUserDisplayName}
 			{getFilterDisplayLabel}
 		/>
 	{/if}
