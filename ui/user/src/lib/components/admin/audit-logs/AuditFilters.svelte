@@ -28,6 +28,7 @@
 
 	interface Props {
 		filters?: AuditLogURLFilters;
+		supportedFilters?: FilterKey[];
 		onClose: () => void;
 		getUserDisplayName: (userId: string) => string;
 		getFilterDisplayLabel?: (key: keyof AuditLogURLFilters) => string;
@@ -35,6 +36,7 @@
 
 	let {
 		filters: externFilters,
+		supportedFilters = Object.keys(externFilters ?? {}) as FilterKey[],
 		onClose,
 		getUserDisplayName,
 		getFilterDisplayLabel
@@ -46,20 +48,7 @@
 	let filtersOptions: FilterOptions = $state({} as FilterOptions);
 
 	type FilterInputs = Record<FilterKey, FilterInput>;
-	let filterInputs = (
-		[
-			'user_id',
-			'mcp_id',
-			'mcp_server_display_name',
-			'mcp_server_catalog_entry_name',
-			'call_type',
-			'client_name',
-			'client_version',
-			'client_ip',
-			'response_status',
-			'session_id'
-		] as FilterKey[]
-	).reduce((acc, filterId) => {
+	let filterInputs = supportedFilters.reduce((acc, filterId) => {
 		acc[filterId] = {
 			property: filterId,
 			label: getFilterDisplayLabel?.(filterId) ?? filterId.replace(/_(\w)/, ' $1'),
