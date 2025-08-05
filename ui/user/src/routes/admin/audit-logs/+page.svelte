@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { fade, slide } from 'svelte/transition';
-	import { X, ChevronLeft, ChevronRight } from 'lucide-svelte';
+	import { X, ChevronLeft, ChevronRight, Funnel, Captions } from 'lucide-svelte';
 	import { delay, throttle } from 'es-toolkit';
 	import { page } from '$app/state';
 	import { afterNavigate, goto } from '$app/navigation';
