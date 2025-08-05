@@ -112,7 +112,6 @@
 
 	afterNavigate(() => {
 		AdminService.listUsers().then((userData) => {
-			console.log(userData);
 			for (const user of userData) {
 				users.set(user.id, user);
 			}
@@ -198,27 +197,27 @@
 		return key.replace(/_(\w)/g, ' $1');
 	}
 
-	async function getFilterValue(label: keyof AuditLogURLFilters, value: string | number) {
+	function getFilterValue(label: keyof AuditLogURLFilters, value: string | number) {
 		if (label === 'start_time' || label === 'end_time') {
-			return Promise.resolve(
-				new Date(value).toLocaleString(undefined, {
-					year: 'numeric',
-					month: 'short',
-					day: 'numeric',
-					hour: '2-digit',
-					minute: '2-digit',
-					second: '2-digit',
-					hour12: true,
-					timeZoneName: 'short'
-				})
-			);
+			return new Date(value).toLocaleString(undefined, {
+				year: 'numeric',
+				month: 'short',
+				day: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit',
+				second: '2-digit',
+				hour12: true,
+				timeZoneName: 'short'
+			});
 		}
 
 		if (label === 'user_id') {
-			return (await fetchUserById(value + ''))?.displayName;
+			const user = users.get(value + '');
+
+			return user?.displayName;
 		}
 
-		return Promise.resolve(value + '');
+		return value + '';
 	}
 
 	function handleRightSidebarClose() {
@@ -391,7 +390,7 @@
 		<AuditFilters
 			onClose={handleRightSidebarClose}
 			filters={{ ...searchParamFilters }}
-			{fetchUserById}
+			{users}
 			{getFilterDisplayLabel}
 		/>
 	{/if}
@@ -424,17 +423,15 @@
 						{#each values as value (value)}
 							{@const isMultiple = values.length > 1}
 
-							{#await getFilterValue(key, value) then response}
-								{#if isMultiple}
-									<span class="font-light">
-										<span>{response}</span>
-									</span>
+							{#if isMultiple}
+								<span class="font-light">
+									<span>{getFilterValue(key, value)}</span>
+								</span>
 
-									<span class="mx-1 font-bold last:hidden">OR</span>
-								{:else}
-									<span class="font-light">{response}</span>
-								{/if}
-							{/await}
+								<span class="mx-1 font-bold last:hidden">OR</span>
+							{:else}
+								<span class="font-light">{getFilterValue(key, value)}</span>
+							{/if}
 						{/each}
 					</div>
 

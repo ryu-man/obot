@@ -28,12 +28,12 @@
 
 	interface Props {
 		filters?: AuditLogURLFilters;
+		users?: Map<string, OrgUser>;
 		onClose: () => void;
-		fetchUserById: (userId: string) => Promise<OrgUser | undefined>;
 		getFilterDisplayLabel?: (key: keyof AuditLogURLFilters) => string;
 	}
 
-	let { filters: externFilters, onClose, fetchUserById, getFilterDisplayLabel }: Props = $props();
+	let { filters: externFilters, onClose, users, getFilterDisplayLabel }: Props = $props();
 
 	let filters = $derived({ ...(externFilters ?? {}) });
 
@@ -80,16 +80,15 @@
 			const response = await AdminService.listAuditLogFilterOptions(filterId);
 
 			if (filterId === 'user_id') {
-				return await Promise.all(
-					response.options
-						.map((d) =>
-							fetchUserById(d).then((user) => ({
-								id: d,
-								label: user?.displayName ?? 'Unknown User'
-							}))
-						)
-						.filter(Boolean)
-				);
+				return response.options
+					.map((d) => {
+						const user = users?.get(d);
+						return {
+							id: d,
+							label: user?.displayName ?? 'Unknown User'
+						};
+					})
+					.filter(Boolean);
 			}
 
 			return response.options.map((d) => ({
