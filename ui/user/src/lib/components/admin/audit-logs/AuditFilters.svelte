@@ -82,7 +82,12 @@
 			if (filterId === 'user_id') {
 				return await Promise.all(
 					response.options
-						.map((d) => fetchUserById(d).then((user) => ({ id: d, label: user?.displayName ?? d })))
+						.map((d) =>
+							fetchUserById(d).then((user) => ({
+								id: d,
+								label: user?.displayName ?? 'Unknown User'
+							}))
+						)
 						.filter(Boolean)
 				);
 			}
