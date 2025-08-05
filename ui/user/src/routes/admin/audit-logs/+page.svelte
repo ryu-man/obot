@@ -85,18 +85,18 @@
 	let timeRangeFilters = $derived.by(() => {
 		const { start_time, end_time } = searchParamFilters;
 
-		if (start_time || end_time) {
-			const today = set(new Date(), { milliseconds: 0, seconds: 0 });
+		const today = set(new Date(), { milliseconds: 0, seconds: 0 });
 
-			return {
-				startTime: set(new Date(start_time ?? today), { milliseconds: 0, seconds: 0 }),
-				endTime: set(new Date(end_time ?? subDays(today, 7)), { milliseconds: 0, seconds: 0 })
-			};
-		}
+		let endTime = set(new Date(end_time ?? today), { milliseconds: 0, seconds: 0 });
+
+		let startTime = set(new Date(start_time ?? subDays(today, 90)), {
+			milliseconds: 0,
+			seconds: 0
+		});
 
 		return {
-			startTime: subDays(set(new Date(), { milliseconds: 0, seconds: 0 }), 7),
-			endTime: set(new Date(new Date()), { milliseconds: 0, seconds: 0 })
+			startTime,
+			endTime
 		};
 	});
 
