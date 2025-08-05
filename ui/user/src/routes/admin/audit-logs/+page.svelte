@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { fade, slide } from 'svelte/transition';
+	import { SvelteMap } from 'svelte/reactivity';
 	import { X, ChevronLeft, ChevronRight, Funnel, Captions } from 'lucide-svelte';
-	import { delay, throttle } from 'es-toolkit';
+	import { throttle } from 'es-toolkit';
 	import { page } from '$app/state';
 	import { afterNavigate, goto } from '$app/navigation';
 	import { type DateRange } from '$lib/components/Calendar.svelte';
@@ -14,7 +15,7 @@
 		AdminService,
 		type AuditLog
 	} from '$lib/services';
-	import { getUser, type PaginatedResponse } from '$lib/services/admin/operations';
+	import { type PaginatedResponse } from '$lib/services/admin/operations';
 	import { clickOutside } from '$lib/actions/clickoutside';
 	import { dialogAnimation } from '$lib/actions/dialogAnimation';
 	import AuditLogDetails from '$lib/components/admin/audit-logs/AuditLogDetails.svelte';
@@ -55,7 +56,7 @@
 
 	const fragmentedAuditLogs = $derived(remoteAuditLogs.slice(fragmentSliceStart, fragmentSliceEnd));
 
-	const users = new Map<string, OrgUser>();
+	const users = new SvelteMap<string, OrgUser>();
 
 	let showFilters = $state(false);
 	let selectedAuditLog = $state<AuditLog & { user: string }>();
@@ -111,6 +112,7 @@
 
 	afterNavigate(() => {
 		AdminService.listUsers().then((userData) => {
+			console.log(userData);
 			for (const user of userData) {
 				users.set(user.id, user);
 			}
@@ -175,40 +177,8 @@
 		}
 	}
 
-	let fetchUserPromises: Map<string, Promise<OrgUser>> = new Map<string, Promise<OrgUser>>();
-
 	async function fetchUserById(id: string): Promise<OrgUser | undefined> {
-		// Input validation
-		if (!id || typeof id !== 'string' || id.trim() === '') {
-			console.warn('fetchUserById: Invalid user ID provided:', id);
-			return undefined;
-		}
-
-		const trimmedId = id.trim();
-
-		if (users.has(trimmedId)) {
-			return users.get(trimmedId);
-		}
-
-		if (!fetchUserPromises.has(trimmedId)) {
-			fetchUserPromises.set(trimmedId, getUser(trimmedId, { dontLogErrors: true }));
-		}
-
-		const fetchUserPromise = fetchUserPromises.get(trimmedId)!;
-		try {
-			const remote = await fetchUserPromise;
-
-			users.set(trimmedId, remote);
-
-			// Invalidate promise cache after 1 minute
-			delay(1000 * 60).then(() => {
-				fetchUserPromises.delete(trimmedId);
-			});
-
-			return remote;
-		} catch (_) {
-			return undefined;
-		}
+		return users.get(id);
 	}
 
 	function getFilterDisplayLabel(key: keyof AuditLogURLFilters) {
@@ -395,7 +365,7 @@
 					{/snippet}
 				</AuditLogsTable>
 			{:else}
-				<div class="mt-12 flex w-md flex-col items-center gap-4 self-center text-center">
+				<div class="w-md mt-12 flex flex-col items-center gap-4 self-center text-center">
 					<Captions class="size-24 text-gray-200 dark:text-gray-900" />
 					<h4 class="text-lg font-semibold text-gray-400 dark:text-gray-600">No audit logs</h4>
 					<p class="text-sm font-light text-gray-400 dark:text-gray-600">
@@ -412,7 +382,7 @@
 	bind:this={rightSidebar}
 	use:clickOutside={[handleRightSidebarClose, true]}
 	use:dialogAnimation={{ type: 'drawer' }}
-	class="dark:border-surface1 dark:bg-surface1 fixed! top-0! right-0! bottom-0! left-auto! z-40 h-screen w-auto max-w-none rounded-none border-0 bg-white shadow-lg outline-none!"
+	class="dark:border-surface1 dark:bg-surface1 fixed! top-0! right-0! bottom-0! left-auto! outline-none! z-40 h-screen w-auto max-w-none rounded-none border-0 bg-white shadow-lg"
 >
 	{#if selectedAuditLog}
 		<AuditLogDetails onClose={handleRightSidebarClose} auditLog={selectedAuditLog} />
