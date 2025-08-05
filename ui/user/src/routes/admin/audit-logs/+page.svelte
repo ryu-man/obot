@@ -133,7 +133,6 @@
 	// Throttle query update
 	const handleQueryChange = throttle((value: string) => {
 		query = value;
-		console.log('Query changed:', value, encodeURIComponent(value));
 
 		if (value) {
 			page.url.searchParams.set('query', encodeURIComponent(value));
