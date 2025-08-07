@@ -324,6 +324,7 @@
 	const colorByCallType: Record<string, string> = {
 		initialize: '#254993',
 		'notifications/initialized': '#D65C7C',
+		'notifications/message': '#635DB6',
 		'prompts/list': '#D6A95C',
 		'resources/list': '#2EB88A',
 		'tools/call': '#47A3D1',
