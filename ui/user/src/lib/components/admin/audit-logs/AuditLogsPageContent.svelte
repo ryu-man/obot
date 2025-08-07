@@ -5,7 +5,7 @@
 	import { flip } from 'svelte/animate';
 	import { X, ChevronLeft, ChevronRight, Funnel, Captions } from 'lucide-svelte';
 	import { throttle } from 'es-toolkit';
-	import { set, endOfDay, isBefore, startOfDay, subDays } from 'date-fns';
+	import { set, endOfDay, isBefore, subDays } from 'date-fns';
 	import { page } from '$app/state';
 	import { afterNavigate, goto } from '$app/navigation';
 	import { type DateRange } from '$lib/components/Calendar.svelte';
@@ -150,31 +150,20 @@
 		const endTime = set(new Date(end_time || new Date()), { milliseconds: 0, seconds: 0 });
 
 		const getStartTime = (date: typeof start_time) => {
-			// date is not provided
-			if (!date) {
-				const parsedStartTime = set(new Date(), { milliseconds: 0, seconds: 0 });
-
-				// Ensure start time is not after end time
-				if (isBefore(parsedStartTime, endTime)) {
-					return subDays(parsedStartTime, 90);
-				}
-
-				// Default to 90 days before end time
-				return subDays(endTime, 90);
-			}
-
-			const parsedStartTime = set(new Date(date), {
+			const parsedStartTime = set(new Date(date ? date : Date.now()), {
 				milliseconds: 0,
 				seconds: 0
 			});
 
-			// Ensure start time is not after end time
-			if (isBefore(parsedStartTime, endTime)) {
-				return parsedStartTime;
+			if (date) {
+				// Ensure start time is not after end time
+				if (isBefore(parsedStartTime, endTime)) {
+					return parsedStartTime;
+				}
 			}
 
-			// Default to start of end time day
-			return startOfDay(endTime);
+			// Return 7 days before end time
+			return subDays(endTime, 7);
 		};
 
 		const startTime = getStartTime(start_time);
