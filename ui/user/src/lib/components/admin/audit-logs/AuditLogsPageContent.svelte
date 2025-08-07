@@ -1,11 +1,10 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { flip } from 'svelte/animate';
 	import { slide } from 'svelte/transition';
 	import { SvelteMap } from 'svelte/reactivity';
+	import { flip } from 'svelte/animate';
 	import { X, ChevronLeft, ChevronRight, Funnel, Captions } from 'lucide-svelte';
 	import { throttle } from 'es-toolkit';
-	import { endOfDay, set, subDays } from 'date-fns';
 	import { page } from '$app/state';
 	import { afterNavigate, goto } from '$app/navigation';
 	import { type DateRange } from '$lib/components/Calendar.svelte';
@@ -24,6 +23,7 @@
 	import AuditLogsTable from './AuditLogs.svelte';
 	import AuditLogsTimeline from './AuditLogsTimeline.svelte';
 	import AuditLogCalendar from './AuditLogCalendar.svelte';
+	import { endOfDay, isBefore, set, startOfDay, subDays } from 'date-fns';
 	import { localState } from '$lib/runes/localState.svelte';
 
 	interface Props {
@@ -117,59 +117,77 @@
 		);
 	});
 
-	// Build filters for auditlogs filters slideover
-	// Remove props filters as well as start_time and end_time
-	const auditSupportedFilters = $derived.by(() => {
-		const filters = new Set([...supportedFilters]);
-
-		// Remove defined props filters keys as well as start_time and end_time
-		const keys = [
-			// Keep keys with null and defined values from the props filters, undefined values should be filtered out
-			...Object.entries(propsFilters)
-				.filter(([, value]) => !!value || value === null)
-				.map(([key]) => key),
-			'start_time',
-			'end_time'
-		];
-
-		for (const key of keys as (keyof AuditLogURLFilters)[]) {
-			filters.delete(key);
-		}
-
-		return filters
-			.values()
-			.reduce(
-				(acc, val) => ((acc[val] = searchParamFilters[val]), acc),
-				{} as Record<string, unknown>
-			);
-	});
-
 	let timeRangeFilters = $derived.by(() => {
 		const { start_time, end_time } = searchParamFilters;
 
-		if (start_time || end_time) {
-			const today = set(new Date(), { milliseconds: 0, seconds: 0 });
+		const endTime = set(new Date(end_time || new Date()), { milliseconds: 0, seconds: 0 });
 
-			return {
-				startTime: set(new Date(start_time ?? today), { milliseconds: 0, seconds: 0 }),
-				endTime: set(new Date(end_time ?? subDays(today, 7)), { milliseconds: 0, seconds: 0 })
-			};
-		}
+		const getStartTime = (date: typeof start_time) => {
+			// date is not provided
+			if (!date) {
+				const parsedStartTime = set(new Date(), { milliseconds: 0, seconds: 0 });
+
+				// Ensure start time is not after end time
+				if (isBefore(parsedStartTime, endTime)) {
+					return subDays(parsedStartTime, 90);
+				}
+
+				// Default to 90 days before end time
+				return subDays(endTime, 90);
+			}
+
+			const parsedStartTime = set(new Date(date), {
+				milliseconds: 0,
+				seconds: 0
+			});
+
+			// Ensure start time is not after end time
+			if (isBefore(parsedStartTime, endTime)) {
+				return parsedStartTime;
+			}
+
+			// Default to start of end time day
+			return startOfDay(endTime);
+		};
+
+		const startTime = getStartTime(start_time);
 
 		return {
-			startTime: subDays(set(new Date(), { milliseconds: 0, seconds: 0 }), 7),
-			endTime: set(new Date(new Date()), { milliseconds: 0, seconds: 0 })
+			startTime,
+			endTime
 		};
+	});
+
+	// Base filters without time filters
+	const baseFilters = $derived.by(() => {
+		const clone = { ...searchParamFilters };
+		delete clone['start_time'];
+		delete clone['end_time'];
+
+		return {
+			...clone
+		};
+	});
+
+	// Filters to be used in the audit logs slideover
+	// Exclude filters that are set via props and not undefined
+	const auditLogsSlideoverFilters = $derived.by(() => {
+		const clone = { ...baseFilters };
+
+		for (const key of Object.keys(propsFilters)) {
+			delete clone[key as keyof AuditLogURLFilters];
+		}
+
+		return { ...clone };
 	});
 
 	let query = $state(page.url.searchParams.get('query') ?? '');
 
+	// Base filters with time filters and query and pagination
 	const allFilters = $derived({
-		...searchParamFilters,
-		// Override search params with props filters
-		...propsFilters,
+		...baseFilters,
 		start_time: timeRangeFilters.startTime.toISOString(),
-		end_time: timeRangeFilters.endTime?.toISOString() ?? '',
+		end_time: timeRangeFilters.endTime?.toISOString(),
 		limit: pageLimit,
 		offset: pageOffset,
 		query: query
@@ -201,7 +219,7 @@
 		query = value;
 
 		if (value) {
-			page.url.searchParams.set('query', value);
+			page.url.searchParams.set('query', encodeURIComponent(value));
 		} else {
 			page.url.searchParams.delete('query');
 		}
@@ -263,27 +281,25 @@
 		return key.replace(/_(\w)/g, ' $1');
 	}
 
-	async function getFilterValue(label: keyof AuditLogURLFilters, value: string | number) {
+	function getFilterValue(label: keyof AuditLogURLFilters, value: string | number) {
 		if (label === 'start_time' || label === 'end_time') {
-			return Promise.resolve(
-				new Date(value).toLocaleString(undefined, {
-					year: 'numeric',
-					month: 'short',
-					day: 'numeric',
-					hour: '2-digit',
-					minute: '2-digit',
-					second: '2-digit',
-					hour12: true,
-					timeZoneName: 'short'
-				})
-			);
+			return new Date(value).toLocaleString(undefined, {
+				year: 'numeric',
+				month: 'short',
+				day: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit',
+				second: '2-digit',
+				hour12: true,
+				timeZoneName: 'short'
+			});
 		}
 
 		if (label === 'user_id') {
 			return getUserDisplayName(value + '');
 		}
 
-		return Promise.resolve(value + '');
+		return value + '';
 	}
 
 	function handleRightSidebarClose() {
@@ -395,29 +411,26 @@
 		</div>
 	</div>
 
-	{#if remoteAuditLogs.length > 0}
-		<AuditLogsTable
-			data={fragmentedAuditLogs}
-			currentFragmentIndex={fragmentIndex}
-			getFragmentIndex={(rowIndex: number) => Math.floor(rowIndex / fragmentLimit)}
-			getFragmentRowIndex={(rowIndex: number) => {
-				const fragIndex = Math.floor(rowIndex / fragmentLimit);
+	<AuditLogsTable
+		data={fragmentedAuditLogs}
+		currentFragmentIndex={fragmentIndex}
+		getFragmentIndex={(rowIndex: number) => Math.floor(rowIndex / fragmentLimit)}
+		getFragmentRowIndex={(rowIndex: number) => {
+			const fragIndex = Math.floor(rowIndex / fragmentLimit);
 
-				return rowIndex - fragIndex * fragmentLimit;
-			}}
-			onLoadNextFragment={(rowFragmentIndex: number) => {
-				fragmentIndex = Math.min(numberOfFragments - 1, rowFragmentIndex + 1);
-			}}
-			onSelectRow={(d: typeof selectedAuditLog) => {
-				selectedAuditLog = d;
-				showFilters = false;
-				rightSidebar?.show();
-			}}
-			{getUserDisplayName}
-		></AuditLogsTable>
-	{:else}
-		{@render emptyContent?.()}
-	{/if}
+			return rowIndex - fragIndex * fragmentLimit;
+		}}
+		onLoadNextFragment={(rowFragmentIndex: number) => {
+			fragmentIndex = Math.min(numberOfFragments - 1, rowFragmentIndex + 1);
+		}}
+		onSelectRow={(d: typeof selectedAuditLog) => {
+			selectedAuditLog = d;
+			showFilters = false;
+			rightSidebar?.show();
+		}}
+		{getUserDisplayName}
+		{emptyContent}
+	></AuditLogsTable>
 {:else}
 	<div class="mt-12 flex w-md flex-col items-center gap-4 self-center text-center">
 		<Captions class="size-24 text-gray-200 dark:text-gray-900" />
@@ -441,7 +454,7 @@
 	{#if showFilters}
 		<AuditFilters
 			onClose={handleRightSidebarClose}
-			filters={{ ...auditSupportedFilters }}
+			filters={{ ...auditLogsSlideoverFilters }}
 			{getUserDisplayName}
 			{getFilterDisplayLabel}
 		/>
@@ -450,11 +463,11 @@
 
 {#snippet filters()}
 	{@const entries = Object.entries(searchParamFilters)}
-	{@const activeFilters = entries.filter(([, value]) => !!value) as [
+	{@const filters = entries.filter(([, value]) => !!value) as [
 		keyof AuditLogURLFilters,
 		string | number | null
 	][]}
-	{@const hasFilters = !!activeFilters.length}
+	{@const hasFilters = !!filters.length}
 
 	{#if hasFilters}
 		<div
@@ -462,9 +475,10 @@
 			in:slide={{ duration: 100 }}
 			out:slide={{ duration: 50 }}
 		>
-			{#each activeFilters as [filterKey, filterValues] (filterKey)}
-				{@const displayLabel = getFilterDisplayLabel(filterKey!)}
+			{#each filters as [filterKey, filterValues] (filterKey)}
+				{@const displayLabel = getFilterDisplayLabel(filterKey)}
 				{@const values = filterValues?.toString().split(',').filter(Boolean) ?? []}
+
 				<div
 					class="flex items-center gap-1 rounded-lg border border-blue-500/50 bg-blue-500/10 px-4 py-2 text-blue-600 dark:text-blue-300"
 					animate:flip={{ duration: 100 }}
@@ -475,17 +489,15 @@
 						{#each values as value (value)}
 							{@const isMultiple = values.length > 1}
 
-							{#await getFilterValue(filterKey, value) then response}
-								{#if isMultiple}
-									<span class="font-light">
-										<span>{response}</span>
-									</span>
+							{#if isMultiple}
+								<span class="font-light">
+									<span>{getFilterValue(filterKey, value)}</span>
+								</span>
 
-									<span class="mx-1 font-bold last:hidden">OR</span>
-								{:else}
-									<span class="font-light">{response}</span>
-								{/if}
-							{/await}
+								<span class="mx-1 font-bold last:hidden">OR</span>
+							{:else}
+								<span class="font-light">{getFilterValue(filterKey, value)}</span>
+							{/if}
 						{/each}
 					</div>
 
