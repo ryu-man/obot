@@ -417,10 +417,6 @@
 </script>
 
 <div bind:clientHeight bind:clientWidth class="group relative h-full w-full">
-	<div class="absolute right-0 bottom-full text-xs">
-		{timeFrame[0]} - ({timeFrame[1]})
-	</div>
-
 	<div
 		class="tooltip pointer-events-none fixed top-0 left-0 flex flex-col"
 		style="opacity: 0;"
