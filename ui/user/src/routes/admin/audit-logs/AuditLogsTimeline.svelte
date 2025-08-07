@@ -305,6 +305,7 @@
 
 		if (frame === 'day') {
 			generator = timeDays;
+			step = Math.max(1, Math.ceil(duration / 31) * Math.round(ticksRatio / 2));
 		}
 
 		if (frame === 'month') {
