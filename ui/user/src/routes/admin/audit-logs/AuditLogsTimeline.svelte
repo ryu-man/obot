@@ -41,11 +41,11 @@
 		max,
 		min,
 		set,
-		addDays,
 		endOfMinute,
 		type Duration
 	} from 'date-fns';
 	import type { AuditLog } from '$lib/services';
+	import { debounce } from 'es-toolkit';
 
 	interface Props<T> {
 		start: Date;
@@ -71,6 +71,8 @@
 
 	let clientHeight = $state(0);
 	let innerHeight = $derived(clientHeight - paddingTop - paddingBottom);
+
+	const vpWidth = viewport();
 
 	const callTypes = $derived(union(data.map((d) => d.callType)));
 
@@ -167,6 +169,28 @@
 		const [setStartBoundary, setEndBoundary] = boundaries;
 
 		return [setStartBoundary(start), setEndBoundary(end)];
+	});
+
+	const ticksRatio = $derived.by(() => {
+		const width = vpWidth.current;
+
+		if (width < 425) {
+			return 8;
+		}
+
+		if (width < 768) {
+			return 4;
+		}
+
+		if (width < 1024) {
+			return 2;
+		}
+
+		if (width < 1440) {
+			return 1.4;
+		}
+
+		return 1;
 	});
 
 	const xAccessor = $derived.by(() => {
@@ -271,11 +295,11 @@
 		const [frame, frameStep, duration] = timeFrame;
 
 		let generator = timeMinute;
-		let step = frameStep;
+		let step = frameStep * ticksRatio;
 
 		if (frame === 'minute') {
 			if (duration <= 60) {
-				step = 5;
+				step = 5 * ticksRatio;
 			}
 		}
 
@@ -286,13 +310,15 @@
 		if (frame === 'day') {
 			generator = timeDay;
 			if (duration > 60) {
-				step = frameStep + Math.round(duration / 40);
+				step = frameStep + Math.round(duration / 40) * ticksRatio;
 			}
 		}
 
 		if (frame === 'month') {
 			generator = timeMonth;
 		}
+
+		console.log(step);
 
 		return generator.every(step);
 	});
@@ -342,6 +368,38 @@
 
 	let currentItem = $state<{ key: string; value: string; date: string }>();
 
+	function viewport() {
+		const getViewportWidth = () => {
+			if (typeof window !== 'undefined') {
+				return (
+					window.visualViewport?.width ||
+					window.innerWidth ||
+					document.documentElement.clientWidth ||
+					document.body.clientWidth ||
+					0
+				);
+			}
+
+			return 0;
+		};
+
+		let width = $state(getViewportWidth());
+
+		const onResize = debounce(() => {
+			width = getViewportWidth();
+		}, 1000 / 60);
+
+		$effect(() => {
+			window.addEventListener('resize', onResize);
+		});
+
+		return {
+			get current() {
+				return width;
+			}
+		};
+	}
+
 	function durationToMonths(duration: Duration) {
 		return (duration.years ?? 0) * 12 + (duration.months ?? 0);
 	}
@@ -360,12 +418,12 @@
 </script>
 
 <div bind:clientHeight bind:clientWidth class="group relative h-full w-full">
-	<div class="absolute bottom-full right-0 text-xs">
+	<div class="absolute right-0 bottom-full text-xs">
 		{timeFrame[0]} - ({timeFrame[1]})
 	</div>
 
 	<div
-		class="tooltip pointer-events-none fixed left-0 top-0 flex flex-col"
+		class="tooltip pointer-events-none fixed top-0 left-0 flex flex-col"
 		style="opacity: 0;"
 		{@attach (node) => {
 			tooltipElement = node;
