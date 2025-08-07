@@ -499,7 +499,7 @@
 
 					selection
 						.transition()
-						.duration(200)
+						.duration(100)
 						.call(axis)
 						.selectAll('.tick')
 						.attr(
