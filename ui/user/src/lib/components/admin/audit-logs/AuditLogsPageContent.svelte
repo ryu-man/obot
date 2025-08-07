@@ -109,9 +109,11 @@
 			['mcp_server_display_name', mcpServerDisplayName]
 		];
 
-		return entries.reduce(
-			(acc, [key, value]) => ((acc[key] = value!), acc),
-			{} as Record<string, unknown>
+		return (
+			entries
+				// Filter out undefined values, null values should be kept as they mean the value is specified
+				.filter(([, value]) => value !== undefined)
+				.reduce((acc, [key, value]) => ((acc[key] = value!), acc), {} as Record<string, unknown>)
 		);
 	});
 
