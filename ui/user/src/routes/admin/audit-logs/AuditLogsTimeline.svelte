@@ -174,23 +174,23 @@
 	const ticksRatio = $derived.by(() => {
 		const width = vpWidth.current;
 
-		if (width < 425) {
-			return 8;
+		if (width >= 1440) {
+			return 1;
 		}
 
-		if (width < 768) {
-			return 4;
-		}
-
-		if (width < 1024) {
+		if (width >= 1024) {
 			return 2;
 		}
 
-		if (width < 1440) {
-			return 1.4;
+		if (width >= 768) {
+			return 3;
 		}
 
-		return 1;
+		if (width >= 425) {
+			return 4;
+		}
+
+		return 6;
 	});
 
 	const xAccessor = $derived.by(() => {
@@ -294,7 +294,7 @@
 	const xAxisTicks = $derived.by(() => {
 		const [frame, frameStep, duration] = timeFrame;
 
-		let generator = timeMinute;
+		let generator = timeMinutes;
 		let step = frameStep * ticksRatio;
 
 		if (frame === 'minute') {
@@ -304,21 +304,20 @@
 		}
 
 		if (frame === 'hour') {
-			generator = timeHour;
+			generator = timeHours;
 		}
 
 		if (frame === 'day') {
-			generator = timeDay;
-			if (duration > 60) {
-				step = frameStep + Math.round(duration / 40) * ticksRatio;
-			}
+			generator = timeDays;
 		}
 
 		if (frame === 'month') {
-			generator = timeMonth;
+			generator = timeMonths;
 		}
 
-		return generator.every(step);
+		const [start, end] = timeFrameDomain;
+
+		return generator(start, end, step);
 	});
 
 	const colorByCallType: Record<string, string> = {
@@ -489,7 +488,7 @@
 
 					const axis = axisBottom(timeScale)
 						.tickSizeOuter(0)
-						.ticks(xAxisTicks)
+						.tickValues(xAxisTicks)
 						.tickFormat(tickFormat);
 
 					selection
