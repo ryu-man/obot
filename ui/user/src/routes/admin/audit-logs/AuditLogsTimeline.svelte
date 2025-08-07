@@ -318,8 +318,6 @@
 			generator = timeMonth;
 		}
 
-		console.log(step);
-
 		return generator.every(step);
 	});
 
