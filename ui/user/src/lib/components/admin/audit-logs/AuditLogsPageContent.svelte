@@ -229,6 +229,7 @@
 		if (!allFilters) return;
 		if (!pageIndexLocal.isReady) return;
 
+		showLoadingSpinner = true;
 		fetchAuditLogs({ ...allFilters }).then((res) => {
 			// Reset page and page fragment indexes when the total results are less than the current page offset
 			if (!res || pageOffset > (res?.total ?? 0)) {
@@ -360,11 +361,13 @@
 
 {#if showLoadingSpinner}
 	<div
-		class="absolute inset-0 z-10 flex items-center justify-center backdrop-blur-[2px]"
+		class="absolute inset-0 z-10 flex items-center justify-center"
 		in:fade={{ duration: 100 }}
-		out:fade={{ duration: 300, delay: 1000 }}
+		out:fade|global={{ duration: 300, delay: 1000 }}
 	>
-		<div class="flex flex-col items-center gap-4 text-blue-500 dark:text-blue-500">
+		<div
+			class="bg-surface3/50 border-surface3 flex flex-col items-center gap-4 rounded-2xl border px-16 py-8 text-blue-500 shadow-md backdrop-blur-[1px] dark:text-blue-500"
+		>
 			<Loading class="size-32 stroke-1" />
 			<div class="text-2xl font-semibold">Loading logs...</div>
 		</div>
