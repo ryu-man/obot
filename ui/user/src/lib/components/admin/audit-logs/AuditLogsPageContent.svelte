@@ -88,8 +88,22 @@
 		'end_time'
 	];
 
-	const searchParamsAsArray = $derived(
-		supportedFilters.map((d) => [d, page.url.searchParams.get(d)])
+	const defaultSearchParams: Partial<AuditLogURLFilters> = {
+		call_type: [
+			'prompts/list',
+			'resources/read',
+			'tools/list',
+			'tools/call',
+			'prompts/get',
+			'resources/list'
+		].join(',')
+	};
+
+	const searchParamsAsArray: [keyof AuditLogURLFilters, string | null][] = $derived(
+		supportedFilters.map((d) => [
+			d,
+			page.url.searchParams.get(d) ?? defaultSearchParams[d]?.toString() ?? ''
+		])
 	);
 
 	// Extract search supported params from the URL and convert them to AuditLogURLFilters
@@ -456,10 +470,7 @@
 </dialog>
 
 {#snippet filters()}
-	{@const entries = Object.entries(searchParamFilters)
-		.filter(([, value]) => !!value)
-		.map(([key]) => [key, allFilters[key as keyof typeof allFilters]])}
-
+	{@const entries = Object.entries(prunedSearchParamFilters)}
 	{@const filters = entries.filter(([, value]) => !!value) as [
 		keyof AuditLogURLFilters,
 		string | number | null
