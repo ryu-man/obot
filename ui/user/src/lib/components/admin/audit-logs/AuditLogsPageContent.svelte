@@ -456,7 +456,10 @@
 </dialog>
 
 {#snippet filters()}
-	{@const entries = Object.entries(searchParamFilters)}
+	{@const entries = Object.entries(searchParamFilters)
+		.filter(([, value]) => !!value)
+		.map(([key]) => [key, allFilters[key as keyof typeof allFilters]])}
+
 	{@const filters = entries.filter(([, value]) => !!value) as [
 		keyof AuditLogURLFilters,
 		string | number | null
