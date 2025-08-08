@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { slide } from 'svelte/transition';
+	import { fade, slide } from 'svelte/transition';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { flip } from 'svelte/animate';
 	import { X, ChevronLeft, ChevronRight, Funnel, Captions } from 'lucide-svelte';
@@ -25,6 +25,7 @@
 	import AuditLogsTimeline from './AuditLogsTimeline.svelte';
 	import AuditLogCalendar from './AuditLogCalendar.svelte';
 	import { localState } from '$lib/runes/localState.svelte';
+	import Loading from '$lib/icons/Loading.svelte';
 
 	interface Props {
 		mcpId?: string | null;
@@ -66,6 +67,7 @@
 
 	const users = new SvelteMap<string, OrgUser>();
 
+	let showLoadingSpinner = $state(true);
 	let showFilters = $state(false);
 	let selectedAuditLog = $state<AuditLog & { user: string }>();
 	let rightSidebar = $state<HTMLDialogElement>();
@@ -233,6 +235,7 @@
 				pageIndexLocal.current = 0;
 				fragmentIndex = 0;
 			}
+			showLoadingSpinner = false;
 		});
 	});
 
@@ -354,6 +357,19 @@
 		pageIndexLocal.current = 0;
 	}
 </script>
+
+{#if showLoadingSpinner}
+	<div
+		class="absolute inset-0 z-10 flex items-center justify-center backdrop-blur-[2px]"
+		in:fade={{ duration: 100 }}
+		out:fade={{ duration: 300, delay: 1000 }}
+	>
+		<div class="flex flex-col items-center gap-4 text-blue-500 dark:text-blue-500">
+			<Loading class="size-32 stroke-1" />
+			<div class="text-2xl font-semibold">Loading logs...</div>
+		</div>
+	</div>
+{/if}
 
 <div class="flex gap-4">
 	<Search
