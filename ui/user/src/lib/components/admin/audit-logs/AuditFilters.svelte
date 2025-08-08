@@ -122,7 +122,7 @@
 				);
 			} else {
 				// Override default values
-				if (filterInput.selected === undefined) {
+				if (filterInput.selected === null) {
 					// Clear the search param
 					url.searchParams.delete(filterInput.property);
 				} else {
@@ -167,7 +167,6 @@
 				}}
 				onReset={() => {
 					filterInput.selected = null;
-					console.log('reset', filterInput.selected);
 				}}
 			></AuditFilter>
 		{/each}
