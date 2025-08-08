@@ -363,7 +363,7 @@
 	<div
 		class="absolute inset-0 z-10 flex items-center justify-center"
 		in:fade={{ duration: 100 }}
-		out:fade|global={{ duration: 300, delay: 1000 }}
+		out:fade|global={{ duration: 300, delay: 500 }}
 	>
 		<div
 			class="bg-surface3/50 border-surface3 flex flex-col items-center gap-4 rounded-2xl border px-16 py-8 text-blue-500 shadow-md backdrop-blur-[1px] dark:text-blue-500"
