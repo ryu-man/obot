@@ -119,11 +119,11 @@
 					encodeURIComponent(filterInput.selected.toString())
 				);
 			} else {
-				// Override default values
 				if (filterInput.selected === null) {
 					// Clear the search param
 					url.searchParams.delete(filterInput.property);
 				} else {
+					// Override default values
 					url.searchParams.set(filterInput.property, '');
 				}
 			}
