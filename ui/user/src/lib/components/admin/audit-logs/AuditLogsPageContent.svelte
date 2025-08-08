@@ -115,7 +115,7 @@
 						? // Value is not defined but has a search param then override with empty string
 							''
 						: // No search params return default value if exist otherwise return undefined
-							(defaultSearchParams[d]?.toString() ?? undefined)
+							(defaultSearchParams[d]?.toString() ?? null)
 			];
 		})
 	);
@@ -135,10 +135,10 @@
 	// Keep only filters with defined values
 	const prunedSearchParamFilters = $derived.by(() => {
 		return searchParamsAsArray
-			.filter(([, value]) => value !== undefined && value !== null)
+			.filter(([, value]) => isSafe(value))
 			.reduce(
 				(acc, [key, value]) => {
-					acc[key!] = value ? decodeURIComponent(value) : undefined;
+					acc[key!] = value;
 					return acc;
 				},
 				{} as Record<string, unknown>
@@ -477,12 +477,14 @@
 	{#if selectedAuditLog}
 		<AuditLogDetails onClose={handleRightSidebarClose} auditLog={selectedAuditLog} />
 	{/if}
+
 	{#if showFilters}
 		<AuditFilters
 			onClose={handleRightSidebarClose}
 			filters={{ ...auditLogsSlideoverFilters }}
 			{getUserDisplayName}
 			{getFilterDisplayLabel}
+			getDefaultValue={(filter) => defaultSearchParams[filter]}
 		/>
 	{/if}
 </dialog>

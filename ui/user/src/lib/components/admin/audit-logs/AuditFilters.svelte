@@ -7,7 +7,8 @@
 	export type FilterInput = {
 		label: string;
 		property: FilterKey;
-		selected: string | number;
+		selected?: string | number | null;
+		default?: string | number | null;
 		options: { id: string; label: string }[];
 	};
 
@@ -31,14 +32,18 @@
 		onClose: () => void;
 		getUserDisplayName: (userId: string) => string;
 		getFilterDisplayLabel?: (key: keyof AuditLogURLFilters) => string;
+		getDefaultValue?: <T extends keyof AuditLogURLFilters>(filter: T) => AuditLogURLFilters[T];
 	}
 
 	let {
 		filters: externFilters,
 		onClose,
 		getUserDisplayName,
-		getFilterDisplayLabel
+		getFilterDisplayLabel,
+		getDefaultValue
 	}: Props = $props();
+
+	const url = new URL(page.url);
 
 	let filters = $derived({ ...(externFilters ?? {}) });
 
@@ -52,12 +57,15 @@
 				property: filterId,
 				label: getFilterDisplayLabel?.(filterId) ?? filterId.replace(/_(\w)/, ' $1'),
 				get selected() {
-					return filters?.[filterId] ?? '';
+					return filters?.[filterId];
 				},
 				set selected(v) {
-					filters[filterId] = v ?? '';
+					filters[filterId] = v;
 					// Force Component to react
 					filters = { ...filters };
+				},
+				get default() {
+					return getDefaultValue?.(filterId);
 				},
 				get options() {
 					return filtersOptions[filterId];
@@ -104,28 +112,21 @@
 	});
 
 	async function handleApplyFilters() {
-		const url = page.url;
-
 		for (const filterInput of filterInputsAsArray) {
+			console.log(filterInput.property, filterInput.selected);
+
 			if (filterInput.selected) {
 				url.searchParams.set(
 					filterInput.property,
 					encodeURIComponent(filterInput.selected.toString())
 				);
 			} else {
-				// Has default values, So override with empty string
-				const hasDefinedValue =
-					externFilters?.[filterInput.property] !== undefined &&
-					externFilters?.[filterInput.property] !== null;
-
-				const hasSearchParamDefined = page.url.searchParams.has(filterInput.property);
-
 				// Override default values
-				if (!hasSearchParamDefined && hasDefinedValue) {
-					page.url.searchParams.set(filterInput.property, '');
-				} else {
+				if (filterInput.selected === undefined) {
 					// Clear the search param
-					page.url.searchParams.delete(filterInput.property);
+					url.searchParams.delete(filterInput.property);
+				} else {
+					url.searchParams.set(filterInput.property, '');
 				}
 			}
 		}
@@ -163,6 +164,10 @@
 					// single clear value is handled inside the component
 					const key = filterInputsAsArray[index].property;
 					filterInputs[key].selected = '';
+				}}
+				onReset={() => {
+					filterInput.selected = null;
+					console.log('reset', filterInput.selected);
 				}}
 			></AuditFilter>
 		{/each}
