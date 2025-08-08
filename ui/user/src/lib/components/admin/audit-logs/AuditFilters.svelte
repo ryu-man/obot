@@ -113,7 +113,20 @@
 					encodeURIComponent(filterInput.selected.toString())
 				);
 			} else {
-				page.url.searchParams.delete(filterInput.property);
+				// Has default values, So override with empty string
+				const hasDefinedValue =
+					externFilters?.[filterInput.property] !== undefined &&
+					externFilters?.[filterInput.property] !== null;
+
+				const hasSearchParamDefined = page.url.searchParams.has(filterInput.property);
+
+				// Override default values
+				if (!hasSearchParamDefined && hasDefinedValue) {
+					page.url.searchParams.set(filterInput.property, '');
+				} else {
+					// Clear the search param
+					page.url.searchParams.delete(filterInput.property);
+				}
 			}
 		}
 
