@@ -113,8 +113,6 @@
 
 	async function handleApplyFilters() {
 		for (const filterInput of filterInputsAsArray) {
-			console.log(filterInput.property, filterInput.selected);
-
 			if (filterInput.selected) {
 				url.searchParams.set(
 					filterInput.property,
