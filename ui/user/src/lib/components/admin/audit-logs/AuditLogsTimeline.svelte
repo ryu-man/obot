@@ -57,7 +57,6 @@
 
 	let { start, end, data }: Props<AuditLog> = $props();
 
-	let timelineElement = $state<HTMLElement>();
 	let highlightedRectElement = $state<SVGRectElement>();
 
 	let paddingLeft = $state(24);
@@ -431,7 +430,7 @@
 							left: 40,
 							bottom: 0
 						},
-						boundary: timelineElement,
+						boundary: document.documentElement,
 						fallbackPlacements: ['top', 'top-end', 'top-start', 'left-start', 'right-start']
 					})
 				]
@@ -450,14 +449,7 @@
 	}
 </script>
 
-<div
-	bind:clientHeight
-	bind:clientWidth
-	class="group relative h-full w-full"
-	{@attach (node) => {
-		timelineElement = node;
-	}}
->
+<div bind:clientHeight bind:clientWidth class="group relative h-full w-full">
 	{#if highlightedRectElement && currentItem}
 		<div
 			class="tooltip pointer-events-none fixed top-0 left-0 flex flex-col shadow-md"
