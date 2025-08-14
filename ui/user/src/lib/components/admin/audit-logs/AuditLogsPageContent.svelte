@@ -517,8 +517,6 @@
 			getDefaultValue={(filter) => defaultSearchParams[filter]}
 			filterOptions={(option, filterId) => {
 				if (filterId === 'mcp_id') {
-					console.log(page.url.pathname);
-
 					if (page.url.pathname.match(/[\w\d]+$/)) {
 						const selectedMcpId = page.params?.id ?? '';
 
