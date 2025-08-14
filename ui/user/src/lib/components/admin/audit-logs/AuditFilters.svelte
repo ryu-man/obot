@@ -92,7 +92,7 @@
 
 			if (filterId === 'user_id') {
 				return (
-					response.options
+					response?.options
 						?.filter((d) => filterOptions?.(d, filterId) ?? true)
 						?.map((d) => ({
 							id: d,
@@ -101,19 +101,9 @@
 				);
 			}
 
-			if (filterId === 'mcp_id') {
-				const selectedMcpId = page.params?.id ?? '';
-
-				return (
-					response?.options
-						?.filter((d) => !selectedMcpId || d.endsWith(selectedMcpId))
-						.map((d) => ({ id: d, label: d })) ?? []
-				);
-			}
-
 			return (
 				response?.options
-					.filter((d) => filterOptions?.(d, filterId) ?? true)
+					?.filter((d) => filterOptions?.(d, filterId) ?? true)
 					?.map((d) => ({
 						id: d,
 						label: d
