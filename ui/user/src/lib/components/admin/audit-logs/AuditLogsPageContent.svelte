@@ -168,11 +168,11 @@
 	const auditLogsSlideoverFilters = $derived.by(() => {
 		const clone = { ...searchParamFilters };
 
-		for (const key of ['mcp_server_display_name', 'start_time', 'end_time']) {
+		for (const key of ['start_time', 'end_time']) {
 			delete clone[key as keyof AuditLogURLFilters];
 		}
 
-		return { ...clone };
+		return { ...clone, ...propsFilters };
 	});
 
 	let timeRangeFilters = $derived.by(() => {
