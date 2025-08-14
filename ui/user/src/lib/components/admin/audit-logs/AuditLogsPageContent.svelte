@@ -34,7 +34,7 @@
 		emptyContent?: Snippet;
 	}
 
-	let { mcpId, mcpCatalogEntryId, mcpServerDisplayName, emptyContent }: Props = $props();
+	let { mcpServerDisplayName, emptyContent }: Props = $props();
 
 	let auditLogsResponse = $state<PaginatedResponse<AuditLog>>();
 	const auditLogsTotalItems = $derived(auditLogsResponse?.total ?? 0);
@@ -152,8 +152,6 @@
 
 	const propsFilters = $derived.by(() => {
 		const entries: [key: string, value: string | null | undefined][] = [
-			['mcp_id', mcpId],
-			['mcp_server_catalog_entry_name', mcpCatalogEntryId],
 			['mcp_server_display_name', mcpServerDisplayName]
 		];
 
@@ -170,7 +168,7 @@
 	const auditLogsSlideoverFilters = $derived.by(() => {
 		const clone = { ...searchParamFilters };
 
-		for (const key of [...Object.keys(propsFilters), 'start_time', 'end_time']) {
+		for (const key of ['mcp_server_display_name', 'start_time', 'end_time']) {
 			delete clone[key as keyof AuditLogURLFilters];
 		}
 
@@ -506,9 +504,30 @@
 		<AuditFilters
 			onClose={handleRightSidebarClose}
 			filters={{ ...auditLogsSlideoverFilters }}
+			isFilterDisabled={(key) => {
+				if (!mcpServerDisplayName) return false;
+
+				if (key === 'mcp_server_display_name') return true;
+				if (key === 'mcp_server_catalog_entry_name') return true;
+
+				return false;
+			}}
 			{getUserDisplayName}
 			{getFilterDisplayLabel}
 			getDefaultValue={(filter) => defaultSearchParams[filter]}
+			filterOptions={(option, filterId) => {
+				if (filterId === 'mcp_id') {
+					console.log(page.url.pathname);
+
+					if (page.url.pathname.match(/[\w\d]+$/)) {
+						const selectedMcpId = page.params?.id ?? '';
+
+						return !selectedMcpId || option.endsWith(selectedMcpId);
+					}
+				}
+
+				return true;
+			}}
 		/>
 	{/if}
 </dialog>
