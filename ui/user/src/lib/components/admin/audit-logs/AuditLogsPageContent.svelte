@@ -472,7 +472,8 @@
 			showFilters = false;
 			rightSidebar?.show();
 		}}
-		getUserDisplayName={(...args) => getUserDisplayName(users, ...args)}
+		getUserDisplayName={(userId: string, hasConflict?: () => boolean) =>
+			getUserDisplayName(users, userId, hasConflict)}
 		{emptyContent}
 	></AuditLogsTable>
 {:else if !showLoadingSpinner}
