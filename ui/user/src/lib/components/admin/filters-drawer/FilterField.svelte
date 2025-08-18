@@ -23,14 +23,21 @@
 
 	interface Props {
 		filter: FilterInput;
+		optionsSort?: (a: FilterOption, b: FilterOption) => number;
 		onSelect: SelectProps<{ id: string; label: string }>['onSelect'];
 		onClearAll?: () => void;
 		onReset?: () => void;
 	}
 
-	let { filter, onSelect, onClearAll, onReset }: Props = $props();
+	let {
+		filter,
+		optionsSort = (a: FilterOption, b: FilterOption) => a.label.localeCompare(b.label),
+		onSelect,
+		onClearAll,
+		onReset
+	}: Props = $props();
 
-	let options = $derived(filter.options ?? []);
+	let options = $derived([...(filter?.options ?? [])].sort(optionsSort));
 
 	const value = $derived(
 		filter.selected === null ? (filter.default ?? '') : (filter.selected ?? '')
