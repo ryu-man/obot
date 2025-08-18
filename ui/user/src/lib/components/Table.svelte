@@ -96,7 +96,7 @@
 							onclick={() => {
 								if (!sortable?.includes(property)) return;
 								if (!sortedBy || sortedBy.property !== property) {
-									sortedBy = { property, order: 'desc' };
+									sortedBy = { property, order: 'asc' };
 								} else {
 									sortedBy.order = sortedBy.order === 'asc' ? 'desc' : 'asc';
 								}
