@@ -472,7 +472,7 @@
 			showFilters = false;
 			rightSidebar?.show();
 		}}
-		{getUserDisplayName}
+		getUserDisplayName={(...args) => getUserDisplayName(users, ...args)}
 		{emptyContent}
 	></AuditLogsTable>
 {:else if !showLoadingSpinner}
