@@ -20,7 +20,7 @@
 		// Used to filter server ids when selecting a multi instance server
 		filterOptions?: (option: string, filterId?: keyof AuditLogURLFilters) => boolean;
 		onClose: () => void;
-		getUserDisplayName: (userId: string) => string;
+		getUserDisplayName: (userId: string, hasConflict?: () => boolean) => string;
 		getFilterDisplayLabel?: (key: keyof AuditLogURLFilters) => string;
 		getDefaultValue?: <T extends keyof AuditLogURLFilters>(filter: T) => AuditLogURLFilters[T];
 	}
@@ -82,7 +82,7 @@
 						?.filter((d) => filterOptions?.(d, filterId) ?? true)
 						?.map((d) => ({
 							id: d,
-							label: getUserDisplayName(d)
+							label: getUserDisplayName(d, () => response.options.some((id) => id === d))
 						})) ?? []
 				);
 			}

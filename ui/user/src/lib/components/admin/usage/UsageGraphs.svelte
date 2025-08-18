@@ -22,6 +22,7 @@
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import FiltersDrawer from '../filters-drawer/FiltersDrawer.svelte';
+	import { getUserDisplayName } from '../filters-drawer/utils';
 
 	interface Props {
 		mcpId?: string;
@@ -421,23 +422,6 @@
 		return key.replace(/_(\w)/g, ' $1');
 	}
 
-	function getUserDisplayName(id: string): string {
-		const user = userMap.get(id);
-		let display =
-			user?.displayName ??
-			user?.originalUsername ??
-			user?.originalEmail ??
-			user?.username ??
-			user?.email ??
-			'Unknown User';
-
-		if (user?.deletedAt) {
-			display += ' (Deleted)';
-		}
-
-		return display;
-	}
-
 	function isSafe<T = unknown>(value: T) {
 		return value !== undefined && value !== null;
 	}
@@ -576,7 +560,7 @@
 				onClose={handleRightSidebarClose}
 				filters={searchParamFilters}
 				{getFilterDisplayLabel}
-				{getUserDisplayName}
+				getUserDisplayName={(...args) => getUserDisplayName(userMap, ...args)}
 			/>
 		{/if}
 	</dialog>
