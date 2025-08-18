@@ -20,12 +20,12 @@
 	import { clickOutside } from '$lib/actions/clickoutside';
 	import { dialogAnimation } from '$lib/actions/dialogAnimation';
 	import AuditLogDetails from '$lib/components/admin/audit-logs/AuditLogDetails.svelte';
-	import AuditFilters from '$lib/components/admin/audit-logs/AuditFilters.svelte';
 	import AuditLogsTable from './AuditLogs.svelte';
 	import AuditLogsTimeline from './AuditLogsTimeline.svelte';
 	import AuditLogCalendar from './AuditLogCalendar.svelte';
 	import { localState } from '$lib/runes/localState.svelte';
 	import Loading from '$lib/icons/Loading.svelte';
+	import FiltersDrawer from '../filters-drawer/FiltersDrawer.svelte';
 
 	interface Props {
 		mcpId?: string | null;
@@ -513,7 +513,7 @@
 	{/if}
 
 	{#if showFilters}
-		<AuditFilters
+		<FiltersDrawer
 			onClose={handleRightSidebarClose}
 			filters={{ ...auditLogsSlideoverFilters }}
 			isFilterDisabled={(key) => {

@@ -16,12 +16,12 @@
 	import StatBar from '../StatBar.svelte';
 	import { tooltip } from '$lib/actions/tooltip.svelte';
 	import HorizontalBarGraph from '../../graph/HorizontalBarGraph.svelte';
-	import UsageFilters from './UsageFilters.svelte';
 	import { clickOutside } from '$lib/actions/clickoutside';
 	import { dialogAnimation } from '$lib/actions/dialogAnimation';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
+	import FiltersDrawer from '../filters-drawer/FiltersDrawer.svelte';
 
 	interface Props {
 		mcpId?: string;
@@ -395,7 +395,9 @@
 
 	function handleRightSidebarClose() {
 		rightSidebar?.close();
-		showFilters = false;
+		setTimeout(() => {
+			showFilters = false;
+		}, 300);
 	}
 
 	function hasData(graphConfigs: GraphConfig[]) {
@@ -570,7 +572,7 @@
 		class="dark:border-surface1 dark:bg-surface1 fixed! top-0! right-0! bottom-0! left-auto! z-40 h-screen w-auto max-w-none rounded-none border-0 bg-white shadow-lg outline-none!"
 	>
 		{#if showFilters}
-			<UsageFilters
+			<FiltersDrawer
 				onClose={handleRightSidebarClose}
 				filters={searchParamFilters}
 				{getFilterDisplayLabel}
