@@ -27,15 +27,18 @@
 	import Loading from '$lib/icons/Loading.svelte';
 	import FiltersDrawer from '../filters-drawer/FiltersDrawer.svelte';
 	import { getUserDisplayName } from '../filters-drawer/utils';
+	import { doGet } from '$lib/services/http';
 
 	interface Props {
 		mcpId?: string | null;
-		mcpCatalogEntryId?: string | null;
+		catalogId?: string | null;
 		mcpServerDisplayName?: string | null;
+		mcpServerCatalogEntryName?: string | null;
 		emptyContent?: Snippet;
 	}
 
-	let { mcpServerDisplayName, emptyContent }: Props = $props();
+	let { mcpServerDisplayName, mcpServerCatalogEntryName, mcpId, catalogId, emptyContent }: Props =
+		$props();
 
 	let auditLogsResponse = $state<PaginatedResponse<AuditLog>>();
 	const auditLogsTotalItems = $derived(auditLogsResponse?.total ?? 0);
@@ -76,7 +79,8 @@
 	// Supported filters for the audit logs
 	// These filters are used to filter the audit logs based on the URL parameters
 	// Ignore other params
-	const supportedFilters: (keyof AuditLogURLFilters)[] = [
+	type SupportedFilter = keyof AuditLogURLFilters;
+	const supportedFilters: SupportedFilter[] = [
 		'user_id',
 		'mcp_id',
 		'mcp_server_display_name',
@@ -103,7 +107,7 @@
 		].join(',')
 	};
 
-	const searchParamsAsArray: [keyof AuditLogURLFilters, string | undefined | null][] = $derived(
+	const searchParamsAsArray: [SupportedFilter, string | undefined | null][] = $derived(
 		supportedFilters.map((d) => {
 			const hasSearchParam = page.url.searchParams.has(d);
 
@@ -153,9 +157,13 @@
 	});
 
 	const propsFilters = $derived.by(() => {
-		const entries: [key: string, value: string | null | undefined][] = [
-			['mcp_server_display_name', mcpServerDisplayName]
+		const entries: [key: SupportedFilter, value: string | null | undefined][] = [
+			// ['mcp_id', mcpId],
+			['mcp_server_display_name', mcpServerDisplayName],
+			['mcp_server_catalog_entry_name', mcpServerCatalogEntryName]
 		];
+
+		console.log(mcpId, mcpServerDisplayName, mcpServerCatalogEntryName);
 
 		return (
 			entries
@@ -220,6 +228,8 @@
 		query: query
 	});
 
+	// $inspect(allFilters);
+
 	afterNavigate(() => {
 		AdminService.listUsersIncludeDeleted().then((userData) => {
 			for (const user of userData) {
@@ -283,13 +293,14 @@
 	}
 
 	async function fetchAuditLogs(filters: typeof searchParamFilters) {
-		const { mcp_id: mcpId } = filters;
-
-		if (mcpId) {
-			return (auditLogsResponse = await AdminService.listServerOrInstanceAuditLogs(mcpId, filters));
-		} else {
-			return (auditLogsResponse = await AdminService.listAuditLogs(filters));
-		}
+		// if (mcpServerCatalogEntryName) {
+		// 	return (auditLogsResponse = await AdminService.listAuditLogs({
+		// 		...filters,
+		// 		mcp_server_catalog_entry_name: mcpServerCatalogEntryName
+		// 	}));
+		// } else {
+		// }
+		return (auditLogsResponse = await AdminService.listAuditLogs(filters));
 	}
 
 	function getFilterDisplayLabel(key: string) {
@@ -515,16 +526,24 @@
 			getUserDisplayName={(...args) => getUserDisplayName(users, ...args)}
 			{getFilterDisplayLabel}
 			getDefaultValue={(filter) => defaultSearchParams[filter]}
-			filterOptions={(option, filterId) => {
-				if (filterId === 'mcp_id') {
-					if (page.url.pathname.match(/[\w\d]+$/)) {
-						const selectedMcpId = page.params?.id ?? '';
-
-						return !selectedMcpId || option.endsWith(selectedMcpId);
-					}
+			endpoint={async (filterId: string, ...args) => {
+				if (filterId !== 'mcp_id') {
+					return await AdminService.listAuditLogFilterOptions(filterId, ...args);
 				}
 
-				return true;
+				if (mcpId) {
+					const response = await AdminService.listAuditLogFilterOptions(filterId, ...args);
+
+					return { options: response?.options.filter((option) => option.endsWith(mcpId)) ?? [] };
+				}
+
+				const response = (await doGet(
+					`/mcp-catalogs/${catalogId}/entries/${mcpServerCatalogEntryName}/servers`
+				)) as { items: { id: string }[] };
+
+				const options = response?.items?.map?.((item) => item.id) ?? [];
+
+				return { options };
 			}}
 		/>
 	{/if}
