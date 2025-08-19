@@ -223,20 +223,24 @@
 		const usernameFilterFunction = (array: ProjectThread[]) => {
 			return array.filter((thread) => {
 				const user = userMap.get(thread.userID || '');
-				return user?.displayName?.toLowerCase().includes(filters?.username ?? '');
+				return (filters?.username ?? '')
+					?.toLowerCase()
+					.includes(user?.displayName?.toLowerCase() || '');
 			});
 		};
 
 		const emailFilterFunction = (array: ProjectThread[]) => {
 			return array.filter((thread) => {
 				const user = userMap.get(thread.userID || '');
-				return user?.email?.toLowerCase().includes(filters?.email ?? '');
+				return (filters?.email ?? '')?.toLowerCase().includes(user?.email?.toLowerCase() || '');
 			});
 		};
 
 		const projectFilterFunction = (array: ProjectThread[]) => {
 			return array.filter((thread) => {
-				return thread.projectID?.toLowerCase().includes(filters?.project ?? '');
+				return (filters?.project ?? '')
+					?.toLowerCase()
+					.includes(thread.projectID?.toLowerCase() || '');
 			});
 		};
 
