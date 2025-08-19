@@ -16,7 +16,7 @@
 	import type { FilterOptionsEndpoint } from '$lib/components/admin/filters-drawer/types';
 	import { debounce } from 'es-toolkit';
 
-	type SupportedFilter = 'username' | 'email' | 'project';
+	type SupportedFilter = 'username' | 'email' | 'project' | 'query';
 
 	let threads = $state<ProjectThread[]>([]);
 	let filteredThreads = $state<ProjectThread[]>([]);
@@ -29,7 +29,7 @@
 
 	let showFilters = $state(false);
 
-	const supportedFilters: SupportedFilter[] = ['username', 'email', 'project'];
+	const supportedFilters: Exclude<SupportedFilter, 'query'>[] = ['username', 'email', 'project'];
 
 	const searchParamsAsArray: [SupportedFilter, string | undefined | null][] = $derived(
 		supportedFilters.map((d) => {
