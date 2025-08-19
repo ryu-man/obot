@@ -4,10 +4,10 @@
 	import { SvelteMap } from 'svelte/reactivity';
 	import { flip } from 'svelte/animate';
 	import { X, ChevronLeft, ChevronRight, Funnel, Captions } from 'lucide-svelte';
-	import { throttle } from 'es-toolkit';
+	import { debounce } from 'es-toolkit';
 	import { set, endOfDay, isBefore, subDays } from 'date-fns';
 	import { page } from '$app/state';
-	import { afterNavigate, goto } from '$app/navigation';
+	import { afterNavigate, goto, replaceState } from '$app/navigation';
 	import { type DateRange } from '$lib/components/Calendar.svelte';
 	import Search from '$lib/components/Search.svelte';
 	import {
@@ -244,7 +244,7 @@
 	});
 
 	// Throttle query update
-	const handleQueryChange = throttle((value: string) => {
+	const handleQueryChange = debounce((value: string) => {
 		query = value;
 
 		if (value) {
@@ -255,7 +255,7 @@
 
 		// Update the query search param without cause app to react
 		// Prevent losing focus from the input
-		history.replaceState(null, '', page.url);
+		replaceState(page.url, { query: value });
 	}, 100);
 
 	function isSafe<T = unknown>(value: T) {
