@@ -347,15 +347,7 @@
 	{#if entry}
 		{@const name = 'manifest' in entry ? entry.manifest.name : undefined}
 		{@const mcpCatalogEntryId = 'isCatalogEntry' in entry ? entry.id : undefined}
-		<UsageGraphs
-			mcpServerDisplayName={name}
-			{mcpCatalogEntryId}
-			{users}
-			filters={{
-				startTime: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-				endTime: new Date().toISOString()
-			}}
-		/>
+		<UsageGraphs mcpServerDisplayName={name} {mcpCatalogEntryId} />
 	{/if}
 {/snippet}
 
