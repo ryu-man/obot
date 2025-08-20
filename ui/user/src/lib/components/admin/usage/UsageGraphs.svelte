@@ -1,12 +1,5 @@
 <script lang="ts">
-	import {
-		ChevronsLeft,
-		ChevronsRight,
-		LoaderCircle,
-		Funnel,
-		ChartBarDecreasing,
-		X
-	} from 'lucide-svelte';
+	import { ChevronsLeft, ChevronsRight, Funnel, ChartBarDecreasing, X } from 'lucide-svelte';
 	import {
 		AdminService,
 		type AuditLogURLFilters,
@@ -24,13 +17,14 @@
 	import FiltersDrawer from '../filters-drawer/FiltersDrawer.svelte';
 	import { getUserDisplayName } from '../filters-drawer/utils';
 	import type { SupportedStateFilter } from './types';
-	import { slide } from 'svelte/transition';
+	import { fade, slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
 	import { endOfDay, isBefore, set, subDays } from 'date-fns';
 	import { page } from '$app/state';
 	import { DEFAULT_MCP_CATALOG_ID } from '$lib/constants';
 	import type { DateRange } from '$lib/components/Calendar.svelte';
 	import AuditLogCalendar from '../audit-logs/AuditLogCalendar.svelte';
+	import Loading from '$lib/icons/Loading.svelte';
 
 	type Props = {
 		mcpId?: string | null;
@@ -202,6 +196,7 @@
 		end_time: timeRangeFilters.endTime.toISOString()
 	});
 
+	let showLoadingSpinner = $state(true);
 	let listUsageStats = $state<Promise<AuditLogUsageStats>>();
 	let graphPageSize = $state(10);
 	let graphPages = $state<Record<string, number>>({});
@@ -463,7 +458,11 @@
 
 	$effect(() => {
 		if (!listUsageStats) return;
-		updateGraphs();
+		showLoadingSpinner = true;
+
+		updateGraphs().then(() => {
+			showLoadingSpinner = false;
+		});
 	});
 
 	async function reload() {
@@ -612,80 +611,82 @@
 	}
 </script>
 
-{#await listUsageStats}
-	<div class="flex w-full justify-center">
-		<LoaderCircle class="size-6 animate-spin" />
+{#if showLoadingSpinner}
+	<div
+		class="absolute inset-0 z-10 flex items-center justify-center"
+		in:fade={{ duration: 100 }}
+		out:fade|global={{ duration: 300, delay: 500 }}
+	>
+		<div
+			class="bg-surface3/50 border-surface3 flex flex-col items-center gap-4 rounded-2xl border px-16 py-8 text-blue-500 shadow-md backdrop-blur-[1px] dark:text-blue-500"
+		>
+			<Loading class="size-32 stroke-1" />
+			<div class="text-2xl font-semibold">Loading stats...</div>
+		</div>
 	</div>
-{:then _}
-	<div class="flex flex-col">
-		<h1 class="text-2xl font-semibold">Usage</h1>
+{/if}
 
-		<div class="flex w-full justify-end gap-4">
-			<AuditLogCalendar
-				start={timeRangeFilters.startTime}
-				end={timeRangeFilters.endTime}
-				onChange={handleDateChange}
-			/>
+<div class="flex flex-col">
+	<h1 class="text-2xl font-semibold">Usage</h1>
 
-			{#if !mcpId}
-				<button
-					class="hover:bg-surface1 dark:bg-surface1 dark:hover:bg-surface3 dark:border-surface3 button flex h-12 w-fit items-center justify-center gap-1 rounded-lg border border-transparent bg-white shadow-sm"
-					onclick={() => {
-						showFilters = true;
-						rightSidebar?.show();
-					}}
+	<div class="flex w-full justify-end gap-4">
+		<AuditLogCalendar
+			start={timeRangeFilters.startTime}
+			end={timeRangeFilters.endTime}
+			onChange={handleDateChange}
+		/>
+
+		{#if !mcpId}
+			<button
+				class="hover:bg-surface1 dark:bg-surface1 dark:hover:bg-surface3 dark:border-surface3 button flex h-12 w-fit items-center justify-center gap-1 rounded-lg border border-transparent bg-white shadow-sm"
+				onclick={() => {
+					showFilters = true;
+					rightSidebar?.show();
+				}}
+			>
+				<Funnel class="size-4" />
+				Filters
+			</button>
+		{/if}
+	</div>
+</div>
+
+<div>
+	{@render filtersPill()}
+</div>
+
+<div class="flex flex-col gap-8">
+	<!-- Summary with filter button -->
+	<div class="flex items-center justify-between gap-4">
+		<div class="flex-1">
+			<StatBar startTime={filters?.start_time ?? ''} endTime={filters?.end_time ?? ''} />
+		</div>
+	</div>
+
+	{#if !showLoadingSpinner && !hasData(filteredGraphConfigs)}
+		<div class="mt-12 flex w-md flex-col items-center gap-4 self-center text-center">
+			<ChartBarDecreasing class="size-24 text-gray-200 dark:text-gray-900" />
+			<h4 class="text-lg font-semibold text-gray-400 dark:text-gray-600">No usage stats</h4>
+			<p class="w-sm text-sm font-light text-gray-400 dark:text-gray-600">
+				Currently, there are no usage stats for the range or selected filters. Try modifying your
+				search criteria or try again later.
+			</p>
+		</div>
+	{:else if !showLoadingSpinner}
+		<div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
+			{#each filteredGraphConfigs as cfg (cfg.id)}
+				{@const full = graphData[cfg.id] ?? []}
+				{@const total = graphTotals[cfg.id] ?? 0}
+				{@const page = graphPages[cfg.id] ?? 0}
+				{@const maxPage = Math.max(0, Math.ceil(total / graphPageSize) - 1)}
+				{@const paginated = full.slice(page * graphPageSize, (page + 1) * graphPageSize)}
+
+				<div
+					class="dark:bg-surface1 dark:border-surface3 rounded-md border border-transparent bg-white p-6 shadow-sm"
 				>
-					<Funnel class="size-4" />
-					Filters
-				</button>
-			{/if}
-		</div>
-	</div>
+					<h3 class="mb-4 text-lg font-semibold">{cfg.label}</h3>
 
-	<div>
-		{@render filtersPill()}
-	</div>
-
-	{#if !hasData(filteredGraphConfigs)}
-		<div class="flex flex-col gap-8">
-			<div class="flex items-center justify-between gap-4">
-				<div class="flex-1">
-					<StatBar startTime={filters?.start_time ?? ''} endTime={filters?.end_time ?? ''} />
-				</div>
-				<div class="flex items-center gap-2"></div>
-			</div>
-
-			<div class="mt-12 flex w-md flex-col items-center gap-4 self-center text-center">
-				<ChartBarDecreasing class="size-24 text-gray-200 dark:text-gray-900" />
-				<h4 class="text-lg font-semibold text-gray-400 dark:text-gray-600">No usage stats</h4>
-				<p class="w-sm text-sm font-light text-gray-400 dark:text-gray-600">
-					Currently, there are no usage stats for the range or selected filters. Try modifying your
-					search criteria or try again later.
-				</p>
-			</div>
-		</div>
-	{:else}
-		<div class="flex flex-col gap-8">
-			<!-- Summary with filter button -->
-			<div class="flex items-center justify-between gap-4">
-				<div class="flex-1">
-					<StatBar startTime={filters?.start_time ?? ''} endTime={filters?.end_time ?? ''} />
-				</div>
-			</div>
-
-			<div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
-				{#each filteredGraphConfigs as cfg (cfg.id)}
-					{@const full = graphData[cfg.id] ?? []}
-					{@const total = graphTotals[cfg.id] ?? 0}
-					{@const page = graphPages[cfg.id] ?? 0}
-					{@const maxPage = Math.max(0, Math.ceil(total / graphPageSize) - 1)}
-					{@const paginated = full.slice(page * graphPageSize, (page + 1) * graphPageSize)}
-
-					<div
-						class="dark:bg-surface1 dark:border-surface3 rounded-md border border-transparent bg-white p-6 shadow-sm"
-					>
-						<h3 class="mb-4 text-lg font-semibold">{cfg.label}</h3>
-
+					<div class="h-[300px] min-h-[300h]">
 						{#if paginated.length > 0}
 							<HorizontalBarGraph
 								data={paginated}
@@ -696,68 +697,68 @@
 									((d) => `${d[cfg.yKey]} ${cfg.tooltip}`)}
 								formatXLabel={cfg.formatXLabel}
 							/>
-						{:else}
+						{:else if !showLoadingSpinner}
 							<div
 								class="flex h-[300px] items-center justify-center text-sm font-light text-gray-400 dark:text-gray-600"
 							>
 								No data available
 							</div>
 						{/if}
-
-						{#if maxPage > 0}
-							<div
-								class="mt-4 flex items-center justify-center gap-4 border-t border-gray-200 p-4 dark:border-gray-700"
-							>
-								<button
-									class="icon-button disabled:opacity-50"
-									onclick={() => setGraphPage(cfg.id, Math.max(0, page - 1))}
-									disabled={page === 0}
-									use:tooltip={'Previous Page'}
-								>
-									<ChevronsLeft class="size-5" />
-								</button>
-								<span class="text-sm">
-									Page {page + 1} of {maxPage + 1}
-									(showing {Math.min(graphPageSize, total - page * graphPageSize)} of {total} items)
-								</span>
-								<button
-									class="icon-button disabled:opacity-50"
-									onclick={() => setGraphPage(cfg.id, Math.min(maxPage, page + 1))}
-									disabled={page >= maxPage}
-									use:tooltip={'Next Page'}
-								>
-									<ChevronsRight class="size-5" />
-								</button>
-							</div>
-						{/if}
 					</div>
-				{/each}
-			</div>
+
+					{#if maxPage > 0}
+						<div
+							class="mt-4 flex items-center justify-center gap-4 border-t border-gray-200 p-4 dark:border-gray-700"
+						>
+							<button
+								class="icon-button disabled:opacity-50"
+								onclick={() => setGraphPage(cfg.id, Math.max(0, page - 1))}
+								disabled={page === 0}
+								use:tooltip={'Previous Page'}
+							>
+								<ChevronsLeft class="size-5" />
+							</button>
+							<span class="text-sm">
+								Page {page + 1} of {maxPage + 1}
+								(showing {Math.min(graphPageSize, total - page * graphPageSize)} of {total} items)
+							</span>
+							<button
+								class="icon-button disabled:opacity-50"
+								onclick={() => setGraphPage(cfg.id, Math.min(maxPage, page + 1))}
+								disabled={page >= maxPage}
+								use:tooltip={'Next Page'}
+							>
+								<ChevronsRight class="size-5" />
+							</button>
+						</div>
+					{/if}
+				</div>
+			{/each}
 		</div>
 	{/if}
+</div>
 
-	<dialog
-		bind:this={rightSidebar}
-		use:clickOutside={[handleRightSidebarClose, true]}
-		use:dialogAnimation={{ type: 'drawer' }}
-		class="dark:border-surface1 dark:bg-surface1 fixed! top-0! right-0! bottom-0! left-auto! z-40 h-screen w-auto max-w-none rounded-none border-0 bg-white shadow-lg outline-none!"
-	>
-		{#if showFilters}
-			<FiltersDrawer
-				onClose={handleRightSidebarClose}
-				filters={auditLogsSlideoverFilters}
-				{getFilterDisplayLabel}
-				getUserDisplayName={(...args) => getUserDisplayName(usersMap, ...args)}
-				isFilterDisabled={(filterId) => propsFiltersKeys.has(filterId)}
-				isFilterClearable={(filterId) => !propsFiltersKeys.has(filterId)}
-				endpoint={async (filterId: string, ...args) => {
-					const proxyFilterId = proxy.get(filterId as SupportedStateFilter) ?? filterId;
-					return AdminService.listAuditLogFilterOptions(proxyFilterId, ...args);
-				}}
-			/>
-		{/if}
-	</dialog>
-{/await}
+<dialog
+	bind:this={rightSidebar}
+	use:clickOutside={[handleRightSidebarClose, true]}
+	use:dialogAnimation={{ type: 'drawer' }}
+	class="dark:border-surface1 dark:bg-surface1 fixed! top-0! right-0! bottom-0! left-auto! z-40 h-screen w-auto max-w-none rounded-none border-0 bg-white shadow-lg outline-none!"
+>
+	{#if showFilters}
+		<FiltersDrawer
+			onClose={handleRightSidebarClose}
+			filters={auditLogsSlideoverFilters}
+			{getFilterDisplayLabel}
+			getUserDisplayName={(...args) => getUserDisplayName(usersMap, ...args)}
+			isFilterDisabled={(filterId) => propsFiltersKeys.has(filterId)}
+			isFilterClearable={(filterId) => !propsFiltersKeys.has(filterId)}
+			endpoint={async (filterId: string, ...args) => {
+				const proxyFilterId = proxy.get(filterId as SupportedStateFilter) ?? filterId;
+				return AdminService.listAuditLogFilterOptions(proxyFilterId, ...args);
+			}}
+		/>
+	{/if}
+</dialog>
 
 {#snippet filtersPill()}
 	{@const entries = Object.entries(pillsSearchParamFilters)}
