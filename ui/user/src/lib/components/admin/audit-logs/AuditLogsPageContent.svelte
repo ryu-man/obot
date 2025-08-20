@@ -169,22 +169,37 @@
 				{} as Record<string, unknown>
 			) as Record<keyof AuditLogURLFilters, string>;
 
-		return Object.entries({ ...propsFilters, ...base })
-			.filter(([, value]) => !!value)
-			.sort((a, b) => {
-				if (propsFiltersKeys.has(a[0])) {
-					return -1;
-				}
+		return (
+			Object.entries({ ...propsFilters, ...base })
+				.filter(([, value]) => !!value)
+				// Sort to prioritize props filter keys first, then alphabetically
+				.sort((a, b) => {
+					// If both keys are in propsFiltersKeys, sort alphabetically
+					if (propsFiltersKeys.has(a[0]) && propsFiltersKeys.has(b[0])) {
+						return a[0].localeCompare(b[0]);
+					}
 
-				return a[0].localeCompare(b[0]);
-			})
-			.reduce(
-				(acc, val) => {
-					acc[val[0] as keyof AuditLogURLFilters] = val[1] as string;
-					return acc;
-				},
-				{} as Record<string, unknown>
-			) as Record<keyof AuditLogURLFilters, string>;
+					// If only a is in propsFiltersKeys, it comes first
+					if (propsFiltersKeys.has(a[0])) {
+						return -1;
+					}
+
+					// If only b is in propsFiltersKeys, it comes first
+					if (propsFiltersKeys.has(b[0])) {
+						return 1;
+					}
+
+					// If neither are in propsFiltersKeys, sort alphabetically
+					return a[0].localeCompare(b[0]);
+				})
+				.reduce(
+					(acc, val) => {
+						acc[val[0] as keyof AuditLogURLFilters] = val[1] as string;
+						return acc;
+					},
+					{} as Record<string, unknown>
+				) as Record<keyof AuditLogURLFilters, string>
+		);
 	});
 
 	// Filters to be used in the audit logs slideover
