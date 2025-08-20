@@ -173,6 +173,8 @@
 		);
 	});
 
+	const propsFiltersKeys = $derived(new Set(Object.keys(propsFilters)));
+
 	// Filters to be used in the audit logs slideover
 	// Exclude filters that are set via props and not undefined
 	const auditLogsSlideoverFilters = $derived.by(() => {
@@ -515,14 +517,8 @@
 		<FiltersDrawer
 			onClose={handleRightSidebarClose}
 			filters={{ ...auditLogsSlideoverFilters }}
-			isFilterDisabled={(key) => {
-				if (!mcpServerDisplayName) return false;
-
-				if (key === 'mcp_server_display_name') return true;
-				if (key === 'mcp_server_catalog_entry_name') return true;
-
-				return false;
-			}}
+			isFilterDisabled={(filterId) => propsFiltersKeys.has(filterId)}
+			isFilterClearable={(filterId) => !propsFiltersKeys.has(filterId)}
 			getUserDisplayName={(...args) => getUserDisplayName(users, ...args)}
 			{getFilterDisplayLabel}
 			getDefaultValue={(filter) => defaultSearchParams[filter]}
