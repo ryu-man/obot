@@ -138,7 +138,7 @@
 
 	function handleClearAllFilters() {
 		filterInputsAsArray
-			.filter((filter) => (isFilterClearable ? isFilterClearable(filter.property) : true))
+			.filter((filter) => (isFilterClearable ? isFilterClearable?.(filter.property) : true))
 			.forEach((filterInput) => {
 				filterInput.selected = '';
 			});

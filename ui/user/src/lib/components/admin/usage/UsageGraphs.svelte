@@ -117,6 +117,8 @@
 		);
 	});
 
+	const propsFiltersKeys = $derived(new Set(Object.keys(propsFilters)));
+
 	// Keep only filters with defined values
 	const pillsSearchParamFilters = $derived.by(() => {
 		const filters = searchParamsAsArray
@@ -129,8 +131,6 @@
 				},
 				{} as Record<string, unknown>
 			);
-
-		const propsFiltersKeys = new Set(Object.keys(propsFilters));
 
 		// Sort pills; those from props goes first
 		return Object.entries({
@@ -748,9 +748,8 @@
 				filters={auditLogsSlideoverFilters}
 				{getFilterDisplayLabel}
 				getUserDisplayName={(...args) => getUserDisplayName(usersMap, ...args)}
-				isFilterDisabled={(filterId) => {
-					return Object.keys(propsFilters).some((d) => d === filterId);
-				}}
+				isFilterDisabled={(filterId) => propsFiltersKeys.has(filterId)}
+				isFilterClearable={(filterId) => !propsFiltersKeys.has(filterId)}
 				endpoint={async (filterId: string, ...args) => {
 					const proxyFilterId = proxy.get(filterId as SupportedStateFilter) ?? filterId;
 					return AdminService.listAuditLogFilterOptions(proxyFilterId, ...args);
