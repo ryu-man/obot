@@ -622,36 +622,32 @@
 	</div>
 {/if}
 
-<div class="flex flex-col">
-	<h1 class="text-2xl font-semibold">Usage</h1>
-
-	<div class="flex w-full justify-end gap-4">
-		<AuditLogCalendar
-			start={timeRangeFilters.startTime}
-			end={timeRangeFilters.endTime}
-			onChange={handleDateChange}
-		/>
-
-		{#if !mcpId}
-			<button
-				class="hover:bg-surface1 dark:bg-surface1 dark:hover:bg-surface3 dark:border-surface3 button flex h-12 w-fit items-center justify-center gap-1 rounded-lg border border-transparent bg-white shadow-sm"
-				onclick={() => {
-					showFilters = true;
-					rightSidebar?.show();
-				}}
-			>
-				<Funnel class="size-4" />
-				Filters
-			</button>
-		{/if}
-	</div>
-</div>
-
-<div>
-	{@render filtersPill()}
-</div>
-
 <div class="flex flex-col gap-8">
+	<div class="flex flex-col">
+		<div class="flex w-full justify-end gap-4">
+			<AuditLogCalendar
+				start={timeRangeFilters.startTime}
+				end={timeRangeFilters.endTime}
+				onChange={handleDateChange}
+			/>
+
+			{#if !mcpId}
+				<button
+					class="hover:bg-surface1 dark:bg-surface1 dark:hover:bg-surface3 dark:border-surface3 button flex h-12 w-fit items-center justify-center gap-1 rounded-lg border border-transparent bg-white shadow-sm"
+					onclick={() => {
+						showFilters = true;
+						rightSidebar?.show();
+					}}
+				>
+					<Funnel class="size-4" />
+					Filters
+				</button>
+			{/if}
+		</div>
+	</div>
+
+	{@render filtersPill()}
+
 	<!-- Summary with filter button -->
 	<div class="flex items-center justify-between gap-4">
 		<div class="flex-1">

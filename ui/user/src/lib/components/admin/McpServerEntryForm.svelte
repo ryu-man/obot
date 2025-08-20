@@ -353,11 +353,13 @@
 		{@const mcpServerDisplayName = entry.manifest?.name ?? null}
 		{@const entryId = entry.id ?? null}
 
-		<UsageGraphs
-			mcpId={isMultiUserServer ? entryId : null}
-			mcpServerCatalogEntryName={isSingleUserServer || isRemoteServer ? entryId : null}
-			{mcpServerDisplayName}
-		/>
+		<div class="mt-4 flex min-h-full flex-col gap-8 pb-8">
+			<UsageGraphs
+				mcpId={isMultiUserServer ? entryId : null}
+				mcpServerCatalogEntryName={isSingleUserServer || isRemoteServer ? entryId : null}
+				{mcpServerDisplayName}
+			/>
+		</div>
 	{/if}
 {/snippet}
 
