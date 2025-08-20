@@ -442,13 +442,9 @@
 
 	afterNavigate(() => {
 		AdminService.listUsersIncludeDeleted().then((userData) => {
-			console.log(userData);
-
 			for (const user of userData) {
 				usersMap.set(user.id, user);
 			}
-
-			console.log(usersMap.values().toArray());
 		});
 	});
 
