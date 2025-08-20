@@ -32,13 +32,12 @@
 	import type { DateRange } from '$lib/components/Calendar.svelte';
 	import AuditLogCalendar from '../audit-logs/AuditLogCalendar.svelte';
 
-	interface Props {
-		mcpId?: string;
-		mcpCatalogEntryId?: string;
-		mcpServerDisplayName?: string;
-		users: OrgUser[];
-		sort?: { sortBy: string; sortOrder: 'asc' | 'desc' };
-	}
+	type Props = {
+		mcpId?: string | null;
+		mcpServerDisplayName?: string | null;
+		mcpServerCatalogEntryName?: string | null;
+	};
+
 	type GraphConfig = {
 		id: string;
 		label: string;
@@ -52,27 +51,22 @@
 		transform: (stats?: AuditLogUsageStats) => Array<Record<string, any>>;
 	};
 
-	let {
-		mcpId,
-		mcpCatalogEntryId,
-		mcpServerDisplayName,
-		sort = { sortBy: 'created_at', sortOrder: 'desc' }
-	}: Props = $props();
+	let { mcpId, mcpServerCatalogEntryName, mcpServerDisplayName }: Props = $props();
 
 	const supportedFilters: SupportedStateFilter[] = [
-		'mcp_id',
 		'user_ids',
+		'mcp_id',
 		'mcp_server_display_names',
 		'mcp_server_catalog_entry_names'
 	];
 
 	const proxy = new Map<SupportedStateFilter, keyof AuditLogURLFilters>([
-		['mcp_id', 'mcp_id'],
-		['end_time', 'end_time'],
-		['start_time', 'start_time'],
 		['user_ids', 'user_id'],
+		['mcp_id', 'mcp_id'],
 		['mcp_server_display_names', 'mcp_server_display_name'],
-		['mcp_server_catalog_entry_names', 'mcp_server_catalog_entry_name']
+		['mcp_server_catalog_entry_names', 'mcp_server_catalog_entry_name'],
+		['end_time', 'end_time'],
+		['start_time', 'start_time']
 	]);
 
 	const searchParamsAsArray: [keyof UsageStatsFilters, string | undefined | null][] = $derived(
@@ -108,20 +102,55 @@
 		);
 	});
 
+	const propsFilters = $derived.by(() => {
+		const entries: [key: string, value: string | null | undefined][] = [
+			['mcp_id', mcpId],
+			['mcp_server_display_names', mcpServerDisplayName],
+			['mcp_server_catalog_entry_names', mcpServerCatalogEntryName]
+		];
+
+		return (
+			entries
+				// Filter out undefined values, null values should be kept as they mean the value is specified
+				.filter(([, value]) => value !== undefined)
+				.reduce((acc, [key, value]) => ((acc[key] = value!), acc), {} as Record<string, unknown>)
+		);
+	});
+
 	// Keep only filters with defined values
 	const pillsSearchParamFilters = $derived.by(() => {
-		return (
-			searchParamsAsArray
-				// exclude start_time and end_time from pills filters
-				.filter(([key, value]) => !(key === 'start_time' || key === 'end_time') && isSafe(value))
-				.reduce(
-					(acc, [key, value]) => {
-						acc[key!] = value;
-						return acc;
-					},
-					{} as Record<string, unknown>
-				)
-		);
+		const filters = searchParamsAsArray
+			// exclude start_time and end_time from pills filters
+			.filter(([key, value]) => !(key === 'start_time' || key === 'end_time') && isSafe(value))
+			.reduce(
+				(acc, [key, value]) => {
+					acc[key!] = value;
+					return acc;
+				},
+				{} as Record<string, unknown>
+			);
+
+		const propsFiltersKeys = new Set(Object.keys(propsFilters));
+
+		// Sort pills; those from props goes first
+		return Object.entries({
+			...filters,
+			...propsFilters
+		})
+			.sort((a, b) => {
+				if (propsFiltersKeys.has(a[0])) {
+					return -1;
+				}
+
+				return a[0].localeCompare(b[0]);
+			})
+			.reduce(
+				(acc, val) => {
+					acc[val[0]] = val[1];
+					return acc;
+				},
+				{} as Record<string, unknown>
+			);
 	});
 
 	// Filters to be used in the audit logs slideover
@@ -133,7 +162,7 @@
 			delete clone[key as SupportedStateFilter];
 		}
 
-		return { ...clone };
+		return { ...clone, ...propsFilters };
 	});
 
 	let timeRangeFilters = $derived.by(() => {
@@ -168,6 +197,7 @@
 
 	let filters = $derived({
 		...searchParamFilters,
+		...propsFilters,
 		start_time: timeRangeFilters.startTime.toISOString(),
 		end_time: timeRangeFilters.endTime.toISOString()
 	});
@@ -404,7 +434,7 @@
 
 	// Filter out server-related graphs when viewing a specific server
 	const filteredGraphConfigs = $derived.by(() => {
-		const isSpecificServer = mcpId || mcpCatalogEntryId;
+		const isSpecificServer = mcpId;
 		if (isSpecificServer) {
 			// Remove server comparison graphs when viewing a specific server
 			return graphConfigs.filter(
@@ -428,7 +458,7 @@
 	});
 
 	$effect(() => {
-		if (mcpId || mcpCatalogEntryId || mcpServerDisplayName || filters || sort) reload();
+		if (mcpId || filters) reload();
 	});
 
 	$effect(() => {
@@ -545,7 +575,16 @@
 		}
 
 		if (label === 'user_ids') {
-			return getUserDisplayName(usersMap, value + '');
+			const hasConflict = (display?: string) => {
+				const isConflicted = usersAsArray.some(
+					(user) =>
+						user.id !== value && display && getUserDisplayName(usersMap, user.id) === display
+				);
+
+				return isConflicted;
+			};
+
+			return getUserDisplayName(usersMap, value + '', hasConflict);
 		}
 
 		return value + '';
@@ -588,7 +627,7 @@
 				onChange={handleDateChange}
 			/>
 
-			{#if !(mcpId || mcpCatalogEntryId || mcpServerDisplayName)}
+			{#if !mcpId}
 				<button
 					class="hover:bg-surface1 dark:bg-surface1 dark:hover:bg-surface3 dark:border-surface3 button flex h-12 w-fit items-center justify-center gap-1 rounded-lg border border-transparent bg-white shadow-sm"
 					onclick={() => {
@@ -709,6 +748,9 @@
 				filters={auditLogsSlideoverFilters}
 				{getFilterDisplayLabel}
 				getUserDisplayName={(...args) => getUserDisplayName(usersMap, ...args)}
+				isFilterDisabled={(filterId) => {
+					return Object.keys(propsFilters).some((d) => d === filterId);
+				}}
 				endpoint={async (filterId: string, ...args) => {
 					const proxyFilterId = proxy.get(filterId as SupportedStateFilter) ?? filterId;
 					return AdminService.listAuditLogFilterOptions(proxyFilterId, ...args);
@@ -735,6 +777,7 @@
 			{#each filterEntries as [filterKey, filterValues] (filterKey)}
 				{@const displayLabel = getFilterDisplayLabel(filterKey)}
 				{@const values = filterValues?.toString().split(',').filter(Boolean) ?? []}
+				{@const isClearable = Object.keys(propsFilters).every((d) => d !== filterKey)}
 
 				<div
 					class="flex items-center gap-1 rounded-lg border border-blue-500/50 bg-blue-500/10 px-4 py-2 text-blue-600 dark:text-blue-300"
@@ -758,17 +801,19 @@
 						{/each}
 					</div>
 
-					<button
-						class="rounded-full p-1 transition-colors duration-200 hover:bg-blue-500/25"
-						onclick={() => {
-							const url = page.url;
-							url.searchParams.set(filterKey, '');
+					{#if isClearable}
+						<button
+							class="rounded-full p-1 transition-colors duration-200 hover:bg-blue-500/25"
+							onclick={() => {
+								const url = page.url;
+								url.searchParams.set(filterKey, '');
 
-							goto(url, { noScroll: true });
-						}}
-					>
-						<X class="size-3" />
-					</button>
+								goto(url, { noScroll: true });
+							}}
+						>
+							<X class="size-3" />
+						</button>
+					{/if}
 				</div>
 			{/each}
 		</div>

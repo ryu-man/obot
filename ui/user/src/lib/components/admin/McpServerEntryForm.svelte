@@ -345,9 +345,19 @@
 
 {#snippet usageView()}
 	{#if entry}
-		{@const name = 'manifest' in entry ? entry.manifest.name : undefined}
-		{@const mcpCatalogEntryId = 'isCatalogEntry' in entry ? entry.id : undefined}
-		<UsageGraphs mcpServerDisplayName={name} {mcpCatalogEntryId} />
+		{@const isMultiUserServer = !!page.url.pathname.match(/\/mcp-servers\/s.*$/)?.[0]}
+		{@const isSingleUserServer =
+			!isMultiUserServer && ['npx', 'uvx', 'containerized'].includes(entry.manifest.runtime)}
+		{@const isRemoteServer = !isMultiUserServer && entry.manifest.runtime === 'remote'}
+
+		{@const mcpServerDisplayName = entry.manifest?.name ?? null}
+		{@const entryId = entry.id ?? null}
+
+		<UsageGraphs
+			mcpId={isMultiUserServer ? entryId : null}
+			mcpServerCatalogEntryName={isSingleUserServer || isRemoteServer ? entryId : null}
+			{mcpServerDisplayName}
+		/>
 	{/if}
 {/snippet}
 
