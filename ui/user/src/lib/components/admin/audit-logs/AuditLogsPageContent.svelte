@@ -140,30 +140,11 @@
 		);
 	});
 
-	// Keep only filters with defined values
-	const pillsSearchParamFilters = $derived.by(() => {
-		return (
-			searchParamsAsArray
-				// exclude start_time and end_time from pills filters
-				.filter(([key, value]) => !(key === 'start_time' || key === 'end_time') && isSafe(value))
-				.reduce(
-					(acc, [key, value]) => {
-						acc[key!] = value;
-						return acc;
-					},
-					{} as Record<string, unknown>
-				)
-		);
-	});
-
 	const propsFilters = $derived.by(() => {
 		const entries: [key: SupportedFilter, value: string | null | undefined][] = [
-			// ['mcp_id', mcpId],
 			['mcp_server_display_name', mcpServerDisplayName],
 			['mcp_server_catalog_entry_name', mcpServerCatalogEntryName]
 		];
-
-		console.log(mcpId, mcpServerDisplayName, mcpServerCatalogEntryName);
 
 		return (
 			entries
@@ -174,6 +155,37 @@
 	});
 
 	const propsFiltersKeys = $derived(new Set(Object.keys(propsFilters)));
+
+	// Keep only filters with defined values
+	const pillsSearchParamFilters = $derived.by(() => {
+		const base = searchParamsAsArray
+			// exclude start_time and end_time from pills filters
+			.filter(([key, value]) => !(key === 'start_time' || key === 'end_time') && isSafe(value))
+			.reduce(
+				(acc, [key, value]) => {
+					acc[key] = value;
+					return acc;
+				},
+				{} as Record<string, unknown>
+			) as Record<keyof AuditLogURLFilters, string>;
+
+		return Object.entries({ ...propsFilters, ...base })
+			.filter(([, value]) => !!value)
+			.sort((a, b) => {
+				if (propsFiltersKeys.has(a[0])) {
+					return -1;
+				}
+
+				return a[0].localeCompare(b[0]);
+			})
+			.reduce(
+				(acc, val) => {
+					acc[val[0] as keyof AuditLogURLFilters] = val[1] as string;
+					return acc;
+				},
+				{} as Record<string, unknown>
+			) as Record<keyof AuditLogURLFilters, string>;
+	});
 
 	// Filters to be used in the audit logs slideover
 	// Exclude filters that are set via props and not undefined
@@ -546,12 +558,8 @@
 </dialog>
 
 {#snippet filters()}
-	{@const entries = Object.entries(pillsSearchParamFilters)}
-	{@const filters = entries.filter(([, value]) => !!value) as [
-		keyof AuditLogURLFilters,
-		string | number | null
-	][]}
-	{@const hasFilters = !!filters.length}
+	{@const entries = Object.entries(pillsSearchParamFilters) as [keyof AuditLogURLFilters, string][]}
+	{@const hasFilters = !!entries.length}
 
 	{#if hasFilters}
 		<div
@@ -559,9 +567,10 @@
 			in:slide={{ duration: 100 }}
 			out:slide={{ duration: 50 }}
 		>
-			{#each filters as [filterKey, filterValues] (filterKey)}
+			{#each entries as [filterKey, filterValues] (filterKey)}
 				{@const displayLabel = getFilterDisplayLabel(filterKey)}
 				{@const values = filterValues?.toString().split(',').filter(Boolean) ?? []}
+				{@const isClearable = !propsFiltersKeys.has(filterKey)}
 
 				<div
 					class="flex items-center gap-1 rounded-lg border border-blue-500/50 bg-blue-500/10 px-4 py-2 text-blue-600 dark:text-blue-300"
@@ -585,17 +594,19 @@
 						{/each}
 					</div>
 
-					<button
-						class="rounded-full p-1 transition-colors duration-200 hover:bg-blue-500/25"
-						onclick={() => {
-							const url = page.url;
-							url.searchParams.set(filterKey, '');
+					{#if isClearable}
+						<button
+							class="rounded-full p-1 transition-colors duration-200 hover:bg-blue-500/25"
+							onclick={() => {
+								const url = page.url;
+								url.searchParams.set(filterKey, '');
 
-							goto(url, { noScroll: true });
-						}}
-					>
-						<X class="size-3" />
-					</button>
+								goto(url, { noScroll: true });
+							}}
+						>
+							<X class="size-3" />
+						</button>
+					{/if}
 				</div>
 			{/each}
 		</div>
