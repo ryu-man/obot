@@ -39,10 +39,8 @@
 		yKey: string;
 		tooltip: string;
 		formatXLabel?: (x: string | number) => string;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		formatTooltipText?: (data: Record<string, any>) => string;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		transform: (stats?: AuditLogUsageStats) => Array<Record<string, any>>;
+		formatTooltipText?: (data: Record<string, string | number>) => string;
+		transform: (stats?: AuditLogUsageStats) => Array<Record<string, string | number>>;
 	};
 
 	let { mcpId, mcpServerCatalogEntryName, mcpServerDisplayName }: Props = $props();
@@ -51,7 +49,9 @@
 		'user_ids',
 		'mcp_id',
 		'mcp_server_display_names',
-		'mcp_server_catalog_entry_names'
+		'mcp_server_catalog_entry_names',
+		'start_time',
+		'end_time'
 	];
 
 	const proxy = new Map<SupportedStateFilter, keyof AuditLogURLFilters>([
@@ -107,7 +107,10 @@
 			entries
 				// Filter out undefined values, null values should be kept as they mean the value is specified
 				.filter(([, value]) => value !== undefined)
-				.reduce((acc, [key, value]) => ((acc[key] = value!), acc), {} as Record<string, unknown>)
+				.reduce(
+					(acc, [key, value]) => ((acc[key] = value!), acc),
+					{} as Record<string, string | undefined | null>
+				)
 		);
 	});
 
@@ -200,8 +203,7 @@
 	let listUsageStats = $state<Promise<AuditLogUsageStats>>();
 	let graphPageSize = $state(10);
 	let graphPages = $state<Record<string, number>>({});
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	let graphData = $derived<Record<string, Array<any>>>({});
+	let graphData = $derived<Record<string, Record<string, string | number>[]>>({});
 	let graphTotals = $derived<Record<string, number>>({});
 	let showFilters = $state(false);
 	let rightSidebar = $state<HTMLDialogElement>();
@@ -267,7 +269,7 @@
 			tooltip: 'ms',
 			formatXLabel: (d) => String(d).split('.').slice(1).join('.'),
 			formatTooltipText: (data) =>
-				`${data.averageResponseTimeMs.toFixed(2)}ms avg • ${data.serverDisplayName}`,
+				`${(data.averageResponseTimeMs as number).toFixed(2)}ms avg • ${data.serverDisplayName}`,
 			transform: (stats) => {
 				const responseTimes = new Map<
 					string,
@@ -310,7 +312,7 @@
 				return parts[parts.length - 1];
 			},
 			formatTooltipText: (data) =>
-				`${data.processingTimeMs.toFixed(2)}ms • ${data.serverDisplayName}`,
+				`${(data.processingTimeMs as number).toFixed(2)}ms • ${data.serverDisplayName}`,
 			transform: (stats) => {
 				const rows = [];
 				for (const s of stats?.items ?? []) {
@@ -485,8 +487,6 @@
 	}
 
 	afterNavigate(() => {
-		// currentFilters = compileSortAndFilters();
-
 		AdminService.listUsersIncludeDeleted().then((userData) => {
 			for (const user of userData) {
 				usersMap.set(user.id, user);
@@ -513,8 +513,7 @@
 
 	async function updateGraphs() {
 		const stats = await listUsageStats;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const data: Record<string, any[]> = {};
+		const data: Record<string, Record<string, string | number>[]> = {};
 		const totals: Record<string, number> = {};
 
 		for (const cfg of filteredGraphConfigs) {
