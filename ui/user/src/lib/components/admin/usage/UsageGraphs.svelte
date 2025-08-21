@@ -92,7 +92,7 @@
 				acc[key!] = value;
 				return acc;
 			},
-			{} as Record<string, unknown>
+			{} as Record<string, string | number | undefined | null>
 		);
 	});
 
@@ -123,10 +123,10 @@
 			.filter(([key, value]) => !(key === 'start_time' || key === 'end_time') && isSafe(value))
 			.reduce(
 				(acc, [key, value]) => {
-					acc[key!] = value;
+					acc[key!] = value as string | number;
 					return acc;
 				},
-				{} as Record<string, unknown>
+				{} as Record<string, string | number>
 			);
 
 		// Sort pills; those from props goes first
@@ -143,10 +143,10 @@
 			})
 			.reduce(
 				(acc, val) => {
-					acc[val[0]] = val[1];
+					acc[val[0]] = val[1] as string | number;
 					return acc;
 				},
-				{} as Record<string, unknown>
+				{} as Record<string, string | number>
 			);
 	});
 
