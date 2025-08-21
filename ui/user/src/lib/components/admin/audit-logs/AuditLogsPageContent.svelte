@@ -27,7 +27,6 @@
 	import Loading from '$lib/icons/Loading.svelte';
 	import FiltersDrawer from '../filters-drawer/FiltersDrawer.svelte';
 	import { getUserDisplayName } from '../filters-drawer/utils';
-	import { doGet } from '$lib/services/http';
 
 	interface Props {
 		mcpId?: string | null;
@@ -163,10 +162,10 @@
 			.filter(([key, value]) => !(key === 'start_time' || key === 'end_time') && isSafe(value))
 			.reduce(
 				(acc, [key, value]) => {
-					acc[key] = value;
+					acc[key] = value as string | number;
 					return acc;
 				},
-				{} as Record<string, unknown>
+				{} as Record<string, string | number>
 			) as Record<keyof AuditLogURLFilters, string>;
 
 		return (
@@ -197,7 +196,7 @@
 						acc[val[0] as keyof AuditLogURLFilters] = val[1] as string;
 						return acc;
 					},
-					{} as Record<string, unknown>
+					{} as Record<string, string | number>
 				) as Record<keyof AuditLogURLFilters, string>
 		);
 	});
@@ -256,8 +255,6 @@
 		offset: pageOffset,
 		query: query
 	});
-
-	// $inspect(allFilters);
 
 	afterNavigate(() => {
 		AdminService.listUsersIncludeDeleted().then((userData) => {
@@ -322,13 +319,6 @@
 	}
 
 	async function fetchAuditLogs(filters: typeof searchParamFilters) {
-		// if (mcpServerCatalogEntryName) {
-		// 	return (auditLogsResponse = await AdminService.listAuditLogs({
-		// 		...filters,
-		// 		mcp_server_catalog_entry_name: mcpServerCatalogEntryName
-		// 	}));
-		// } else {
-		// }
 		return (auditLogsResponse = await AdminService.listAuditLogs(filters));
 	}
 
@@ -560,11 +550,16 @@
 					return { options: response?.options.filter((option) => option.endsWith(mcpId)) ?? [] };
 				}
 
-				const response = (await doGet(
-					`/mcp-catalogs/${catalogId}/entries/${mcpServerCatalogEntryName}/servers`
-				)) as { items: { id: string }[] };
+				if (!catalogId || !mcpServerCatalogEntryName) {
+					return { options: [] };
+				}
 
-				const options = response?.items?.map?.((item) => item.id) ?? [];
+				const items = await AdminService.listMCPServersForEntry(
+					catalogId,
+					mcpServerCatalogEntryName
+				);
+
+				const options = items?.map?.((item) => item.id) ?? [];
 
 				return { options };
 			}}
