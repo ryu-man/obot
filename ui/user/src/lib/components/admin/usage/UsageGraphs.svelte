@@ -109,7 +109,7 @@
 				.filter(([, value]) => value !== undefined)
 				.reduce(
 					(acc, [key, value]) => ((acc[key] = value!), acc),
-					{} as Record<string, string | undefined | null>
+					{} as Record<string, string | null>
 				)
 		);
 	});
