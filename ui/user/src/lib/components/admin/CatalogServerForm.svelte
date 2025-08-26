@@ -620,10 +620,16 @@
 					formData.categories = [category, ...formData.categories].filter(Boolean);
 				}}
 				onUpdate={async (categories) => {
-					formData.categories = categories
-						.split(',')
-						.map((c) => c.trim())
-						.filter(Boolean);
+					formData.categories = [
+						// Avoid duplicates
+						...new Set([
+							...formData.categories,
+							...categories
+								.split(',')
+								.map((c) => c.trim())
+								.filter(Boolean)
+						])
+					];
 				}}
 			/>
 		</div>
