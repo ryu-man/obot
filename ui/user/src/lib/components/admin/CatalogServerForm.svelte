@@ -13,12 +13,11 @@
 	import ContainerizedRuntimeForm from '../mcp/ContainerizedRuntimeForm.svelte';
 	import RemoteRuntimeForm from '../mcp/RemoteRuntimeForm.svelte';
 	import { AdminService, type MCPCatalogServer } from '$lib/services';
-	import { getContext, onMount, tick, type Snippet } from 'svelte';
+	import { onMount, tick, type Snippet } from 'svelte';
 	import MarkdownInput from '../MarkdownInput.svelte';
 	import SelectMcpAccessControlRules from './SelectMcpAccessControlRules.svelte';
 	import { twMerge } from 'tailwind-merge';
 	import CategorySelectInput from './CategorySelectInput.svelte';
-	import { CONTEXT_KEY_MCP_SERVERS_CATEGORIES } from '$lib/context/admin/keys';
 
 	interface Props {
 		catalogId?: string;
@@ -59,10 +58,14 @@
 	let showRequired = $state<Record<string, boolean>>({});
 	let loading = $state(false);
 
-	const categoriesContext = getContext(CONTEXT_KEY_MCP_SERVERS_CATEGORIES) as {
-		readonly current: string[];
-	};
-	const categories = $derived(categoriesContext?.current ?? []);
+	let categories: string[] = $state([]);
+
+	onMount(() => {
+		if (!catalogId) return;
+		AdminService.listCatalogCategories(catalogId).then((res) => {
+			categories = res;
+		});
+	});
 
 	function convertToFormData(item?: MCPCatalogEntry | MCPCatalogServer): RuntimeFormData {
 		if (!item) {

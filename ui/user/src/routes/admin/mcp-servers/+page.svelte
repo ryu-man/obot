@@ -30,7 +30,7 @@
 		Users,
 		X
 	} from 'lucide-svelte';
-	import { onDestroy, onMount, setContext } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { fade, fly, slide } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { afterNavigate } from '$app/navigation';
@@ -38,7 +38,6 @@
 	import BackLink from '$lib/components/admin/BackLink.svelte';
 	import Search from '$lib/components/Search.svelte';
 	import { formatTimeAgo } from '$lib/time';
-	import { CONTEXT_KEY_MCP_SERVERS_CATEGORIES } from '$lib/context/admin/keys';
 
 	const defaultCatalogId = DEFAULT_MCP_CATALOG_ID;
 	let search = $state('');
@@ -146,22 +145,6 @@
 	let tableData = $derived(
 		convertEntriesAndServersToTableData(mcpServerAndEntries.entries, mcpServerAndEntries.servers)
 	);
-
-	const categories = $derived(
-		new Set(
-			tableData
-				.map((item) => item.data.manifest.metadata?.categories?.split(','))
-				.flat()
-				.filter(Boolean)
-				.map((category) => category?.trim()) as string[]
-		)
-	);
-
-	setContext(CONTEXT_KEY_MCP_SERVERS_CATEGORIES, {
-		get current() {
-			return [...categories];
-		}
-	});
 
 	let filteredTableData = $derived(
 		tableData
