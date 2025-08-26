@@ -622,13 +622,12 @@
 				onUpdate={async (categories) => {
 					formData.categories = [
 						// Avoid duplicates
-						...new Set([
-							...formData.categories,
-							...categories
+						...new Set(
+							categories
 								.split(',')
 								.map((c) => c.trim())
 								.filter(Boolean)
-						])
+						)
 					];
 				}}
 			/>
