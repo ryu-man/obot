@@ -58,12 +58,16 @@
 	let showRequired = $state<Record<string, boolean>>({});
 	let loading = $state(false);
 
-	let categories: string[] = $state([]);
+	let formData = $state<RuntimeFormData>(convertToFormData(entry));
+
+	let remoteCategories = $state<string[]>([]);
+
+	let categories = $derived([...remoteCategories, ...(formData?.categories ?? [])]);
 
 	onMount(() => {
 		if (!catalogId) return;
 		AdminService.listCatalogCategories(catalogId).then((res) => {
-			categories = res;
+			remoteCategories = res;
 		});
 	});
 
@@ -176,7 +180,6 @@
 			return formData;
 		}
 	}
-	let formData = $state<RuntimeFormData>(convertToFormData(entry));
 
 	async function revealCatalogServer(catalogId: string, entryId: string) {
 		try {
@@ -611,7 +614,6 @@
 				categories={formData.categories.join(',')}
 				options={categories.map((d) => ({ label: d, id: d }))}
 				{readonly}
-				onDelete={() => formData.categories.splice(0, 1)}
 				onCreate={async (category) => {
 					await tick();
 
