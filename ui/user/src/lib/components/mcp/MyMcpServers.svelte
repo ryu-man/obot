@@ -480,6 +480,7 @@
 							{#if connectedServer.server}
 								<McpCard
 									data={connectedServer.server}
+									parent={connectedServer.parent}
 									onClick={() => {
 										if (onConnectedServerCardClick) {
 											onConnectedServerCardClick(connectedServer);
