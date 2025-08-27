@@ -721,7 +721,12 @@
 		{/if}
 
 		{#if serverOrEntry}
-			<McpServerInfoAndTools entry={serverOrEntry} />
+			<McpServerInfoAndTools
+				entry={serverOrEntry}
+				parent={selectedEntryOrServer && 'parent' in selectedEntryOrServer
+					? selectedEntryOrServer.parent
+					: undefined}
+			/>
 		{/if}
 	</div>
 {/snippet}
