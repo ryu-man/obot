@@ -31,15 +31,19 @@
 		...restProps
 	}: Props = $props();
 
+	// Editor value updated internally; used to detect changes from the outside
+	let _value = $state();
+
 	$effect(() => {
-		if (!editor || value === undefined) return;
+		if (!editor) return;
 
-		const internalText = getTextContent();
-
-		if (internalText !== value) {
+		// Check if we have a change from the outside
+		if (_value !== value) {
 			if (value) {
+				// If value is defined; updated editor content
 				setTextContent(value);
 			} else {
+				// Otherwise clear the editor
 				clear();
 			}
 		}
@@ -57,16 +61,6 @@
 		}
 	}
 
-	function getTextContent() {
-		if (!editor) return '';
-
-		return editor.action((ctx) => {
-			const view = ctx.get(editorViewCtx) as EditorView;
-
-			return view?.state?.doc?.textContent ?? '';
-		});
-	}
-
 	// Public method to set the editor content programmatically
 	function setTextContent(value: string | undefined) {
 		if (!editor) return;
@@ -75,7 +69,7 @@
 			// const schema = (ctx.get(editorStateCtx) as EditorState).schema;
 			const view = ctx.get(editorViewCtx) as EditorView;
 
-			if (!view) return;
+			if (!view || !view.state) return;
 
 			// Only update if value is different
 			const currentText = view.state.doc.textContent.trim();
@@ -102,12 +96,12 @@
 			const view = ctx.get(editorViewCtx) as EditorView;
 			if (!view) return;
 
-			const { schema, tr } = view.state;
+			const { schema, tr, doc } = view.state;
 			const paragraph = schema.nodes.paragraph.createAndFill();
 
 			if (paragraph) {
 				// Replace the entire document with a single empty paragraph
-				tr.replaceWith(0, view.state.doc.content.size, paragraph);
+				tr.replaceWith(0, doc.content.size, paragraph);
 				view.dispatch(tr);
 			}
 		});
@@ -126,6 +120,18 @@
 			}
 		});
 	});
+
+	const mlkTextChangePlugin = mlkprose(() => {
+		return new Plugin({
+			appendTransaction(transactions, oldState, newState) {
+				if (transactions.some((tr) => tr.docChanged)) {
+					_value = value = newState.doc.textBetween(1, newState.doc.content.size - 1, '\n', '\0');
+				}
+
+				return null;
+			}
+		});
+	});
 </script>
 
 <div
@@ -141,29 +147,11 @@
 					ctx.set(rootCtx, node!);
 				})
 				.use(mlkEventPluging)
+				.use(mlkTextChangePlugin)
 				.use(plaintext)
 				.create()
 				.then((instance) => {
 					editor = instance;
-
-					instance.action((ctx) => {
-						const view = ctx.get(editorViewCtx);
-
-						view.setProps({
-							dispatchTransaction(tr) {
-								const newState = view.state.apply(tr);
-								view.updateState(newState);
-
-								// Get plain text content
-								const text = newState.doc.textContent.trim();
-
-								value = text;
-							}
-						});
-					});
-
-					// Set up content change detection
-					setTextContent(undefined);
 				})
 				.catch((error) => {
 					console.error('Failed to create editor:', error);
