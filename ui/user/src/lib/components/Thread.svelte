@@ -564,7 +564,6 @@
 			</div>
 		</div>
 
-		<!-- Spacer to avoid input overlap -->
 		<div
 			class={twMerge(
 				'sticky z-30 flex w-full justify-center bg-white pb-2 transition-transform duration-300 dark:bg-black',
