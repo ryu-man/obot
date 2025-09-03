@@ -415,25 +415,25 @@
 {#snippet editBasicSection()}
 	<button
 		aria-label="backdrop"
-		class="fixed left-0 top-0 z-20 h-full w-full"
+		class="fixed top-0 left-0 z-20 h-full w-full"
 		onclick={() => {
 			createProject = undefined;
 		}}
 	></button>
-	<div class="w-sm md:w-md relative z-30 mt-4 self-center border-2 border-transparent pt-4">
+	<div class="relative z-30 mt-4 w-sm self-center border-2 border-transparent pt-4 md:w-md">
 		<div class="flex flex-col items-center justify-center text-center">
 			{#if createProject}
 				<input
 					id="project-name"
 					type="text"
 					placeholder="Project Name"
-					class="ghost-input border-b-surface1 mb-2 w-full pb-0 pt-0 text-center text-base font-bold"
+					class="ghost-input border-b-surface1 mb-2 w-full pt-0 pb-0 text-center text-base font-bold"
 					bind:value={createProject.name}
 					bind:this={nameInput}
 				/>
 				<textarea
 					id="project-desc"
-					class="ghost-input border-b-surface1 text-md scrollbar-none mb-4 w-full grow resize-none pb-0 pt-0.5 text-center font-light"
+					class="ghost-input border-b-surface1 text-md scrollbar-none mb-4 w-full grow resize-none pt-0.5 pb-0 text-center font-light"
 					rows="1"
 					placeholder="A short description of your project"
 					use:autoHeight
@@ -469,7 +469,7 @@
 		</div>
 
 		<button
-			class="icon-button absolute right-2 top-2"
+			class="icon-button absolute top-2 right-2"
 			onclick={() => {
 				createProject = undefined;
 			}}
@@ -513,7 +513,7 @@
 			in:fade|global
 			bind:this={messagesDiv}
 			class={twMerge(
-				'flex w-full flex-col justify-start gap-8 p-5 transition-all',
+				'flex w-full flex-1 flex-col justify-start gap-8 p-5 transition-all',
 				!centerInput ? 'grow' : 'h-0 overflow-hidden'
 			)}
 			class:justify-center={!thread}
@@ -563,10 +563,12 @@
 				<!-- Vertical Spacer -->
 			</div>
 		</div>
+
+		<!-- Spacer to avoid input overlap -->
 		<div
 			class={twMerge(
-				'sticky z-30 flex w-full justify-center bg-white pb-2 transition-transform  duration-300 dark:bg-black',
-				centerInput ? 'absolute top-1/2  -translate-y-[50%]' : 'bottom-0 top-auto'
+				'sticky z-30 flex w-full justify-center bg-white pb-2 transition-transform duration-300 dark:bg-black',
+				centerInput ? 'absolute top-1/2 -translate-y-[50%]' : 'bottom-0'
 			)}
 		>
 			<div class="w-full max-w-[1000px]">
@@ -687,9 +689,9 @@
 	<div
 		class="default-scrollbar-thin relative flex max-h-[95vh] w-full flex-col overflow-y-auto p-4"
 	>
-		<div class="sticky left-0 top-0 z-10 w-full">
+		<div class="sticky top-0 left-0 z-10 w-full">
 			<button
-				class="icon-button absolute right-0 top-0"
+				class="icon-button absolute top-0 right-0"
 				onclick={() => {
 					imagePreviewDialog?.close();
 					imagePreviewSrc = undefined;
