@@ -255,9 +255,4 @@
 	.virtual-list-viewport {
 		-webkit-overflow-scrolling: touch;
 	}
-
-	.virtual-list-row {
-		/* Remove display: block to maintain table-row behavior */
-		overflow: hidden;
-	}
 </style>
