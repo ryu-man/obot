@@ -227,7 +227,7 @@
 		)}
 		onscroll={handleScroll}
 	>
-		<table class={twMerge('virtual-list-contents h-full w-full')} {...restProps}>
+		<table class={twMerge('virtual-list-contents w-full')} {...restProps}>
 			{@render header?.()}
 
 			<tbody bind:this={contentElement}>
