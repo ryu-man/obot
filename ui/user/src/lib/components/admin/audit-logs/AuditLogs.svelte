@@ -32,52 +32,52 @@
 					<tr>
 						<th
 							scope="col"
-							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 							style="width: 0px;">#</th
 						>
 						<th
 							scope="col"
-							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 							>Timestamp</th
 						>
 						<th
 							scope="col"
-							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 							>User</th
 						>
 						<th
 							scope="col"
-							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 							>Server</th
 						>
 						<th
 							scope="col"
-							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 							style="width: 100px;">Type</th
 						>
 						<th
 							scope="col"
-							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 							>Identifier</th
 						>
 						<th
 							scope="col"
-							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 							>Response Code</th
 						>
 						<th
 							scope="col"
-							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 							>Response Time (ms)</th
 						>
 						<th
 							scope="col"
-							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 							>Client</th
 						>
 						<th
 							scope="col"
-							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500"
+							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
 							>IP Address</th
 						>
 					</tr>
@@ -90,15 +90,15 @@
 
 					<tr
 						class={twMerge(
-							'virtual-list-row border-surface2 dark:border-surface2 shadow-xs h-14 border-t transition-colors duration-300',
+							'virtual-list-row border-surface2 dark:border-surface2 h-14 border-t shadow-xs transition-colors duration-300',
 							onSelectRow && ' hover:bg-surface1 dark:hover:bg-surface3 cursor-pointer'
 						)}
 						onclick={() => onSelectRow?.(d)}
 					>
-						<td class="whitespace-nowrap px-6 py-4 text-sm" style="width: 60px;"
+						<td class="px-6 py-4 text-sm whitespace-nowrap" style="width: 60px;"
 							>{item.index + 1}</td
 						>
-						<td class="whitespace-nowrap px-6 py-4 text-sm" style="width: 160px;"
+						<td class="px-6 py-4 text-sm whitespace-nowrap" style="width: 160px;"
 							>{new Date(d.createdAt)
 								.toLocaleString(undefined, {
 									year: 'numeric',
@@ -112,28 +112,28 @@
 								})
 								.replace(/,/g, '')}</td
 						>
-						<td class="whitespace-nowrap px-6 py-4 text-sm" style="width: 120px;">
+						<td class="px-6 py-4 text-sm whitespace-nowrap" style="width: 120px;">
 							{getUserDisplayName(d.userID)}
 						</td>
-						<td class="whitespace-nowrap px-6 py-4 text-sm" style="width: 150px;"
+						<td class="px-6 py-4 text-sm whitespace-nowrap" style="width: 150px;"
 							>{d.mcpServerDisplayName}</td
 						>
-						<td class="whitespace-nowrap px-6 py-4 text-sm" style="width: 100px;">{d.callType}</td>
-						<td class="whitespace-nowrap px-6 py-4 text-sm" style="width: 150px;"
+						<td class="px-6 py-4 text-sm whitespace-nowrap" style="width: 100px;">{d.callType}</td>
+						<td class="px-6 py-4 text-sm whitespace-nowrap" style="width: 150px;"
 							>{d.callIdentifier}</td
 						>
-						<td class="whitespace-nowrap px-6 py-4 text-sm" style="width: 120px;"
+						<td class="px-6 py-4 text-sm whitespace-nowrap" style="width: 120px;"
 							>{d.responseStatus}</td
 						>
-						<td class="whitespace-nowrap px-6 py-4 text-sm" style="width: 140px;"
+						<td class="px-6 py-4 text-sm whitespace-nowrap" style="width: 140px;"
 							>{d.processingTimeMs}</td
 						>
-						<td class="whitespace-nowrap px-6 py-4 text-sm" style="width: 120px;">
+						<td class="px-6 py-4 text-sm whitespace-nowrap" style="width: 120px;">
 							<div class="max-w-[10ch] truncate" use:tooltip={d.client?.name}>
 								{d.client?.name}
 							</div>
 						</td>
-						<td class="whitespace-nowrap px-6 py-4 text-sm" style="width: 120px;">{d.clientIP}</td>
+						<td class="px-6 py-4 text-sm whitespace-nowrap" style="width: 120px;">{d.clientIP}</td>
 					</tr>
 				{/each}
 			{/snippet}
