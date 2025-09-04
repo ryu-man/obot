@@ -481,7 +481,7 @@
 		{@const entryId = entry.id ?? null}
 		{@const mcpCatalogEntryId = 'catalogEntryID' in entry ? entry?.catalogEntryID : null}
 
-		<div class="mt-4 flex min-h-full flex-col gap-8 pb-8">
+		<div class="mt-4 flex flex-col gap-8 pb-8">
 			<!-- temporary filter mcp server by name and catalog entry id-->
 			<AuditLogsPageContent
 				mcpId={isMultiUserServer ? entryId : null}
