@@ -53,7 +53,7 @@
 						<th
 							scope="col"
 							class="dark:bg-surface1 bg-surface2 sticky top-0 z-10 px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase"
-							style="width: 100px;">Type</th
+							>Type</th
 						>
 						<th
 							scope="col"
