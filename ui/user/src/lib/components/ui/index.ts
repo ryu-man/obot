@@ -1,1 +1,8 @@
-export { VirtualTable } from './virtual-table';
+export {
+	VirtualPageViewport,
+	VirtualPageTable,
+	getVirtualPageContext,
+	setVirtualPageContext
+} from './virtual-page';
+
+export { Render } from './render';
