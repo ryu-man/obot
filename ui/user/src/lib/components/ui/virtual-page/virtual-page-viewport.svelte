@@ -1,33 +1,32 @@
 <script module lang="ts">
 	export type VirtualListViewportProps<T> = {
 		class?: string;
+		as?: keyof HTMLElementTagNameMap;
 		data: T[];
-		itemHeight?: number; // Optional for dynamic heights
+		itemHeight: number; // Optional for dynamic heights
 		overscan?: number; // Buffer items to render above/below viewport
 		onScroll?: (scrollTop: number) => void;
 		scrollToIndex?: number; // Scroll to specific item
+		disabled?: boolean;
 		header?: Snippet;
-		children: Snippet<
-			[
-				{
-					items: { index: number; data: T }[];
-				}
-			]
-		>;
+		children: Snippet;
 	};
 </script>
 
 <script lang="ts" generics="T">
-	import { throttle } from 'es-toolkit';
-
-	import { onMount, tick, type Snippet } from 'svelte';
+	import { onMount, tick, untrack, type Snippet } from 'svelte';
+	import { setVirtualPageContext, type VirtualPageContext } from './context';
 	import { twMerge } from 'tailwind-merge';
+	import { throttle } from 'es-toolkit';
+	import { Render } from '../render';
 
 	let {
 		class: klass = '',
+		as = 'div',
 		data = [],
 		itemHeight,
 		overscan = 5,
+		disabled = false,
 		children,
 		header,
 		onScroll,
@@ -35,7 +34,6 @@
 		...restProps
 	}: VirtualListViewportProps<T> = $props();
 
-	// Internal state
 	let start = $state(0);
 	let end = $state(0);
 
@@ -43,11 +41,77 @@
 		data.slice(start, end).map((d, i) => ({ index: i + start, data: d }))
 	);
 
+	let rootElement: HTMLElement | undefined = $state();
 	let viewportElement: HTMLElement | undefined = $state();
 	let contentElement: HTMLElement | undefined = $state();
+
 	let top = $state(0);
 	let bottom = $state(0);
+
 	let viewportHeight = $state(0);
+
+	const context: VirtualPageContext<T> = {
+		elements: {
+			get viewport() {
+				return viewportElement;
+			},
+			set viewport(el) {
+				viewportElement = el;
+			},
+			get content() {
+				return contentElement;
+			},
+			set content(el) {
+				contentElement = el;
+			}
+		},
+
+		get top() {
+			return top;
+		},
+		set top(value) {
+			top = value;
+		},
+
+		get bottom() {
+			return bottom;
+		},
+		set bottom(value) {
+			bottom = value;
+		},
+
+		get overscan() {
+			return overscan;
+		},
+		get itemHeight() {
+			return itemHeight;
+		},
+		get scrollToIndex() {
+			return scrollToIndex;
+		},
+
+		get disabled() {
+			return disabled;
+		},
+		set disabled(value) {
+			disabled = value;
+		},
+
+		get height() {
+			return viewportHeight;
+		},
+		get rows() {
+			return visibleItems;
+		},
+		get data() {
+			return data;
+		},
+		set data(value) {
+			data = value;
+		}
+	};
+
+	setVirtualPageContext(context);
 
 	// Height management with exponential moving average
 	let heightMap: number[] = $state([]);
@@ -58,7 +122,7 @@
 	let mounted = $state(false);
 
 	// trigger initial refresh
-	onMount(() => {
+	$effect(() => {
 		if (!contentElement) return;
 
 		rows = Array.from(contentElement.getElementsByClassName('virtual-list-row')) as HTMLElement[];
@@ -67,8 +131,8 @@
 
 		// Give the browser time to render and measure the viewport
 		setTimeout(() => {
-			if (viewportElement) {
-				viewportHeight = viewportElement.offsetHeight;
+			if (untrack(() => viewportElement)) {
+				viewportHeight = untrack(() => viewportElement?.offsetHeight ?? 0);
 			}
 
 			refresh();
@@ -89,6 +153,7 @@
 
 	const handleScroll = throttle(async () => {
 		if (!viewportElement) return;
+		if (disabled) return;
 
 		const { scrollTop } = viewportElement;
 
@@ -115,12 +180,22 @@
 		return heightMap[index] || itemHeight || averageHeight;
 	}
 
+	// Cache the table element to avoid repeated DOM queries
+	let tableElement: HTMLElement | undefined = $state();
+
 	async function refresh() {
 		if (!viewportElement || !mounted) return;
 
-		const { scrollTop } = viewportElement;
+		if (!tableElement) {
+			tableElement = contentElement?.closest('table') as HTMLElement;
+		}
+
+		const rootOffsetTop = rootElement?.offsetTop ?? 0;
+		const contentOffsetTop = tableElement?.offsetTop ?? 0;
 
 		// Calculate visible range with overscan buffer
+		const scrollTop = Math.max(0, viewportElement.scrollTop - contentOffsetTop - rootOffsetTop);
+
 		const startIndex = Math.max(0, findStartIndex(scrollTop) - overscan);
 		const endIndex = Math.min(data.length, findEndIndex(scrollTop, startIndex) + overscan);
 
@@ -217,39 +292,26 @@
 	}
 </script>
 
-<div class="absolute inset-0 block size-full max-h-full">
+<Render
+	class="virtual-page-root flex h-[100svh] max-h-[100svh] w-full overflow-hidden"
+	as={as ?? 'div'}
+	{...restProps}
+	{@attach (node) => {
+		rootElement = node;
+	}}
+>
 	<div
 		bind:this={viewportElement}
 		bind:offsetHeight={viewportHeight}
 		class={twMerge(
-			'virtual-list-viewport virtual-list-viewport relative block h-full max-h-full w-full flex-1 overflow-y-auto',
+			'virtual-page-viewport virtual-list-viewport relative flex h-full max-h-full w-full flex-1 flex-col overflow-y-auto',
 			klass
 		)}
 		onscroll={handleScroll}
 	>
-		<table class={twMerge('virtual-list-contents w-full')} {...restProps}>
-			{@render header?.()}
-
-			<tbody bind:this={contentElement}>
-				<!-- Top spacer row -->
-				{#if top > 0}
-					<tr style="height: {top}px;">
-						<td colspan="100" style="padding: 0; border: none;"></td>
-					</tr>
-				{/if}
-
-				{@render children?.({ items: visibleItems })}
-
-				<!-- Bottom spacer row -->
-				{#if bottom > 0}
-					<tr style="height: {bottom}px;">
-						<td colspan="100" style="padding: 0; border: none;"></td>
-					</tr>
-				{/if}
-			</tbody>
-		</table>
+		{@render children?.({ items: visibleItems })}
 	</div>
-</div>
+</Render>
 
 <style>
 	.virtual-list-viewport {
