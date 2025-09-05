@@ -379,7 +379,7 @@
 
 {#if showLoadingSpinner}
 	<div
-		class="absolute inset-0 z-10 flex items-center justify-center"
+		class="absolute inset-0 z-20 flex items-center justify-center"
 		in:fade={{ duration: 100 }}
 		out:fade|global={{ duration: 300, delay: 500 }}
 	>
