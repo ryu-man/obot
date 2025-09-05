@@ -27,6 +27,7 @@
 	import Loading from '$lib/icons/Loading.svelte';
 	import FiltersDrawer from '../filters-drawer/FiltersDrawer.svelte';
 	import { getUserDisplayName } from '../filters-drawer/utils';
+	import { setVirtualPageData } from '$lib/components/ui/virtual-page/context';
 
 	interface Props {
 		mcpId?: string | null;
@@ -54,6 +55,8 @@
 	const pageOffset = $derived(pageIndex * pageLimit);
 
 	const remoteAuditLogs = $derived(auditLogsResponse?.items ?? []);
+
+	$effect(() => setVirtualPageData(remoteAuditLogs));
 
 	const isReachedMax = $derived(pageIndex >= numberOfPages - 1);
 	const isReachedMin = $derived(pageIndex <= 0);

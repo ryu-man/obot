@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { twMerge } from 'tailwind-merge';
 	import { tooltip } from '$lib/actions/tooltip.svelte';
-	import { VirtualTable } from '$lib/components/ui/virtual-table';
+	import { VirtualPageTable } from '$lib/components/ui';
 
 	let { data = [], onSelectRow, emptyContent, getUserDisplayName } = $props();
 
@@ -22,11 +22,10 @@
 <!-- Data Table -->
 <div
 	bind:this={element}
-	class="dark:bg-surface2 relative flex h-screen w-full min-w-full divide-y divide-gray-200 overflow-hidden overflow-x-auto rounded-lg border border-transparent bg-white shadow-sm"
-	style="height: calc(100vh - {navElementHeight}px - 54px);"
+	class="dark:bg-surface2 flex w-full min-w-full flex-1 divide-y divide-gray-200 overflow-x-auto overflow-y-visible rounded-lg border border-transparent bg-white shadow-sm"
 >
 	{#if data.length}
-		<VirtualTable {data} {itemHeight} overscan={5} class={twMerge('w-full flex-1')}>
+		<VirtualPageTable class={twMerge('w-full flex-1')}>
 			{#snippet header()}
 				<thead>
 					<tr>
@@ -91,7 +90,7 @@
 					<tr
 						class={twMerge(
 							'virtual-list-row border-surface2 dark:border-surface2 h-14 border-t shadow-xs transition-colors duration-300',
-							onSelectRow && ' hover:bg-surface1 dark:hover:bg-surface3 cursor-pointer'
+							onSelectRow && 'hover:bg-surface1 dark:hover:bg-surface3 cursor-pointer'
 						)}
 						onclick={() => onSelectRow?.(d)}
 					>
@@ -137,7 +136,7 @@
 					</tr>
 				{/each}
 			{/snippet}
-		</VirtualTable>
+		</VirtualPageTable>
 	{:else}
 		{@render emptyContent?.()}
 	{/if}
