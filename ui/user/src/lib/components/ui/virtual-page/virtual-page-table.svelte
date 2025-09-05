@@ -30,7 +30,7 @@
 	let { class: klass = '', children, header, ...restProps }: VirtualListViewportProps<T> = $props();
 </script>
 
-<table class={twMerge('virtual-list-contents h-min w-full')} {...restProps}>
+<table class={twMerge('virtual-list-contents h-min w-full', klass)} {...restProps}>
 	{@render header?.()}
 
 	<tbody bind:this={context.elements.content}>

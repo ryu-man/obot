@@ -105,7 +105,7 @@
 	});
 
 	$effect(() => {
-		if (!!page.url.searchParams.get('view')) {
+		if (page.url.searchParams.get('view')) {
 			setVirtualPageDisabled(false);
 		} else {
 			setVirtualPageDisabled(true);

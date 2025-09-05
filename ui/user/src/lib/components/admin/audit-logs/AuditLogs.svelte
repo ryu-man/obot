@@ -4,24 +4,10 @@
 	import { VirtualPageTable } from '$lib/components/ui';
 
 	let { data = [], onSelectRow, emptyContent, getUserDisplayName } = $props();
-
-	let element: HTMLElement | undefined = $state();
-	let navElementHeight = $state(64);
-
-	const itemHeight = 56;
-
-	$effect(() => {
-		if (!element) return;
-
-		const navElement = element.closest('main')?.querySelector('nav');
-
-		navElementHeight = navElement?.clientHeight || 64;
-	});
 </script>
 
 <!-- Data Table -->
 <div
-	bind:this={element}
 	class="dark:bg-surface2 flex w-full min-w-full flex-1 divide-y divide-gray-200 overflow-x-auto overflow-y-visible rounded-lg border border-transparent bg-white shadow-sm"
 >
 	{#if data.length}
@@ -83,7 +69,7 @@
 				</thead>
 			{/snippet}
 
-			{#snippet children({ items })}
+			{#snippet children({ items }: { items: { index: number; data: (typeof data)[0] }[] })}
 				{#each items as item (item.data.id)}
 					{@const d = item.data}
 

@@ -43,7 +43,7 @@
 		onRenderSubContent?: Snippet<[string]>;
 		hideSidebar?: boolean;
 		whiteBackground?: boolean;
-		main?: { component: Component; props?: Record<string, any> };
+		main?: { component: Component; props?: Record<string, unknown> };
 	}
 
 	const {

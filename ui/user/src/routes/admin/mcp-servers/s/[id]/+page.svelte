@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Component } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { DEFAULT_MCP_CATALOG_ID, PAGE_TRANSITION_DURATION } from '$lib/constants';
@@ -16,7 +17,7 @@
 
 <Layout
 	main={{
-		component: VirtualPageViewport,
+		component: VirtualPageViewport as unknown as Component,
 		props: { class: '', as: 'main', itemHeight: 56, overscan: 5, disabled: true }
 	}}
 >

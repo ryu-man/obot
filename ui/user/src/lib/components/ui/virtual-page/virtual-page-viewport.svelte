@@ -1,20 +1,19 @@
 <script module lang="ts">
 	export type VirtualListViewportProps<T> = {
 		class?: string;
-		as?: keyof HTMLElementTagNameMap;
+		as?: string;
 		data: T[];
 		itemHeight: number; // Optional for dynamic heights
 		overscan?: number; // Buffer items to render above/below viewport
 		onScroll?: (scrollTop: number) => void;
 		scrollToIndex?: number; // Scroll to specific item
 		disabled?: boolean;
-		header?: Snippet;
-		children: Snippet;
+		children: Snippet<[{ items: { index: number; data: T }[] }]>;
 	};
 </script>
 
 <script lang="ts" generics="T">
-	import { onMount, tick, untrack, type Snippet } from 'svelte';
+	import { tick, untrack, type Snippet } from 'svelte';
 	import { setVirtualPageContext, type VirtualPageContext } from './context';
 	import { twMerge } from 'tailwind-merge';
 	import { throttle } from 'es-toolkit';
@@ -28,7 +27,6 @@
 		overscan = 5,
 		disabled = false,
 		children,
-		header,
 		onScroll,
 		scrollToIndex,
 		...restProps
@@ -296,7 +294,7 @@
 	class="virtual-page-root flex h-[100svh] max-h-[100svh] w-full overflow-hidden"
 	as={as ?? 'div'}
 	{...restProps}
-	{@attach (node) => {
+	{@attach (node: HTMLElement) => {
 		rootElement = node;
 	}}
 >

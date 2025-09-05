@@ -4,23 +4,18 @@ const CONTEXT_KEY = Symbol('@obot/components/virtual-page');
 
 export type VirtualPageContext<T> = {
 	elements: {
-		root: HTMLElement | undefined;
 		viewport: HTMLElement | undefined;
 		content: HTMLElement | undefined;
 	};
 
+	readonly height: number;
+
+	readonly overscan: number;
+	readonly itemHeight: number;
+	readonly scrollToIndex: number | undefined;
+
 	top: number;
 	bottom: number;
-
-	start: number;
-	end: number;
-
-	height: number;
-
-	overscan: number;
-	itemHeight: number;
-	scrollToIndex: number | undefined;
-
 	disabled: boolean;
 
 	rows: {

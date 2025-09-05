@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Component } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import Layout from '$lib/components/Layout.svelte';
 	import { PAGE_TRANSITION_DURATION } from '$lib/constants';
@@ -15,7 +16,7 @@
 <Layout
 	classes={{ childrenContainer: 'max-w-none', container: '' }}
 	main={{
-		component: VirtualPageRoot,
+		component: VirtualPageRoot as unknown as Component,
 		props: { class: '', as: 'main', itemHeight: 56, overscan: 5 }
 	}}
 >
