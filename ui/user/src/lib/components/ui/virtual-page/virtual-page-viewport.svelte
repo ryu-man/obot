@@ -48,8 +48,6 @@
 
 	let viewportHeight = $state(0);
 
-	// $inspect('top', top);
-
 	const context: VirtualPageContext<T> = {
 		elements: {
 			get viewport() {
