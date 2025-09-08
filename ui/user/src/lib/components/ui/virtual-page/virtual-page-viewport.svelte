@@ -48,6 +48,8 @@
 
 	let viewportHeight = $state(0);
 
+	// $inspect('top', top);
+
 	const context: VirtualPageContext<T> = {
 		elements: {
 			get viewport() {
@@ -184,15 +186,15 @@
 	async function refresh() {
 		if (!viewportElement || !mounted) return;
 
-		if (!tableElement) {
-			tableElement = contentElement?.closest('table') as HTMLElement;
-		}
+		tableElement = contentElement?.closest('table') as HTMLElement;
 
 		const rootOffsetTop = rootElement?.offsetTop ?? 0;
 		const contentOffsetTop = tableElement?.offsetTop ?? 0;
 
+		const totalOffsetTop = rootOffsetTop + contentOffsetTop;
+
 		// Calculate visible range with overscan buffer
-		const scrollTop = Math.max(0, viewportElement.scrollTop - contentOffsetTop - rootOffsetTop);
+		const scrollTop = Math.max(0, viewportElement.scrollTop - totalOffsetTop);
 
 		const startIndex = Math.max(0, findStartIndex(scrollTop) - overscan);
 		const endIndex = Math.min(data.length, findEndIndex(scrollTop, startIndex) + overscan);
