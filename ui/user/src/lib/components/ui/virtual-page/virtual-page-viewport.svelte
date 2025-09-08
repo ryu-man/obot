@@ -291,7 +291,7 @@
 </script>
 
 <Render
-	class="virtual-page-root flex h-[100svh] max-h-[100svh] w-full overflow-hidden"
+	class="flex h-[100svh] max-h-[100svh] w-full overflow-hidden"
 	as={as ?? 'div'}
 	{...restProps}
 	{@attach (node: HTMLElement) => {
@@ -302,7 +302,7 @@
 		bind:this={viewportElement}
 		bind:offsetHeight={viewportHeight}
 		class={twMerge(
-			'virtual-page-viewport virtual-list-viewport relative flex h-full max-h-full w-full flex-1 flex-col overflow-y-auto',
+			'virtual-page-viewport relative flex h-full max-h-full w-full flex-1 flex-col overflow-y-auto',
 			klass
 		)}
 		onscroll={handleScroll}
@@ -312,7 +312,7 @@
 </Render>
 
 <style>
-	.virtual-list-viewport {
+	.virtual-page-viewport {
 		-webkit-overflow-scrolling: touch;
 	}
 </style>
