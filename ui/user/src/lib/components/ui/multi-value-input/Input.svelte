@@ -7,6 +7,7 @@
 	export interface SelectProps {
 		id?: string;
 		value?: string;
+		labels?: Record<string, string>;
 		disabled?: boolean;
 		class?: string;
 		classes?: {
@@ -28,6 +29,7 @@
 		id,
 		disabled,
 		value = $bindable(''),
+		labels,
 		class: klass,
 		classes,
 		placeholder,
@@ -68,7 +70,7 @@
 					animate:flip={{ duration: 100 }}
 				>
 					<div class="flex flex-1 break-all">
-						{v ?? ''}
+						{labels?.[v] ?? v ?? ''}
 					</div>
 
 					<div class="flex h-[22.5px] items-center place-self-start">
