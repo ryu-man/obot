@@ -10,23 +10,23 @@
 	let currentCell: HTMLElement | null | undefined = undefined;
 
 	let headerRowElement: HTMLElement | null | undefined = $state();
+
+	const resizeColumn = (ev: PointerEvent) => {
+		const diff = ev.pageX - startX;
+		const minWidth = currentCell?.getAttribute('data-min-width') ?? '0ch';
+		currentCell!.style.width = `max(${minWidth}, ${startWidth + diff}px)`;
+	};
+
+	const stopResize = () => {
+		document.removeEventListener('pointermove', resizeColumn);
+		document.removeEventListener('pointerup', stopResize);
+	};
 </script>
 
 {#snippet thResizeHandler()}
 	<button
 		class="resize-handle ml-auto flex min-h-full cursor-col-resize items-center outline-none"
 		{@attach (node) => {
-			const resizeColumn = (ev: PointerEvent) => {
-				const diff = ev.pageX - startX;
-				const minWidth = currentCell?.getAttribute('data-min-width') ?? '0ch';
-				currentCell!.style.width = `max(${minWidth}, ${startWidth + diff}px)`;
-			};
-
-			const stopResize = () => {
-				document.removeEventListener('pointermove', resizeColumn);
-				document.removeEventListener('pointerup', stopResize);
-			};
-
 			const pointerDownHandler = (ev: PointerEvent) => {
 				currentCell = (ev.target as HTMLElement).closest('th');
 				if (!currentCell) return;
@@ -54,17 +54,6 @@
 		class="resize-handle ml-auto flex min-h-full cursor-col-resize items-center opacity-0 outline-none group-hover:opacity-100"
 		onclick={(ev) => ev.stopPropagation()}
 		{@attach (node) => {
-			const resizeColumn = (ev: PointerEvent) => {
-				const diff = ev.pageX - startX;
-				const minWidth = currentCell?.getAttribute('data-min-width') ?? '0ch';
-				currentCell!.style.width = `max(${minWidth}, ${startWidth + diff}px)`;
-			};
-
-			const stopResize = () => {
-				document.removeEventListener('pointermove', resizeColumn);
-				document.removeEventListener('pointerup', stopResize);
-			};
-
 			const pointerDownHandler = (ev: PointerEvent) => {
 				const td = (ev.target as HTMLElement).closest('td');
 				if (!td) return;
