@@ -146,11 +146,11 @@
 
 						{@render th('Identifier', { class: 'w-[24ch]', minWidth: '24ch' })}
 
-						{@render th('Response Code', { class: 'w-[20ch]', minWidth: '14ch' })}
+						{@render th('Response Code', { class: 'w-[22ch]', minWidth: '22ch' })}
 
-						{@render th('Response Time (ms)', { class: 'w-[24ch]', minWidth: '24ch' })}
+						{@render th('Response Time (ms)', { class: 'w-[26ch]', minWidth: '26ch' })}
 
-						{@render th('Client', { class: 'w-[14ch]', minWidth: '14ch' })}
+						{@render th('Client', { class: 'w-[19ch]', minWidth: '19ch' })}
 
 						{@render th('IP Address', { class: 'w-[24ch]', minWidth: '24ch' })}
 					</tr>
