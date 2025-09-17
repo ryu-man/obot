@@ -297,10 +297,16 @@
 		let step = frameStep * ticksRatio;
 
 		if (frame === 'minute') {
-			if (duration <= 60) {
+			if (duration < 30) {
+				step = 1 * ticksRatio;
+			} else if (duration < 60) {
+				step = 2 * ticksRatio;
+			} else {
 				step = 5 * ticksRatio;
 			}
 		}
+
+		console.log(frame);
 
 		if (frame === 'hour') {
 			generator = timeHours;
