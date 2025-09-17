@@ -83,7 +83,7 @@
 
 			if (paragraph) {
 				const newDoc = schema.topNodeType.createAndFill(null, paragraph);
-				tr.replaceWith(0, view.state.doc.content.size + 2, newDoc!);
+				tr.replaceWith(0, view.state.doc.content.size, newDoc!);
 				view.dispatch(tr);
 			}
 		});
