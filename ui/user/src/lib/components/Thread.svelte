@@ -610,6 +610,7 @@
 						} catch (_) {
 							// If there's an error, restore the input value
 							input?.setValue(v);
+							console.error(_);
 						}
 					}}
 					onArrowKeys={(direction) => {
