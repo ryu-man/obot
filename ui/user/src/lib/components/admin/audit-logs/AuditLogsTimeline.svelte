@@ -306,8 +306,6 @@
 			}
 		}
 
-		console.log(frame);
-
 		if (frame === 'hour') {
 			generator = timeHours;
 		}
