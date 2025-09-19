@@ -136,7 +136,7 @@
 		class="button-colors text-blue rounded-full p-2 transition-all duration-100 hover:border-none"
 	>
 		{#if readonly}
-			<div class="rounded-xs m-1.5 h-3 w-3 place-self-center bg-white"></div>
+			<div class="m-1.5 h-3 w-3 place-self-center rounded-xs bg-white"></div>
 		{:else if pending}
 			<LoaderCircle class="animate-spin" />
 		{:else}
@@ -180,7 +180,7 @@
 
 				{#if children}
 					<div
-						class="chat-footer z-1 pointer-events-none flex w-full justify-between rounded-b-2xl px-2 pb-2"
+						class="chat-footer pointer-events-none z-1 flex w-full justify-between rounded-b-2xl px-2 pb-2"
 					>
 						<div class="pointer-events-auto flex flex-1">
 							{@render children?.()}
