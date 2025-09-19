@@ -2,34 +2,46 @@
 	import { twMerge } from 'tailwind-merge';
 	import { VirtualPageTable } from '$lib/components/ui';
 	import { GripVertical } from 'lucide-svelte';
+	import { tick } from 'svelte';
+	import { throttle } from '$lib/utils';
 
 	let { data = [], onSelectRow, emptyContent, getUserDisplayName } = $props();
 
 	let startX = 0;
 	let startWidth = 0;
 	let currentCell: HTMLElement | null | undefined = undefined;
+	let cellHandle: HTMLElement | null | undefined = undefined;
 
 	let headerRowElement: HTMLElement | null | undefined = $state();
 
-	const resizeColumn = (ev: PointerEvent) => {
+	let tableContainer: HTMLElement | null | undefined = $state();
+
+	const resizeColumn = throttle((ev: PointerEvent) => {
 		const diff = ev.pageX - startX;
 		const minWidth = currentCell?.getAttribute('data-min-width') ?? '0ch';
-		currentCell!.style.width = `max(${minWidth}, ${startWidth + diff}px)`;
-	};
 
-	const stopResize = () => {
+		currentCell!.style.width = `max(${minWidth}, ${startWidth + diff}px)`;
+	}, 1000 / 60);
+
+	const stopResize = async () => {
 		document.removeEventListener('pointermove', resizeColumn);
 		document.removeEventListener('pointerup', stopResize);
+
+		await tick();
+
+		cellHandle?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
 	};
 </script>
 
 {#snippet thResizeHandler()}
 	<button
-		class="resize-handle ml-auto flex min-h-full cursor-col-resize items-center outline-none"
+		class="resize-handle sticky right-0 ml-auto flex min-h-full cursor-col-resize items-center outline-none"
 		{@attach (node) => {
 			const pointerDownHandler = (ev: PointerEvent) => {
 				currentCell = (ev.target as HTMLElement).closest('th');
 				if (!currentCell) return;
+
+				cellHandle = ev.currentTarget as typeof cellHandle;
 
 				startX = ev.pageX;
 				startWidth = currentCell.clientWidth;
@@ -57,6 +69,8 @@
 			const pointerDownHandler = (ev: PointerEvent) => {
 				const td = (ev.target as HTMLElement).closest('td');
 				if (!td) return;
+
+				cellHandle = ev.currentTarget as typeof cellHandle;
 
 				const row = td.closest('tr');
 				if (!row) return;
@@ -112,6 +126,7 @@
 
 <!-- Data Table -->
 <div
+	bind:this={tableContainer}
 	class="dark:bg-surface2 flex w-full min-w-full flex-1 divide-y divide-gray-200 overflow-x-auto overflow-y-visible rounded-lg border border-transparent bg-white shadow-sm"
 >
 	{#if data.length}
