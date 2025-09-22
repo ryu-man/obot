@@ -373,6 +373,23 @@
 
 	let currentItem = $state<{ key: string; value: string; date: string }>();
 
+	const isMainTick = (tick: Date) => {
+		const [frame, step] = timeFrame;
+
+		switch (frame) {
+			case 'minute':
+				return tick.getMinutes() === 0;
+			case 'hour':
+				return tick.getHours() === 0;
+			case 'day':
+				return tick.getDate() === 0;
+			case 'month':
+				return tick.getMonth() === 0;
+			default:
+				return false;
+		}
+	};
+
 	function viewport() {
 		const getViewportWidth = () => {
 			if (typeof window !== 'undefined') {
@@ -460,7 +477,7 @@
 <div bind:clientHeight bind:clientWidth class="group relative h-full w-full">
 	{#if highlightedRectElement && currentItem}
 		<div
-			class="tooltip pointer-events-none fixed top-0 left-0 flex flex-col shadow-md"
+			class="tooltip pointer-events-none fixed left-0 top-0 flex flex-col shadow-md"
 			{@attach (node) => tooltip(highlightedRectElement!, node)}
 			in:fade={{ duration: 100, delay: 10 }}
 			out:fade={{ duration: 100 }}
@@ -553,6 +570,28 @@
 						.attr('class', function (d) {
 							const element = this as SVGElement;
 
+							const add = (...cn: string[]) => {
+								for (const name of cn) {
+									classNames.add(name);
+								}
+							};
+
+							const remove = (...cn: string[]) => {
+								for (const name of cn) {
+									classNames.delete(name);
+								}
+							};
+
+							const toggle = (...cn: string[]) => {
+								for (const name of cn) {
+									if (classNames.has(name)) {
+										classNames.delete(name);
+									} else {
+										classNames.add(name);
+									}
+								}
+							};
+
 							const isActive = isWithinInterval(d as Date, {
 								start,
 								end
@@ -568,7 +607,20 @@
 
 							const callbackfn = (d: string) =>
 								isActive ? classNames.add(d) : classNames.delete(d);
+
 							activeClassName.forEach(callbackfn);
+
+							const mainTickClassName = ['opacity-100', 'font-semibold'];
+							const secondaryTickClassName = ['opacity-50'];
+
+							const isMain = isMainTick(d as Date);
+
+							if (isMain) {
+								add(...mainTickClassName);
+							} else {
+								remove(...mainTickClassName);
+								add(...secondaryTickClassName);
+							}
 
 							// Keep old class names
 							// Filter falsy values and join with a space
