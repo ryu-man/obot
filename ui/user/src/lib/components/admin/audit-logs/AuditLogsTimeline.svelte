@@ -39,12 +39,14 @@
 		set,
 		endOfMinute,
 		getHours,
-		type Duration
+		type Duration,
+		getDay
 	} from 'date-fns';
 	import type { AuditLog } from '$lib/services';
 	import { debounce } from 'es-toolkit';
 	import { autoUpdate, computePosition, flip, offset } from '@floating-ui/dom';
 	import { fade } from 'svelte/transition';
+	import { get } from 'svelte/store';
 
 	interface Props<T> {
 		start: Date;
@@ -180,16 +182,20 @@
 			return 1;
 		}
 
-		if (width >= 1024) {
+		if (width >= 1280) {
 			return 2;
 		}
 
-		if (width >= 768) {
+		if (width >= 1024) {
 			return 3;
 		}
 
-		if (width >= 425) {
+		if (width >= 768) {
 			return 4;
+		}
+
+		if (width >= 425) {
+			return 5;
 		}
 
 		return 6;
@@ -382,7 +388,7 @@
 			case 'hour':
 				return tick.getHours() === 0;
 			case 'day':
-				return tick.getDate() === 0;
+				return tick.getDate() === 1 || getDay(tick) === 1;
 			case 'month':
 				return tick.getMonth() === 0;
 			default:
@@ -494,6 +500,10 @@
 		</div>
 	{/if}
 
+	<div class="absolute bottom-full right-0 text-xl">
+		{timeFrame[0]} | {timeFrame[1].toString().padStart(2, '0')}
+	</div>
+
 	<svg width={clientWidth} height={clientHeight} viewBox={`0 0 ${clientWidth} ${clientHeight}`}>
 		<g transform="translate({paddingLeft}, {paddingTop})">
 			<g
@@ -538,6 +548,10 @@
 								}
 
 								if (timeFrame[0] === 'hour') {
+									return formatDayOfWeek;
+								}
+
+								if (timeFrame[0] === 'day' && timeFrame[2] <= 90 && getDay(date) === 1) {
 									return formatDayOfWeek;
 								}
 
@@ -598,17 +612,19 @@
 							});
 
 							const classNames = new Set(element.classList);
-							const activeClassName = [
-								'text-on-surface3',
-								'dark:text-on-surface1',
-								'duration-1000',
-								'transiton-colors'
-							];
+							const baseClassName = ['duration-500', 'transiton-all', 'duration-1000'];
+							add(...baseClassName);
 
-							const callbackfn = (d: string) =>
-								isActive ? classNames.add(d) : classNames.delete(d);
+							const activeClassName = ['text-on-surface3', 'dark:text-on-surface1'];
+							const inactiveClassName = ['opacity-0', 'duration-500', 'transiton-opacity'];
 
-							activeClassName.forEach(callbackfn);
+							if (isActive) {
+								add(...activeClassName);
+								remove(...inactiveClassName);
+							} else {
+								add(...inactiveClassName);
+								remove(...activeClassName);
+							}
 
 							const mainTickClassName = ['opacity-100', 'font-semibold'];
 							const secondaryTickClassName = ['opacity-50'];
