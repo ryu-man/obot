@@ -310,7 +310,7 @@
 			} else if (duration < 60) {
 				step = 2 * ticksRatio;
 			} else {
-				step = 5 * ticksRatio;
+				step = frameStep * ticksRatio;
 			}
 		}
 
@@ -498,10 +498,6 @@
 			<div class="text-2xl font-bold">{currentItem?.value}</div>
 		</div>
 	{/if}
-
-	<div class="absolute right-0 bottom-full text-xl">
-		{timeFrame[0]} | {timeFrame[1].toString().padStart(2, '0')}
-	</div>
 
 	<svg width={clientWidth} height={clientHeight} viewBox={`0 0 ${clientWidth} ${clientHeight}`}>
 		<g transform="translate({paddingLeft}, {paddingTop})">
