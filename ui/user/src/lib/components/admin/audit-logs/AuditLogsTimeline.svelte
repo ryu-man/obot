@@ -46,7 +46,6 @@
 	import { debounce } from 'es-toolkit';
 	import { autoUpdate, computePosition, flip, offset } from '@floating-ui/dom';
 	import { fade } from 'svelte/transition';
-	import { get } from 'svelte/store';
 
 	interface Props<T> {
 		start: Date;
@@ -380,7 +379,7 @@
 	let currentItem = $state<{ key: string; value: string; date: string }>();
 
 	const isMainTick = (tick: Date) => {
-		const [frame, step] = timeFrame;
+		const [frame] = timeFrame;
 
 		switch (frame) {
 			case 'minute':
@@ -483,7 +482,7 @@
 <div bind:clientHeight bind:clientWidth class="group relative h-full w-full">
 	{#if highlightedRectElement && currentItem}
 		<div
-			class="tooltip pointer-events-none fixed left-0 top-0 flex flex-col shadow-md"
+			class="tooltip pointer-events-none fixed top-0 left-0 flex flex-col shadow-md"
 			{@attach (node) => tooltip(highlightedRectElement!, node)}
 			in:fade={{ duration: 100, delay: 10 }}
 			out:fade={{ duration: 100 }}
@@ -500,7 +499,7 @@
 		</div>
 	{/if}
 
-	<div class="absolute bottom-full right-0 text-xl">
+	<div class="absolute right-0 bottom-full text-xl">
 		{timeFrame[0]} | {timeFrame[1].toString().padStart(2, '0')}
 	</div>
 
@@ -596,23 +595,13 @@
 								}
 							};
 
-							const toggle = (...cn: string[]) => {
-								for (const name of cn) {
-									if (classNames.has(name)) {
-										classNames.delete(name);
-									} else {
-										classNames.add(name);
-									}
-								}
-							};
-
 							const isActive = isWithinInterval(d as Date, {
 								start,
 								end
 							});
 
 							const classNames = new Set(element.classList);
-							const baseClassName = ['duration-500', 'transiton-all', 'duration-1000'];
+							const baseClassName = ['duration-500', 'transiton-all'];
 							add(...baseClassName);
 
 							const activeClassName = ['text-on-surface3', 'dark:text-on-surface1'];
@@ -626,8 +615,8 @@
 								remove(...activeClassName);
 							}
 
-							const mainTickClassName = ['opacity-100', 'font-semibold'];
-							const secondaryTickClassName = ['opacity-50'];
+							const mainTickClassName = ['opacity-100', 'font-medium'];
+							const secondaryTickClassName = ['opacity-50', 'font-normal'];
 
 							const isMain = isMainTick(d as Date);
 
