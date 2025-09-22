@@ -537,7 +537,7 @@
 									return formatDayOfWeek;
 								}
 
-								if (timeFrame[0] === 'hour' && timeFrame[1] > 1) {
+								if (timeFrame[0] === 'hour') {
 									return formatDayOfWeek;
 								}
 
