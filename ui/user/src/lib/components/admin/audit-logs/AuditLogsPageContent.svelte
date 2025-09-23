@@ -3,7 +3,18 @@
 	import { fade, slide } from 'svelte/transition';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { flip } from 'svelte/animate';
-	import { X, ChevronLeft, ChevronRight, Funnel, Captions } from 'lucide-svelte';
+	import {
+		X,
+		ChevronLeft,
+		ChevronRight,
+		Funnel,
+		Captions,
+		ArrowDown,
+		ChevronDown,
+		ArrowBigDownIcon,
+		ArrowBigDown,
+		DownloadCloud
+	} from 'lucide-svelte';
 	import { debounce } from 'es-toolkit';
 	import { set, endOfDay, isBefore, subDays } from 'date-fns';
 	import { page } from '$app/state';
@@ -28,6 +39,7 @@
 	import FiltersDrawer from '../filters-drawer/FiltersDrawer.svelte';
 	import { getUserDisplayName } from '$lib/utils';
 	import { setVirtualPageData } from '$lib/components/ui/virtual-page/context';
+	import { twMerge } from 'tailwind-merge';
 
 	interface Props {
 		mcpId?: string | null;
@@ -67,6 +79,13 @@
 	let showFilters = $state(false);
 	let selectedAuditLog = $state<AuditLog & { user: string }>();
 	let rightSidebar = $state<HTMLDialogElement>();
+
+	let exportDataState = $state({
+		open: false,
+		type: 'csv' as 'json' | 'csv',
+		scopeOpen: false,
+		scope: 'filtered' as 'filtered' | 'all'
+	});
 
 	// Supported filters for the audit logs
 	// These filters are used to filter the audit logs based on the URL parameters
@@ -375,6 +394,57 @@
 		goto(url.toString(), { noScroll: true });
 		pageIndexLocal.current = 0;
 	}
+
+	async function handleExport() {
+		const scope = exportDataState.scope;
+		const type = exportDataState.type;
+
+		const outputType = type === 'csv' ? 'text/csv' : 'application/json';
+		const fileExtension = type === 'csv' ? 'csv' : 'json';
+		const fileName = `audit-logs-${new Date().toISOString()}.${fileExtension}`;
+
+		const auditLogs = await (async () => {
+			if (scope === 'filtered') return remoteAuditLogs;
+
+			return AdminService.listAuditLogs({}).then((res) => res.items ?? []);
+		})();
+
+		if (!auditLogs.length) return;
+
+		if (type === 'csv') {
+			const output = [];
+			const columns = Object.keys(auditLogs.at(0) ?? {});
+
+			if (!columns.length) return;
+
+			output.push(columns.join(','));
+			for (const log of auditLogs) {
+				output.push(columns.map((col) => JSON.stringify(log?.[col] ?? null)).join(','));
+			}
+
+			const blob = new Blob([output.join('\n')], { type: outputType });
+
+			const link = document.createElement('a');
+			link.href = URL.createObjectURL(blob);
+			link.download = fileName;
+			link.click();
+			URL.revokeObjectURL(link.href);
+
+			link.remove();
+		}
+
+		if (type === 'json') {
+			const blob = new Blob([JSON.stringify(auditLogs, null, 2)], { type: outputType });
+
+			const link = document.createElement('a');
+			link.href = URL.createObjectURL(blob);
+			link.download = fileName;
+			link.click();
+			URL.revokeObjectURL(link.href);
+
+			link.remove();
+		}
+	}
 </script>
 
 {#if showLoadingSpinner}
@@ -418,6 +488,101 @@
 			<Funnel class="size-4" />
 			Filters
 		</button>
+	</div>
+
+	<div class="relative">
+		<div class="dark:border-surface3 flex h-full overflow-clip rounded-lg border">
+			<button
+				class="flex items-center gap-1 px-4 py-1.5"
+				onclick={() => {
+					exportDataState.scopeOpen = false;
+					exportDataState.open = !exportDataState.open;
+				}}
+			>
+				<span>Export</span>
+			</button>
+			<button
+				class="hover:bg-surface1 dark:bg-surface1 dark:hover:bg-surface3 dark:border-surface3 flex items-center gap-1 border-l px-3 py-1.5 whitespace-nowrap"
+				onclick={() => {
+					exportDataState.scopeOpen = false;
+					exportDataState.open = !exportDataState.open;
+				}}
+			>
+				<span class="capitalize"
+					>{exportDataState.scope === 'all' ? 'All Logs' : 'Current Logs'}</span
+				>
+			</button>
+
+			<button
+				class="hover:bg-surface1 dark:bg-surface1 dark:hover:bg-surface3 dark:border-surface3 flex h-full items-center gap-1 border-l px-3 py-1.5"
+				onclick={() => {
+					exportDataState.open = false;
+					exportDataState.scopeOpen = !exportDataState.scopeOpen;
+				}}
+			>
+				<DownloadCloud class="size-4" />
+			</button>
+		</div>
+
+		{#if exportDataState.open}
+			<dialog
+				class="bg-surface3 text-on-surface3 border-surface2/50 absolute top-full right-0 z-10 flex min-w-full translate-y-1 flex-col rounded border whitespace-nowrap shadow"
+				use:clickOutside={() => {
+					exportDataState.open = false;
+				}}
+			>
+				<ul class="flex flex-col">
+					<li
+						class="hover:bg-surface2/25 active:bg-surface1/50 cursor-pointer px-3 py-2 transition-colors duration-100"
+						onclick={() => {
+							exportDataState.scope = 'filtered';
+							exportDataState.open = false;
+						}}
+					>
+						<a href="#">Current audit logs</a>
+					</li>
+					<li
+						class="hover:bg-surface2/25 active:bg-surface1/50 cursor-pointer px-3 py-2 transition-colors duration-100"
+						onclick={() => {
+							exportDataState.scope = 'all';
+							exportDataState.open = false;
+						}}
+					>
+						<a href="#">All audit logs</a>
+					</li>
+				</ul>
+			</dialog>
+		{/if}
+
+		{#if exportDataState.scopeOpen}
+			<dialog
+				class="bg-surface3 text-on-surface3 border-surface2/50 absolute top-full z-10 flex min-w-full translate-y-1 flex-col rounded border shadow"
+				use:clickOutside={() => {
+					exportDataState.scopeOpen = false;
+				}}
+			>
+				<ul class="flex flex-col">
+					{#each ['csv', 'json'] as type (type)}
+						<li
+							class={twMerge(
+								'hover:bg-surface2/25 active:bg-surface1/50 cursor-pointer px-3 py-2 transition-colors duration-100',
+								exportDataState.type === type
+									? 'bg-surface2/25 hover:bg-surface2/35 font-semibold'
+									: ''
+							)}
+							onclick={() => {
+								exportDataState.type = type as 'csv' | 'json';
+								exportDataState.scopeOpen = false;
+								handleExport();
+							}}
+						>
+							<span>Export As</span>
+							<span>{type.toUpperCase()}</span>
+						</li>
+					{/each}
+				</ul>
+			</dialog>
+		{/if}
 	</div>
 </div>
 
