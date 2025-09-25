@@ -88,20 +88,24 @@
 		/>
 	{/if}
 
-	<button
-		type="button"
-		class="absolute top-1/2 right-4 z-10 -translate-y-1/2 cursor-pointer transition-colors duration-150"
-		class:text-red-500={error}
-		class:pulse={isPulsing}
-		onclick={toggleVisibility}
+	<div
+		class="absolute top-1/2 right-4 z-10 grid -translate-y-1/2 grid-cols-1 grid-rows-1"
 		use:tooltip={{ disablePortal: true, text: showSensitive ? 'Hide' : 'Reveal' }}
 	>
-		{#if showSensitive}
-			<EyeOff class="size-4" />
-		{:else}
-			<Eye class="size-4" />
-		{/if}
-	</button>
+		<button
+			type="button"
+			class="cursor-pointer transition-colors duration-150"
+			class:text-red-500={error}
+			class:pulse={isPulsing}
+			onclick={toggleVisibility}
+		>
+			{#if showSensitive}
+				<EyeOff class="size-4" />
+			{:else}
+				<Eye class="size-4" />
+			{/if}
+		</button>
+	</div>
 </div>
 
 <style>
