@@ -292,7 +292,7 @@ export function formatJsonWithDiffHighlighting(
 			// Replace string values
 			highlightedLine = highlightedLine.replace(
 				/: "([^"]+)"/g,
-				': <span class="text-gray-600 dark:text-gray-300">"$1"</span>'
+				': <span class="text-gray-600 dark:text-gray-300 whitespace-normal break-words">"$1"</span>'
 			);
 
 			// Replace null
