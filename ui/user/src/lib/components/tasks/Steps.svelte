@@ -10,6 +10,7 @@
 	import { tooltip } from '$lib/actions/tooltip.svelte';
 	import { Eye, EyeClosed, UsersRound, ArrowBigDown } from 'lucide-svelte';
 	import { DraggableList } from '../primitives/draggable';
+	import { page } from '$app/state';
 
 	interface Props {
 		task: Task;
@@ -42,6 +43,9 @@
 		shouldFollowTaskRun = $bindable(),
 		lastStepId
 	}: Props = $props();
+
+	const isAdmin = $derived(page.url.pathname.startsWith('/admin/tasks'));
+	const shouldShowToggleAllOutput = $derived(!isAdmin);
 
 	let orderedSteps = $state(readOnly && taskRun ? taskRun?.steps : (task?.steps ?? []));
 
@@ -252,7 +256,7 @@
 	<div class="flex w-full items-center justify-between">
 		<h4 class="text-lg font-semibold">Steps</h4>
 
-		{#if !readOnly}
+		{#if shouldShowToggleAllOutput}
 			<button
 				class="icon-button"
 				data-testid="steps-toggle-output-btn"
