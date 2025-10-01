@@ -350,7 +350,7 @@
 	{/if}
 	<div class="flex grow flex-col gap-2">
 		<OverflowContainer
-			class="scrollbar-none flex w-full items-center gap-2 overflow-x-auto"
+			class="scrollbar-none flex min-h-fit w-full items-center gap-2 overflow-x-auto"
 			style="scroll-behavior: smooth;"
 			{@attach (node: HTMLDivElement) => (scrollContainer = node)}
 		>
