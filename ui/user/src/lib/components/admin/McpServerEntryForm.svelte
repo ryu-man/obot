@@ -63,9 +63,8 @@
 						{ label: 'Server Details', view: 'server-instances' },
 						{ label: 'Tools', view: 'tools' },
 						{ label: 'Configuration', view: 'configuration' },
-						// TODO: support workspace usage and audit logs
-						// { label: 'Usage', view: 'usage' },
-						// { label: 'Audit Logs', view: 'audit-logs' },
+						{ label: 'Usage', view: 'usage' },
+						{ label: 'Audit Logs', view: 'audit-logs' },
 						...(isAtLeastPowerUserPlus ? [{ label: 'Access Control', view: 'access-control' }] : [])
 					]
 				: [
