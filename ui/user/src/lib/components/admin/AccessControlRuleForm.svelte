@@ -95,9 +95,32 @@
 
 		loadingUsersAndGroups = true;
 
-		Promise.all([AdminService.listUsers(), AdminService.listGroups()])
+		// Prevent refetching when adding new users or groups
+		const promises: [Promise<OrgUser[] | undefined>, Promise<OrgGroup[] | undefined>] = [
+			Promise.resolve(undefined),
+			Promise.resolve(undefined)
+		];
+
+		if (!usersAndGroups?.users) {
+			promises[0] = AdminService.listUsers();
+		}
+		if (!usersAndGroups?.groups) {
+			promises[1] = AdminService.listGroups();
+		}
+
+		Promise.all(promises)
 			.then(([users, groups]) => {
-				usersAndGroups = { users, groups };
+				if (!usersAndGroups) {
+					usersAndGroups = { users: [], groups: [] };
+				}
+
+				if (users) {
+					usersAndGroups!.users = users;
+				}
+
+				if (groups) {
+					usersAndGroups!.groups = groups;
+				}
 
 				loadingUsersAndGroups = false;
 			})
