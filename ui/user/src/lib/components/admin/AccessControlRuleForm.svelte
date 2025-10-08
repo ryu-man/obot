@@ -89,8 +89,6 @@
 
 	$effect(() => {
 		// Prevent loading users and groups if we are in creation mode and onCreate callback is provided
-		if (onCreate) return;
-
 		if (!accessControlRule.subjects || accessControlRule.subjects?.length === 0) {
 			return;
 		}
