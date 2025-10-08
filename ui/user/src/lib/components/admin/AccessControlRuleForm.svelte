@@ -88,7 +88,7 @@
 	});
 
 	$effect(() => {
-		// Prevent loading users and groups if we are in creation mode and onCreate callback is provided
+		// Prevent loading users and groups if acr has no subjects
 		if (!accessControlRule.subjects || accessControlRule.subjects?.length === 0) {
 			return;
 		}
