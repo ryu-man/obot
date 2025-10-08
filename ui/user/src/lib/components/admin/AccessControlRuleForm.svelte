@@ -15,7 +15,7 @@
 		type OrgGroup
 	} from '$lib/services/admin/types';
 	import { LoaderCircle, Plus, Trash2 } from 'lucide-svelte';
-	import { onMount, type Snippet } from 'svelte';
+	import { type Snippet } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import { tooltip } from '$lib/actions/tooltip.svelte';
 	import Table from '../table/Table.svelte';
@@ -87,16 +87,26 @@
 		return [];
 	});
 
-	onMount(async () => {
+	$effect(() => {
 		// Prevent loading users and groups if we are in creation mode and onCreate callback is provided
 		if (onCreate) return;
 
+		if (!accessControlRule.subjects || accessControlRule.subjects?.length === 0) {
+			return;
+		}
+
 		loadingUsersAndGroups = true;
-		usersAndGroups = {
-			users: await AdminService.listUsers(),
-			groups: await AdminService.listGroups()
-		};
-		loadingUsersAndGroups = false;
+
+		Promise.all([AdminService.listUsers(), AdminService.listGroups()])
+			.then(([users, groups]) => {
+				usersAndGroups = { users, groups };
+
+				loadingUsersAndGroups = false;
+			})
+			.catch((error) => {
+				console.error('Failed to load users and groups:', error);
+				loadingUsersAndGroups = false;
+			});
 	});
 
 	$effect(() => {
@@ -149,6 +159,7 @@
 	) {
 		const userMap = new Map(users?.map((user) => [user.id, user]));
 		const groupMap = new Map(groups?.map((group) => [group.id, group]));
+
 		return (
 			subjects
 				.map((subject) => {
