@@ -2,11 +2,9 @@ import { getContext, setContext } from 'svelte';
 
 const CONTEXT_KEY = '@obot/context/kv';
 
-type Callback = (data?: unknown) => void;
-
 /**
  * Production-ready IndexedDB Key-Value Store with expiration support
- * Features: TTL, batch operations, automatic cleanup, listeners, and error handling
+ * Features: TTL,  cleanup, and error handling
  */
 export class KV {
 	dbName: string;
@@ -14,7 +12,6 @@ export class KV {
 	version: number;
 	db: IDBDatabase | null;
 	cleanupInterval: number | null;
-	listeners: Map<string, Callback[]>;
 	initPromise: Promise<IDBDatabase>;
 
 	constructor(dbName = 'obot', storeName = 'main', version = 1) {
@@ -23,7 +20,6 @@ export class KV {
 		this.version = version;
 		this.db = null;
 		this.cleanupInterval = null;
-		this.listeners = new Map();
 		this.initPromise = this.init();
 	}
 
@@ -97,7 +93,6 @@ export class KV {
 			const request = store.put(item);
 
 			request.onsuccess = () => {
-				this.emit('set', { key, value, ttlMs: ttl });
 				resolve(value);
 			};
 
@@ -131,7 +126,6 @@ export class KV {
 				// Check expiration
 				if (!skipExpiryCheck && item.expiry && Date.now() > item.expiry) {
 					await this.delete(key);
-					this.emit('expired', { key });
 					resolve(null);
 					return;
 				}
@@ -156,7 +150,6 @@ export class KV {
 			const request = store.delete(key);
 
 			request.onsuccess = () => {
-				this.emit('delete', { key });
 				resolve(true);
 			};
 
@@ -223,88 +216,6 @@ export class KV {
 	}
 
 	/**
-	 * Get all entries as an array of [key, value] pairs
-	 */
-	async entries() {
-		const db = await this.ensureDB();
-
-		return new Promise((resolve, reject) => {
-			const tx = db.transaction([this.storeName], 'readonly');
-			const store = tx.objectStore(this.storeName);
-			const request = store.getAll();
-
-			request.onsuccess = () => {
-				const now = Date.now();
-				const entries = request.result
-					.filter((item) => !item.expiry || item.expiry > now)
-					.map((item) => [item.key, item.value]);
-
-				resolve(entries);
-			};
-
-			request.onerror = () => reject(new Error(`Failed to get entries: ${request.error}`));
-		});
-	}
-
-	/**
-	 * Batch set operation
-	 * @param {Array} items - Array of {key, value, ttlMs} objects
-	 */
-	async setMany(items: { key: string; value: string; ttl?: number | null }[]) {
-		const db = await this.ensureDB();
-
-		return new Promise((resolve, reject) => {
-			const tx = db.transaction([this.storeName], 'readwrite');
-			const store = tx.objectStore(this.storeName);
-			const now = Date.now();
-
-			items.forEach(({ key, value, ttl = null }) => {
-				const item = {
-					key,
-					value,
-					expiry: ttl ? now + ttl : null,
-					createdAt: now,
-					updatedAt: now
-				};
-				store.put(item);
-			});
-
-			tx.oncomplete = () => resolve(true);
-			tx.onerror = () => reject(new Error(`Batch set failed: ${tx.error}`));
-		});
-	}
-
-	/**
-	 * Batch get operation
-	 * @param {Array<string>} keys - Array of keys to retrieve
-	 */
-	async getMany(keys: string[]) {
-		const results: Record<string, unknown> = {};
-		for (const key of keys) {
-			results[key] = await this.get(key);
-		}
-		return results;
-	}
-
-	/**
-	 * Batch delete operation
-	 * @param {Array<string>} keys - Array of keys to delete
-	 */
-	async deleteMany(keys: string[]) {
-		const db = await this.ensureDB();
-
-		return new Promise((resolve, reject) => {
-			const tx = db.transaction([this.storeName], 'readwrite');
-			const store = tx.objectStore(this.storeName);
-
-			keys.forEach((key) => store.delete(key));
-
-			tx.oncomplete = () => resolve(true);
-			tx.onerror = () => reject(new Error(`Batch delete failed: ${tx.error}`));
-		});
-	}
-
-	/**
 	 * Clear all entries from the store
 	 */
 	async clear() {
@@ -316,7 +227,6 @@ export class KV {
 			const request = store.clear();
 
 			request.onsuccess = () => {
-				this.emit('clear');
 				resolve(true);
 			};
 
@@ -356,16 +266,12 @@ export class KV {
 					if (cursor.value.expiry !== null) {
 						cursor.delete();
 						deletedCount++;
-						this.emit('expired', { key: cursor.value.key });
 					}
 					cursor.continue();
 				}
 			};
 
 			tx.oncomplete = () => {
-				if (deletedCount > 0) {
-					this.emit('cleanup', { deletedCount });
-				}
 				resolve(deletedCount);
 			};
 
@@ -399,112 +305,6 @@ export class KV {
 			clearInterval(this.cleanupInterval);
 			this.cleanupInterval = null;
 		}
-	}
-
-	/**
-	 * Event listener for store events
-	 * @param {string} event - Event name ('set', 'delete', 'expired', 'clear', 'cleanup')
-	 * @param {Callback} callback - Callback function
-	 */
-	on(event: string, callback: Callback) {
-		if (!this.listeners.has(event)) {
-			this.listeners.set(event, []);
-		}
-
-		this.listeners.get(event)?.push(callback);
-	}
-
-	/**
-	 * Remove event listener
-	 */
-	off(event: string, callback?: Callback) {
-		if (!callback) return;
-
-		if (this.listeners.has(event)) {
-			const callbacks = this.listeners.get(event);
-			if (!callbacks) return;
-
-			const index = callbacks.indexOf(callback);
-			if (index > -1) {
-				callbacks.splice(index, 1);
-			}
-		}
-	}
-
-	/**
-	 * Emit event to listeners
-	 */
-	emit(event: string, data?: unknown) {
-		if (this.listeners.has(event)) {
-			this.listeners.get(event)?.forEach((callback) => callback(data));
-		}
-	}
-
-	/**
-	 * Close database connection and cleanup
-	 */
-	async close() {
-		this.stopCleanupTask();
-
-		if (this.db) {
-			this.db.close();
-			this.db = null;
-		}
-
-		this.listeners.clear();
-	}
-
-	/**
-	 * Get store statistics
-	 */
-	async getStats() {
-		const db = await this.ensureDB();
-
-		return new Promise((resolve, reject) => {
-			const tx = db.transaction([this.storeName], 'readonly');
-			const store = tx.objectStore(this.storeName);
-			const request = store.getAll();
-
-			request.onsuccess = () => {
-				const items = request.result;
-				const now = Date.now();
-
-				const stats = {
-					totalItems: items.length,
-					expiredItems: 0,
-					activeItems: 0,
-					itemsWithTTL: 0,
-					itemsWithoutTTL: 0,
-					oldestItem: null,
-					newestItem: null
-				};
-
-				items.forEach((item) => {
-					if (item.expiry) {
-						stats.itemsWithTTL++;
-						if (item.expiry <= now) {
-							stats.expiredItems++;
-						} else {
-							stats.activeItems++;
-						}
-					} else {
-						stats.itemsWithoutTTL++;
-						stats.activeItems++;
-					}
-
-					if (!stats.oldestItem || item.createdAt < stats.oldestItem) {
-						stats.oldestItem = item.createdAt;
-					}
-					if (!stats.newestItem || item.createdAt > stats.newestItem) {
-						stats.newestItem = item.createdAt;
-					}
-				});
-
-				resolve(stats);
-			};
-
-			request.onerror = () => reject(new Error(`Failed to get stats: ${request.error}`));
-		});
 	}
 
 	share() {
