@@ -153,8 +153,8 @@
 				Promise.resolve(undefined)
 			];
 
-			promises[0] = kvSync!.get('users', () => AdminService.listUsers(), 1000 * 60 * 10);
-			promises[1] = kvSync.get('groups', () => AdminService.listGroups(), 1000 * 60 * 10);
+			promises[0] = kvSync!.get('users', () => AdminService.listUsers(), 1000 * 60 * 5);
+			promises[1] = kvSync.get('groups', () => AdminService.listGroups(), 1000 * 60 * 5);
 
 			const [users, groups] = await Promise.all(promises);
 

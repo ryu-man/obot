@@ -92,7 +92,7 @@
 		try {
 			loading = true;
 
-			const u = await kvSync!.get('users', () => AdminService.listUsers(), 1000 * 60 * 10);
+			const u = await kvSync!.get('users', () => AdminService.listUsers(), 1000 * 60 * 5);
 
 			users = u ?? [];
 

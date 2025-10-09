@@ -37,7 +37,7 @@
 	let search = $state('');
 	let selected = $state<SearchItem[]>([]);
 	let selectedMap = $derived(new Set(selected.map((i) => i.id)));
-	let usersMap = $derived(new Map(users.map((user) => [user.id, user])));
+	let usersMap = $derived(new Map(users?.map((user) => [user.id, user])));
 
 	const mcpServerAndEntries = mcpEntriesContextFn?.() ?? {
 		entries: [],
@@ -121,7 +121,7 @@
 			const u = await kvSync!.get(
 				'users',
 				() => AdminService.listUsersIncludeDeleted(),
-				1000 * 60 * 10
+				1000 * 60 * 5
 			);
 
 			users = u ?? [];
