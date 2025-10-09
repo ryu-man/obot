@@ -7,11 +7,15 @@
 	import Search from '../Search.svelte';
 	import ResponsiveDialog from '../ResponsiveDialog.svelte';
 	import { getUserRoleLabel } from '$lib/utils';
+	import { KV, KVSync } from '$lib/kv';
 
 	interface Props {
 		onAdd: (users: OrgUser[], groups: OrgGroup[]) => void;
 		filterIds?: string[];
 	}
+
+	const kv = KV.get();
+	const kvSync = new KVSync(kv!);
 
 	let { onAdd, filterIds }: Props = $props();
 
@@ -70,15 +74,7 @@
 	}
 
 	async function onOpen() {
-		loading = true;
-
-		try {
-			users = await AdminService.listUsers();
-		} catch (error) {
-			console.error('Error loading initial users:', error);
-		} finally {
-			loading = false;
-		}
+		await loadData();
 
 		// Now search to populate filtered data
 		await search();
@@ -90,6 +86,20 @@
 		selectedUsers = [];
 		filteredUsers = [];
 		filteredGroups = [];
+	}
+
+	async function loadData() {
+		try {
+			loading = true;
+
+			const u = await kvSync!.get('users', () => AdminService.listUsers(), 1000 * 60 * 10);
+
+			users = u ?? [];
+
+			loading = false;
+		} catch (error) {
+			console.error('Error initializing data:', error);
+		}
 	}
 </script>
 
