@@ -98,7 +98,7 @@ export class KV {
 
 			request.onsuccess = () => {
 				this.emit('set', { key, value, ttlMs: ttl });
-				resolve(true);
+				resolve(value);
 			};
 
 			request.onerror = () => reject(new Error(`Failed to set key "${key}": ${request.error}`));
@@ -530,10 +530,10 @@ export class KVSync {
 	async get<T = never>(key: string): Promise<T>;
 	async get<T = never>(key: string, fetcher: () => Promise<T>, ms?: number | null): Promise<T>;
 	async get<T = never>(key: string, fetcher?: () => Promise<T>, ms: number | null = null) {
-		const exist = await this.kv.get(key);
+		const data = await this.kv.get(key);
 
-		if (exist) {
-			return this.kv.get(key);
+		if (data) {
+			return data;
 		} else if (fetcher) {
 			return this.set(key, fetcher, ms);
 		}
