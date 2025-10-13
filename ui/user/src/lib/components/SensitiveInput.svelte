@@ -15,19 +15,20 @@
 	let { name, value = $bindable(''), error, oninput, textarea, disabled }: Props = $props();
 	let showSensitive = $state(false);
 	let textareaElement = $state<HTMLTextAreaElement>();
+	let maskedTextarea = $state<HTMLTextAreaElement>();
 
 	function getMaskedValue(text: string): string {
-		return text.replace(/[^\n\r]/g, '•');
+		return text.replace(/[^\s]/g, '•');
 	}
 
-	function handleInput(event: Event) {
-		const input = event.target as HTMLInputElement;
+	function handleInput(ev: Event) {
+		const input = ev.target as HTMLInputElement;
 		value = input.value;
 		oninput?.();
 	}
 
-	function toggleVisibility(e: MouseEvent) {
-		e.preventDefault();
+	function toggleVisibility(ev: MouseEvent) {
+		ev.preventDefault();
 		showSensitive = !showSensitive;
 
 		if (showSensitive) {
@@ -38,35 +39,46 @@
 
 <div class="relative flex grow items-center">
 	{#if textarea}
-		<textarea
-			bind:this={textareaElement}
-			data-1p-ignore
-			id={name}
-			{name}
-			{disabled}
-			class={twMerge(
-				'text-input-filled base w-full pr-10 font-mono',
-				error && 'border-red-500 bg-red-500/20 text-red-500 ring-red-500 focus:ring-1',
-				!showSensitive && 'hide'
-			)}
-			bind:value={
-				() => value,
-				(v) => {
-					value = v;
-					oninput?.();
-				}
-			}
-		></textarea>
-
-		{#if !showSensitive}
-			<!-- Invisible textarea to allow copying the real value -->
+		<div class="relative flex w-full flex-col">
 			<textarea
+				bind:this={textareaElement}
+				data-1p-ignore
+				id={name}
+				{name}
+				{disabled}
 				class={twMerge(
-					'text-input-filled layer-1 pointer-events-none absolute inset-0 w-full bg-transparent pr-10 font-mono'
+					'text-input-filled base w-full pr-10 font-mono',
+					error && 'border-red-500 bg-red-500/20 text-red-500 ring-red-500 focus:ring-1'
 				)}
-				value={getMaskedValue(value || '')}
+				style={!showSensitive ? 'color: transparent' : ''}
+				bind:value={
+					() => value,
+					(v) => {
+						value = v;
+						oninput?.();
+					}
+				}
+				onscroll={(ev) => {
+					if (!showSensitive && maskedTextarea) {
+						maskedTextarea.scrollTop = ev.currentTarget.scrollTop;
+						maskedTextarea.scrollLeft = ev.currentTarget.scrollLeft;
+					}
+				}}
 			></textarea>
-		{/if}
+
+			{#if !showSensitive}
+				<!-- Masked overlay textarea -->
+				<textarea
+					bind:this={maskedTextarea}
+					readonly
+					tabindex="-1"
+					class={twMerge(
+						'text-input-filled layer-1 pointer-events-none absolute inset-0 w-full bg-transparent pr-10 font-mono'
+					)}
+					value={getMaskedValue(value)}
+				></textarea>
+			{/if}
+		</div>
 	{:else}
 		<input
 			data-1p-ignore
