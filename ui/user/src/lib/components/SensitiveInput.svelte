@@ -47,10 +47,10 @@
 				{name}
 				{disabled}
 				class={twMerge(
-					'text-input-filled base w-full pr-10 font-mono',
-					error && 'border-red-500 bg-red-500/20 text-red-500 ring-red-500 focus:ring-1'
+					'text-input-filled base base w-full pr-10 font-mono',
+					error && 'border-red-500 bg-red-500/20 text-red-500 ring-red-500 focus:ring-1',
+					!showSensitive ? 'hide' : ''
 				)}
-				style={!showSensitive ? 'color: transparent' : ''}
 				bind:value={
 					() => value,
 					(v) => {
