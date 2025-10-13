@@ -10,12 +10,21 @@
 		oninput?: () => void;
 		textarea?: boolean;
 		disabled?: boolean;
+		growable?: boolean;
 	}
 
-	let { name, value = $bindable(''), error, oninput, textarea, disabled }: Props = $props();
+	let {
+		name,
+		value = $bindable(''),
+		error,
+		oninput,
+		textarea,
+		disabled,
+		growable
+	}: Props = $props();
 	let showSensitive = $state(false);
-	let textareaElement = $state<HTMLTextAreaElement>();
-	let maskedTextarea = $state<HTMLTextAreaElement>();
+	let textareaElement = $state<HTMLElement>();
+	let maskedTextarea = $state<HTMLElement>();
 
 	function getMaskedValue(text: string): string {
 		return text.replace(/[^\s]/g, '•');
@@ -39,44 +48,76 @@
 
 <div class="relative flex grow items-center">
 	{#if textarea}
-		<div class="relative flex w-full flex-col">
-			<textarea
-				bind:this={textareaElement}
-				data-1p-ignore
-				id={name}
-				{name}
-				{disabled}
-				class={twMerge(
-					'text-input-filled base base w-full pr-10 font-mono',
-					error && 'border-red-500 bg-red-500/20 text-red-500 ring-red-500 focus:ring-1',
-					!showSensitive ? 'hide' : ''
-				)}
-				bind:value={
-					() => value,
-					(v) => {
-						value = v;
-						oninput?.();
+		<div class="relative flex min-h-[60px] w-full flex-col leading-5">
+			{#if growable}
+				<input type="text" {name} {disabled} {value} hidden />
+				<div
+					bind:this={textareaElement}
+					data-1p-ignore
+					id={name}
+					contenteditable
+					class={twMerge(
+						'text-input-filled base min-h-full w-full flex-1 pr-10 font-mono',
+						error && 'border-red-500 bg-red-500/20 text-red-500 ring-red-500 focus:ring-1',
+						growable && 'resize-y',
+						disabled && 'opacity-50',
+						!showSensitive ? 'hide' : ''
+					)}
+					onscroll={(ev) => {
+						if (!showSensitive && maskedTextarea) {
+							maskedTextarea.scrollTop = ev.currentTarget.scrollTop;
+							maskedTextarea.scrollLeft = ev.currentTarget.scrollLeft;
+						}
+					}}
+					bind:innerText={
+						() => value,
+						(v) => {
+							value = v;
+							oninput?.();
+						}
 					}
-				}
-				onscroll={(ev) => {
-					if (!showSensitive && maskedTextarea) {
-						maskedTextarea.scrollTop = ev.currentTarget.scrollTop;
-						maskedTextarea.scrollLeft = ev.currentTarget.scrollLeft;
+				></div>
+			{:else}
+				<textarea
+					bind:this={textareaElement}
+					data-1p-ignore
+					id={name}
+					{name}
+					{disabled}
+					contenteditable={growable ? true : undefined}
+					class={twMerge(
+						'text-input-filled base min-h-full w-full flex-1 pr-10 font-mono',
+						error && 'border-red-500 bg-red-500/20 text-red-500 ring-red-500 focus:ring-1',
+						!showSensitive ? 'hide' : ''
+					)}
+					onscroll={(ev) => {
+						if (!showSensitive && maskedTextarea) {
+							maskedTextarea.scrollTop = ev.currentTarget.scrollTop;
+							maskedTextarea.scrollLeft = ev.currentTarget.scrollLeft;
+						}
+					}}
+					bind:value={
+						() => value,
+						(v) => {
+							value = v;
+							oninput?.();
+						}
 					}
-				}}
-			></textarea>
+				></textarea>
+			{/if}
 
 			{#if !showSensitive}
 				<!-- Masked overlay textarea -->
-				<textarea
+				<div
 					bind:this={maskedTextarea}
-					readonly
 					tabindex="-1"
 					class={twMerge(
 						'text-input-filled layer-1 pointer-events-none absolute inset-0 w-full bg-transparent pr-10 font-mono'
 					)}
-					value={getMaskedValue(value)}
-				></textarea>
+					{@attach (node) => {
+						node.innerText = getMaskedValue(value);
+					}}
+				></div>
 			{/if}
 		</div>
 	{:else}
