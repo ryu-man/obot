@@ -39,7 +39,6 @@
 			.filter((entry) => entry[0] !== 'query')
 			.reduce(
 				(acc, [key, value]) => {
-					console.log(key, value);
 					acc[key] = value.split(',');
 					return acc;
 				},
