@@ -112,12 +112,11 @@
 					bind:this={maskedTextarea}
 					tabindex="-1"
 					class={twMerge(
-						'text-input-filled layer-1 pointer-events-none absolute inset-0 w-full bg-transparent pr-10 font-mono'
+						'text-input-filled layer-1 pointer-events-none absolute inset-0 w-full overflow-auto bg-transparent pr-10 font-mono break-words whitespace-pre-wrap'
 					)}
-					{@attach (node) => {
-						node.innerText = getMaskedValue(value);
-					}}
-				></div>
+				>
+					{getMaskedValue(value)}
+				</div>
 			{/if}
 		</div>
 	{:else}
