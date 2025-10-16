@@ -55,7 +55,7 @@
 					bind:this={textareaElement}
 					data-1p-ignore
 					id={name}
-					contenteditable
+					contenteditable="plaintext-only"
 					class={twMerge(
 						'text-input-filled base min-h-full w-full flex-1 pr-10 font-mono',
 						error && 'border-red-500 bg-red-500/20 text-red-500 ring-red-500 focus:ring-1',
