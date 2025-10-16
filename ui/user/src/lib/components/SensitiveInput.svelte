@@ -27,7 +27,7 @@
 	let maskedTextarea = $state<HTMLElement>();
 
 	function getMaskedValue(text: string): string {
-		return text.replace(/[^\s]/g, '•');
+		return text.replace(/[^\s]/g, '•').replace(/\n/g, '<br>');
 	}
 
 	function handleInput(ev: Event) {
@@ -115,7 +115,7 @@
 						'text-input-filled layer-1 pointer-events-none absolute inset-0 w-full overflow-auto bg-transparent pr-10 font-mono break-words whitespace-pre-wrap'
 					)}
 				>
-					{getMaskedValue(value)}
+					{@html getMaskedValue(value)}
 				</div>
 			{/if}
 		</div>
