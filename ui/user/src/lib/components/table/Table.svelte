@@ -105,7 +105,6 @@
 	let headerScrollRef: HTMLDivElement | null = $state(null);
 	let bodyScrollRef: HTMLDivElement | null = $state(null);
 	let columnWidths = $state<number[]>([]);
-	let parentContainerWidth = $state<number>(0);
 
 	let tableData = $derived.by(() => {
 		let updatedTableData = data;
@@ -219,10 +218,7 @@
 			return naturalWidths;
 		}
 
-		const minWidths = naturalWidths.map((width, index) => {
-			return Math.max(width * 0.3, 100);
-		});
-
+		const minWidths = naturalWidths.map((width) => Math.max(width * 0.3, 100));
 		const totalMinWidth = minWidths.reduce((sum, width) => sum + width, 0);
 
 		if (totalMinWidth > availableWidth) {
