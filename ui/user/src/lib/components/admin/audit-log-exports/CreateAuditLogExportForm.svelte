@@ -332,6 +332,7 @@
 								bind:selected={
 									() => form.filters.user_id ?? '', (v) => (form.filters.user_id = v ?? '')
 								}
+								disabled={isViewMode}
 								multiple
 							/>
 
@@ -352,6 +353,7 @@
 								bind:selected={
 									() => form.filters.mcp_id ?? '', (v) => (form.filters.mcp_id = v ?? '')
 								}
+								disabled={isViewMode}
 								multiple
 							/>
 							{#if (isViewMode && form.filters.mcp_id) || !isViewMode}
@@ -375,6 +377,7 @@
 									() => form.filters.mcp_server_display_name ?? '',
 									(v) => (form.filters.mcp_server_display_name = v ?? '')
 								}
+								disabled={isViewMode}
 								multiple
 							/>
 							{#if (isViewMode && form.filters.mcp_server_display_name) || !isViewMode}
@@ -394,6 +397,7 @@
 								bind:selected={
 									() => form.filters.call_type ?? '', (v) => (form.filters.call_type = v ?? '')
 								}
+								disabled={isViewMode}
 								multiple
 							/>
 							{#if (isViewMode && form.filters.call_type) || !isViewMode}
@@ -413,6 +417,7 @@
 								bind:selected={
 									() => form.filters.client_name ?? '', (v) => (form.filters.client_name = v ?? '')
 								}
+								disabled={isViewMode}
 								multiple
 							/>
 							{#if (isViewMode && form.filters.client_name) || !isViewMode}
@@ -434,6 +439,7 @@
 									() => form.filters.response_status ?? '',
 									(v) => (form.filters.response_status = v ?? '')
 								}
+								disabled={isViewMode}
 								multiple
 							/>
 							{#if (isViewMode && form.filters.response_status) || !isViewMode}
@@ -453,6 +459,7 @@
 								bind:selected={
 									() => form.filters.session_id ?? '', (v) => (form.filters.session_id = v ?? '')
 								}
+								disabled={isViewMode}
 								multiple
 							/>
 							{#if (isViewMode && form.filters.session_id) || !isViewMode}
@@ -472,6 +479,7 @@
 								bind:selected={
 									() => form.filters.client_ip ?? '', (v) => (form.filters.client_ip = v ?? '')
 								}
+								disabled={isViewMode}
 								multiple
 							/>
 							{#if (isViewMode && form.filters.client_ip) || !isViewMode}
@@ -492,6 +500,7 @@
 									() => form.filters.call_identifier ?? '',
 									(v) => (form.filters.call_identifier = v ?? '')
 								}
+								disabled={isViewMode}
 								multiple
 							/>
 							{#if (isViewMode && form.filters.call_identifier) || !isViewMode}
@@ -512,6 +521,7 @@
 									() => form.filters.client_version ?? '',
 									(v) => (form.filters.client_version = v ?? '')
 								}
+								disabled={isViewMode}
 								multiple
 							/>
 							{#if (isViewMode && form.filters.client_version) || !isViewMode}
@@ -536,6 +546,7 @@
 									() => form.filters.mcp_server_catalog_entry_name ?? '',
 									(v) => (form.filters.mcp_server_catalog_entry_name = v ?? '')
 								}
+								disabled={isViewMode}
 								multiple
 							/>
 							{#if (isViewMode && form.filters.mcp_server_catalog_entry_name) || !isViewMode}
