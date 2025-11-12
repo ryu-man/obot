@@ -89,31 +89,9 @@ func (s *uiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.ServeFileFS(w, r, embedded, userPath)
 	} else if _, err := fs.Stat(embedded, adminPath); err == nil {
 		http.ServeFileFS(w, r, embedded, adminPath)
-	} else if strings.HasPrefix(r.URL.Path, "/admin/") && !isStaticAsset(r.URL.Path) {
-		// All /admin/* routes should serve the admin.html for SPA routing (after checking for static files)
-		http.ServeFileFS(w, r, embedded, "user/build/admin.html")
 	} else if strings.HasPrefix(r.URL.Path, "/legacy-admin") {
 		http.ServeFileFS(w, r, embedded, "admin/build/client/index.html")
 	} else {
 		http.ServeFileFS(w, r, embedded, "user/build/fallback.html")
 	}
-}
-
-func isStaticAsset(path string) bool {
-	// Check if the path has a file extension that indicates a static asset
-	return strings.HasSuffix(path, ".js") ||
-		strings.HasSuffix(path, ".css") ||
-		strings.HasSuffix(path, ".map") ||
-		strings.HasSuffix(path, ".json") ||
-		strings.HasSuffix(path, ".woff") ||
-		strings.HasSuffix(path, ".woff2") ||
-		strings.HasSuffix(path, ".ttf") ||
-		strings.HasSuffix(path, ".eot") ||
-		strings.HasSuffix(path, ".svg") ||
-		strings.HasSuffix(path, ".png") ||
-		strings.HasSuffix(path, ".jpg") ||
-		strings.HasSuffix(path, ".jpeg") ||
-		strings.HasSuffix(path, ".gif") ||
-		strings.HasSuffix(path, ".ico") ||
-		strings.HasSuffix(path, ".webp")
 }
