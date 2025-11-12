@@ -79,13 +79,41 @@ func (s *uiServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/mcp-publisher", http.StatusFound)
 	} else if r.URL.Path == "/mcp-publisher" {
 		http.ServeFileFS(w, r, embedded, "user/build/mcp-publisher.html")
+	} else if strings.HasSuffix(r.URL.Path, "/") {
+		// Paths with trailing slashes should redirect to without slash to avoid directory listings
+		http.Redirect(w, r, strings.TrimSuffix(r.URL.Path, "/"), http.StatusFound)
+	} else if _, err := fs.Stat(embedded, userPath+".html"); err == nil {
+		// Try .html version first (for SvelteKit prerendered pages)
+		http.ServeFileFS(w, r, embedded, userPath+".html")
 	} else if _, err := fs.Stat(embedded, userPath); err == nil {
 		http.ServeFileFS(w, r, embedded, userPath)
 	} else if _, err := fs.Stat(embedded, adminPath); err == nil {
 		http.ServeFileFS(w, r, embedded, adminPath)
+	} else if strings.HasPrefix(r.URL.Path, "/admin/") && !isStaticAsset(r.URL.Path) {
+		// All /admin/* routes should serve the admin.html for SPA routing (after checking for static files)
+		http.ServeFileFS(w, r, embedded, "user/build/admin.html")
 	} else if strings.HasPrefix(r.URL.Path, "/legacy-admin") {
 		http.ServeFileFS(w, r, embedded, "admin/build/client/index.html")
 	} else {
 		http.ServeFileFS(w, r, embedded, "user/build/fallback.html")
 	}
+}
+
+func isStaticAsset(path string) bool {
+	// Check if the path has a file extension that indicates a static asset
+	return strings.HasSuffix(path, ".js") ||
+		strings.HasSuffix(path, ".css") ||
+		strings.HasSuffix(path, ".map") ||
+		strings.HasSuffix(path, ".json") ||
+		strings.HasSuffix(path, ".woff") ||
+		strings.HasSuffix(path, ".woff2") ||
+		strings.HasSuffix(path, ".ttf") ||
+		strings.HasSuffix(path, ".eot") ||
+		strings.HasSuffix(path, ".svg") ||
+		strings.HasSuffix(path, ".png") ||
+		strings.HasSuffix(path, ".jpg") ||
+		strings.HasSuffix(path, ".jpeg") ||
+		strings.HasSuffix(path, ".gif") ||
+		strings.HasSuffix(path, ".ico") ||
+		strings.HasSuffix(path, ".webp")
 }
