@@ -250,7 +250,7 @@
 		}
 	}
 
-	async function handleDeleteProvider() {
+	async function handleDeleteCredentials() {
 		try {
 			await AdminService.deleteStorageCredentials();
 
@@ -579,11 +579,11 @@
 						<button
 							type="button"
 							class="button-destructive"
-							onclick={handleDeleteProvider}
+							onclick={handleDeleteCredentials}
 							disabled={testing || saving}
 						>
 							<Trash class="size-4" />
-							Delete Provider
+							Delete Credentials
 						</button>
 					{:else}
 						<button
