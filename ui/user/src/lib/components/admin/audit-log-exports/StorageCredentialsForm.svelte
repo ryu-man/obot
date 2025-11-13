@@ -268,7 +268,7 @@
 					<label class="text-sm font-medium" for="storage-provider">Provider</label>
 					<div>
 						<Dropdown
-							class="w-full md:w-1/3"
+							class="w-full whitespace-nowrap md:w-sm"
 							values={{
 								s3: 'Amazon S3',
 								gcs: 'Google Cloud Storage',
