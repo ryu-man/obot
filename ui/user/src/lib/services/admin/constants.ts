@@ -15,8 +15,7 @@ export const userRoleOptions = [
 	},
 	{
 		id: Role.POWERUSER_PLUS,
-		label:
-			'Power base role must be one of: Owner (8), Admin (16), PowerUserPlus (64), or PowerUser (128) Plus',
+		label: 'Power User Plus',
 		description:
 			'In addition to power user features, users can share their custom MCP servers through their own Access Control Rules.'
 	},
