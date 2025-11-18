@@ -24,7 +24,8 @@
 		SidebarClose,
 		SidebarOpen,
 		UserCog,
-		Users
+		Users,
+		Group as GroupIcon
 	} from 'lucide-svelte';
 	import { tooltip } from '$lib/actions/tooltip.svelte';
 	import { twMerge } from 'tailwind-merge';
@@ -195,6 +196,14 @@
 								href: '/admin/users',
 								icon: Users,
 								label: 'Users',
+								collapsible: false,
+								disabled: !version.current.authEnabled
+							},
+							{
+								id: 'groups',
+								href: '/admin/groups',
+								icon: GroupIcon,
+								label: 'Groups',
 								collapsible: false,
 								disabled: !version.current.authEnabled
 							},
