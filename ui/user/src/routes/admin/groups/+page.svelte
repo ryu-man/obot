@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { debounce } from 'es-toolkit';
 	import { fade } from 'svelte/transition';
-	import { format } from 'date-fns';
-
 	import { page } from '$app/state';
 	import { replaceState } from '$app/navigation';
 	import Confirm from '$lib/components/Confirm.svelte';
