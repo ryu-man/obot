@@ -43,6 +43,9 @@ import type {
 	ServerK8sSettings,
 	MCPCompositeDeletionDependency,
 	AppPreferences
+	MCPCompositeDeletionDependency
+	GroupRoleAssignment,
+	GroupRoleAssignmentList
 } from './types';
 import { MCPCompositeDeletionDependencyError } from './types';
 
@@ -1144,4 +1147,53 @@ export async function updateAppPreferences(
 	opts?: { fetch?: Fetcher }
 ) {
 	return (await doPut('/app-preferences', preferences, opts)) as AppPreferences;
+// Group Role Assignments
+export async function listGroupRoleAssignments(opts?: {
+	fetch?: Fetcher;
+}): Promise<GroupRoleAssignment[]> {
+	const response = (await doGet('/group-role-assignments', opts)) as GroupRoleAssignmentList;
+	return response.items ?? [];
+}
+
+export async function getGroupRoleAssignment(
+	groupName: string,
+	opts?: { fetch?: Fetcher }
+): Promise<GroupRoleAssignment> {
+	const response = (await doGet(
+		`/group-role-assignments/${encodeURIComponent(groupName)}`,
+		opts
+	)) as GroupRoleAssignment;
+	return response;
+}
+
+export async function createGroupRoleAssignment(
+	assignment: GroupRoleAssignment,
+	opts?: { fetch?: Fetcher }
+): Promise<GroupRoleAssignment> {
+	const response = (await doPost(
+		'/group-role-assignments',
+		assignment,
+		opts
+	)) as GroupRoleAssignment;
+	return response;
+}
+
+export async function updateGroupRoleAssignment(
+	groupName: string,
+	assignment: GroupRoleAssignment,
+	opts?: { fetch?: Fetcher }
+): Promise<GroupRoleAssignment> {
+	const response = (await doPut(
+		`/group-role-assignments/${encodeURIComponent(groupName)}`,
+		assignment,
+		opts
+	)) as GroupRoleAssignment;
+	return response;
+}
+
+export async function deleteGroupRoleAssignment(
+	groupName: string,
+	opts?: { signal?: AbortSignal | undefined }
+): Promise<void> {
+	await doDelete(`/group-role-assignments/${encodeURIComponent(groupName)}`, opts);
 }
