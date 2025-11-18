@@ -184,17 +184,6 @@
 		</div>
 
 		<div class="flex flex-col gap-2 text-sm font-light">
-			{#if !profile.current.groups.includes(Group.OWNER)}
-				<div class="notification-info mb-2 p-3 text-sm font-light">
-					<div class="flex items-center gap-3">
-						<Info class="size-6" />
-						<div>
-							As an Admin, you can assign Admin, Power User+, and Power User roles. Only Owners can
-							assign the Owner role or Auditor flag to groups.
-						</div>
-					</div>
-				</div>
-			{/if}
 			{#each roleOptions as role (role.id)}
 				{@render roleUi(role)}
 			{/each}
