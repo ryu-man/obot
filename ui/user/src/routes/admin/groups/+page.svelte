@@ -53,8 +53,6 @@
 				assignment,
 				role: role ? getUserRoleLabel(role).split(',') : ['No Role'],
 				roleId: role & ~Role.AUDITOR,
-				auditor: role & Role.AUDITOR ? true : false,
-				description: assignment?.description || ''
 			};
 		})
 	);
@@ -149,8 +147,6 @@
 							<div class="flex items-center gap-1">
 								{d.role}
 							</div>
-						{:else if property === 'description'}
-							<span class="text-gray-500">{d.description || '-'}</span>
 						{:else}
 							{d[property as keyof typeof d]}
 						{/if}
