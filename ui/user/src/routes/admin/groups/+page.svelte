@@ -41,28 +41,31 @@
 			{} as Record<string, GroupRoleAssignment>
 		)
 	);
-	let query = $state('');
+	let query = $state(page.url.searchParams.get('query') || '');
 	let urlFilters = $derived(getTableUrlParamsFilters());
 	let initSort = $derived(getTableUrlParamsSort());
 
-	const tableData = $derived(
-		groups
-			.map((group) => {
-				const assignment = groupRoleMap[group.name];
-				const role = assignment?.role ?? 0;
-				return {
-					...group,
-					assignment,
-					role: role ? getUserRoleLabel(role).split(',') : ['No Role'],
-					roleId: role & ~Role.AUDITOR,
-					auditor: role & Role.AUDITOR ? true : false,
-					description: assignment?.description || ''
-				};
-			})
-			.filter((group) => group.name.toLowerCase().includes(query.toLowerCase()))
+	
+	const preparedGroups = $derived(
+		groups.map((group) => {
+			const assignment = groupRoleMap[group.name];
+			const role = assignment?.role ?? 0;
+			return {
+				...group,
+				assignment,
+				role: role ? getUserRoleLabel(role).split(',') : ['No Role'],
+				roleId: role & ~Role.AUDITOR,
+				auditor: role & Role.AUDITOR ? true : false,
+				description: assignment?.description || ''
+			};
+		})
+	);
+	
+	const filteredGroups = $derived(
+		preparedGroups.filter((group) => group.name.toLowerCase().includes(query.toLowerCase()))
 	);
 
-	type TableItem = (typeof tableData)[0];
+	type TableItem = (typeof filteredGroups)[0];
 
 	let updatingRole = $state<TableItem>();
 	let deletingGroup = $state<TableItem>();
@@ -132,7 +135,7 @@
 					placeholder="Search by group name..."
 				/>
 				<Table
-					data={tableData}
+					data={filteredGroups}
 					fields={['name', 'role']}
 					filterable={['name', 'role']}
 					filters={urlFilters}
