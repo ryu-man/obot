@@ -39,7 +39,7 @@
 	let draftDescription = $state('');
 
 	const canAssignOwner = $derived(profile.current.groups.includes(Group.OWNER));
-	const canAssignAdmin = $derived(canAssignOwner);
+	const canAssignAdmin = $derived(canAssignOwner || profile.current.groups.includes(Group.ADMIN));
 
 	// Owners can assign Owner role to groups (under review per requirements)
 	// Admins can assign Admin, PowerUser+, PowerUser roles (not Owner or Auditor)
