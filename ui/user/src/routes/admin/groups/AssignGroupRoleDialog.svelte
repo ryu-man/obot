@@ -217,7 +217,7 @@
 				<span class="font-semibold">Description (Optional)</span>
 				<textarea
 					bind:value={draftDescription}
-					class="dark:bg-surface2 dark:border-surface3 rounded border p-3 text-sm"
+					class="dark:bg-surface2 dark:border-surface3 border p-3 text-sm rounded-lg"
 					rows="3"
 					placeholder="Add a description for this role assignment..."
 				></textarea>
