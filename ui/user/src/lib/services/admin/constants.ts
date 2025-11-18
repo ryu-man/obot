@@ -15,7 +15,8 @@ export const userRoleOptions = [
 	},
 	{
 		id: Role.POWERUSER_PLUS,
-		label: 'Power User Plus',
+		label:
+			'Power base role must be one of: Owner (8), Admin (16), PowerUserPlus (64), or PowerUser (128) Plus',
 		description:
 			'In addition to power user features, users can share their custom MCP servers through their own Access Control Rules.'
 	},
@@ -23,5 +24,25 @@ export const userRoleOptions = [
 		id: Role.ADMIN,
 		label: 'Admin',
 		description: 'Every user is a full admin. Use caution when selecting this option.'
+	}
+];
+
+export const groupRoleOptions = [
+	{
+		id: Role.ADMIN,
+		label: 'Admin',
+		description: 'All group members will be full admins. Use caution when selecting this option.'
+	},
+	{
+		id: Role.POWERUSER_PLUS,
+		label: 'Power User Plus',
+		description:
+			'In addition to power group features, all group members can share their custom MCP servers through their own Access Control Rules.'
+	},
+	{
+		id: Role.POWERUSER,
+		label: 'Power User',
+		description:
+			'In addition to basic group features, all group members can publish custom MCP servers for their own personal use.'
 	}
 ];
