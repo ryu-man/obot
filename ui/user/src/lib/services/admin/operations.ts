@@ -40,7 +40,7 @@ import type {
 	ScheduledAuditLogExportInput,
 	K8sSettings,
 	ServerK8sSettings,
-	MCPCompositeDeletionDependency
+	MCPCompositeDeletionDependency,
 	GroupRoleAssignment,
 	GroupRoleAssignmentList
 } from './types';
