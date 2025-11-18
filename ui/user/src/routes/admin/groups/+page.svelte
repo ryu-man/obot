@@ -133,16 +133,13 @@
 				/>
 				<Table
 					data={tableData}
-					fields={['name', 'role', 'createdAt']}
+					fields={['name', 'role']}
 					filterable={['name', 'role']}
 					filters={urlFilters}
 					onFilter={setFilterUrlParams}
 					onClearAllFilters={clearUrlParams}
-					sortable={['name', 'role', 'createdAt']}
-					headers={[
-						{ property: 'name', title: 'Name' },
-						{ property: 'createdAt', title: 'Created At' }
-					]}
+					sortable={['name', 'role']}
+					headers={[{ property: 'name', title: 'Name' }]}
 					{initSort}
 					onSort={setSortUrlParams}
 				>
@@ -153,12 +150,6 @@
 							</div>
 						{:else if property === 'description'}
 							<span class="text-gray-500">{d.description || '-'}</span>
-						{:else if property === 'createdAt'}
-							<span>
-								{d.assignment?.createdAt
-									? format(d.assignment.createdAt, 'MMM dd yyyy hh:mm:ss')
-									: '-'}
-							</span>
 						{:else}
 							{d[property as keyof typeof d]}
 						{/if}
