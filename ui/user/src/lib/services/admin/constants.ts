@@ -42,6 +42,6 @@ export const groupRoleOptions = [
 		id: Role.POWERUSER,
 		label: 'Power User',
 		description:
-			'In addition to basic group features, all group members can publish custom MCP servers for their own personal use.'
+			'All group members can publish custom MCP servers for their own personal use.'
 	}
 ];
