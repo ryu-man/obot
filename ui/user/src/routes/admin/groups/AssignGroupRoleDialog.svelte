@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Info, LoaderCircle, Group as GroupIcon, X } from 'lucide-svelte';
+	import { LoaderCircle, Group as GroupIcon, X } from 'lucide-svelte';
 	import { twMerge } from 'tailwind-merge';
 
 	import { groupRoleOptions } from '$lib/services/admin/constants.js';
