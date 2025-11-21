@@ -36,7 +36,7 @@ export const groupRoleOptions = [
 		id: Role.POWERUSER_PLUS,
 		label: 'Power User Plus',
 		description:
-			'In addition to power group features, all group members can share their custom MCP servers through their own Access Control Rules.'
+			'In addition to Power User features, all group members can share their custom MCP servers through their own Access Control Rules.'
 	},
 	{
 		id: Role.POWERUSER,
