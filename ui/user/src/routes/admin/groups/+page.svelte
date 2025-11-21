@@ -43,7 +43,6 @@
 	let urlFilters = $derived(getTableUrlParamsFilters());
 	let initSort = $derived(getTableUrlParamsSort());
 
-	
 	const preparedGroups = $derived(
 		groups.map((group) => {
 			const assignment = groupRoleMap[group.name];
@@ -52,11 +51,11 @@
 				...group,
 				assignment,
 				role: role ? getUserRoleLabel(role).split(',') : ['No Role'],
-				roleId: role & ~Role.AUDITOR,
+				roleId: role & ~Role.AUDITOR
 			};
 		})
 	);
-	
+
 	const filteredGroups = $derived(
 		preparedGroups.filter((group) => group.name.toLowerCase().includes(query.toLowerCase()))
 	);
