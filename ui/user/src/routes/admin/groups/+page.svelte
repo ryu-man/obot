@@ -2,7 +2,6 @@
 	import { debounce } from 'es-toolkit';
 	import { fade } from 'svelte/transition';
 	import { page } from '$app/state';
-	import { replaceState } from '$app/navigation';
 	import Confirm from '$lib/components/Confirm.svelte';
 	import DotDotDot from '$lib/components/DotDotDot.svelte';
 	import Layout from '$lib/components/Layout.svelte';
@@ -17,7 +16,8 @@
 		getTableUrlParamsFilters,
 		getTableUrlParamsSort,
 		setSortUrlParams,
-		setFilterUrlParams
+		setFilterUrlParams,
+		replaceState
 	} from '$lib/url.js';
 	import { getUserRoleLabel } from '$lib/utils';
 
