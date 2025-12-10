@@ -43,7 +43,6 @@ import type {
 	ServerK8sSettings,
 	MCPCompositeDeletionDependency,
 	AppPreferences,
-	MCPCompositeDeletionDependency,
 	GroupRoleAssignment,
 	GroupRoleAssignmentList
 } from './types';
