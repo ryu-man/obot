@@ -219,31 +219,33 @@
 	}}
 />
 
-<ConfirmOwnerRoleDialog
-	bind:groupAssignment={confirmOwnerGroupAssignment}
-	{loading}
-	onsuccess={(groupAssignment) => {
-		// Check if auditor is also selected
-		if ((groupAssignment.assignment.role & Role.AUDITOR) !== 0) {
-			confirmAuditorAdditionToGroup = groupAssignment;
-			confirmOwnerGroupAssignment = undefined;
-			return;
-		}
-
-		updateGroupRole(groupAssignment);
-		confirmOwnerGroupAssignment = undefined;
-	}}
-	oncancel={() => (confirmOwnerGroupAssignment = undefined)}
-/>
-
 <ConfirmAuditorRoleDialog
 	bind:groupAssignment={confirmAuditorAdditionToGroup}
 	{loading}
 	onsuccess={(groupAssignment) => {
+		// Check if owner is also selected
+		if ((groupAssignment.assignment.role & Role.OWNER) !== 0) {
+			confirmOwnerGroupAssignment = groupAssignment;
+			confirmAuditorAdditionToGroup = undefined;
+			return;
+		}
+
 		updateGroupRole(groupAssignment);
 		confirmAuditorAdditionToGroup = undefined;
+		updatingRole = undefined;
 	}}
 	oncancel={() => (confirmAuditorAdditionToGroup = undefined)}
+/>
+
+<ConfirmOwnerRoleDialog
+	bind:groupAssignment={confirmOwnerGroupAssignment}
+	{loading}
+	onsuccess={(groupAssignment) => {
+		updateGroupRole(groupAssignment);
+		confirmOwnerGroupAssignment = undefined;
+		confirmAuditorAdditionToGroup = undefined;
+	}}
+	oncancel={() => (confirmOwnerGroupAssignment = undefined)}
 />
 
 <svelte:head>
