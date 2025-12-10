@@ -51,7 +51,8 @@
 				...group,
 				assignment,
 				role: role ? getUserRoleLabel(role).split(',') : ['No Role'],
-				roleId: role & ~Role.AUDITOR
+				roleId: role & ~Role.AUDITOR,
+				description: assignment?.description || ''
 			};
 		})
 	);
@@ -129,55 +130,61 @@
 					onChange={updateQuery}
 					placeholder="Search by group name..."
 				/>
-				<Table
-					data={filteredGroups}
-					fields={['name', 'role']}
-					filterable={['name', 'role']}
-					filters={urlFilters}
-					onFilter={setFilterUrlParams}
-					onClearAllFilters={clearUrlParams}
-					sortable={['name', 'role']}
-					headers={[{ property: 'name', title: 'Name' }]}
-					{initSort}
-					onSort={setSortUrlParams}
-				>
-					{#snippet onRenderColumn(property, d)}
-						{#if property === 'role'}
-							<div class="flex items-center gap-1">
-								{d.role}
-							</div>
-						{:else}
-							{d[property as keyof typeof d]}
-						{/if}
-					{/snippet}
+				<div class="groups-table">
+					<Table
+						data={filteredGroups}
+						fields={['name', 'role', 'description']}
+						filterable={['name', 'role', 'description']}
+						filters={urlFilters}
+						onFilter={setFilterUrlParams}
+						onClearAllFilters={clearUrlParams}
+						sortable={['name', 'role']}
+						headers={[{ property: 'name', title: 'Name' }]}
+						{initSort}
+						onSort={setSortUrlParams}
+					>
+						{#snippet onRenderColumn(property, d)}
+							{#if property === 'role'}
+								<div class="flex items-center gap-1">
+									{d.role}
+								</div>
+							{:else if property === 'description'}
+								<div class="absolute inset-0">
+									<p class="max-w-full truncate opacity-50">{d.description || '-'}</p>
+								</div>
+							{:else}
+								{d[property as keyof typeof d]}
+							{/if}
+						{/snippet}
 
-					{#snippet actions(d)}
-						{#if !isAdminReadonly}
-							<DotDotDot>
-								<div class="default-dialog flex min-w-max flex-col p-2">
-									<button
-										class="menu-button"
-										disabled={!profile.current.groups.includes(Group.OWNER) &&
-											d.roleId === Role.OWNER}
-										onclick={() => (updatingRole = d)}
-									>
-										{d.assignment ? 'Update Role' : 'Assign Role'}
-									</button>
-									{#if d.assignment}
+						{#snippet actions(d)}
+							{#if !isAdminReadonly}
+								<DotDotDot>
+									<div class="default-dialog flex min-w-max flex-col p-2">
 										<button
-											class="menu-button text-red-500"
+											class="menu-button"
 											disabled={!profile.current.groups.includes(Group.OWNER) &&
 												d.roleId === Role.OWNER}
-											onclick={() => (deletingGroup = d)}
+											onclick={() => (updatingRole = d)}
 										>
-											Remove Role Assignment
+											{d.assignment ? 'Update Role' : 'Assign Role'}
 										</button>
-									{/if}
-								</div>
-							</DotDotDot>
-						{/if}
-					{/snippet}
-				</Table>
+										{#if d.assignment}
+											<button
+												class="menu-button text-red-500"
+												disabled={!profile.current.groups.includes(Group.OWNER) &&
+													d.roleId === Role.OWNER}
+												onclick={() => (deletingGroup = d)}
+											>
+												Remove Role Assignment
+											</button>
+										{/if}
+									</div>
+								</DotDotDot>
+							{/if}
+						{/snippet}
+					</Table>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -251,3 +258,9 @@
 <svelte:head>
 	<title>Obot | Groups</title>
 </svelte:head>
+
+<style>
+	.groups-table :global(td) {
+		position: relative;
+	}
+</style>
