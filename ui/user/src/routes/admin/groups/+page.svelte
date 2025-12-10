@@ -149,7 +149,7 @@
 									{d.role}
 								</div>
 							{:else if property === 'description'}
-								<div class="absolute inset-0 [padding:inherit]">
+								<div class="absolute inset-0 [padding:inherit] flex items-center">
 									<p class="max-w-full truncate opacity-50">{d.description || '-'}</p>
 								</div>
 							{:else}
