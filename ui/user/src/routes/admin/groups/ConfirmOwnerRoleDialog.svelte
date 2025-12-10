@@ -43,8 +43,7 @@
 				</ul>
 			</div>
 			<p class="text-left text-sm">
-				Please ensure you understand the implications before
-				proceeding.
+				Please ensure you understand the implications before proceeding.
 			</p>
 			<p class="text-left font-semibold">
 				Are you sure you want to assign the Owner role to this group?
