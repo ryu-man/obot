@@ -29,6 +29,10 @@
 	let { data } = $props();
 	let { groups, groupRoleAssignments } = $derived(data);
 
+	function getRoleId(role: number): number {
+		return role & ~Role.AUDITOR;
+	}
+
 	// Create a map for quick role lookups
 	const groupRoleMap = $derived(
 		groupRoleAssignments.reduce(
@@ -51,7 +55,7 @@
 				...group,
 				assignment,
 				role: role ? getUserRoleLabel(role).split(',') : ['No Role'],
-				roleId: role & ~Role.AUDITOR,
+				roleId: getRoleId(role),
 				description: assignment?.description || ''
 			};
 		})
@@ -149,7 +153,7 @@
 									{d.role}
 								</div>
 							{:else if property === 'description'}
-								<div class="absolute inset-0 [padding:inherit] flex items-center">
+								<div class="absolute inset-0 flex items-center [padding:inherit]">
 									<p class="max-w-full truncate opacity-50">{d.description || '-'}</p>
 								</div>
 							{:else}
@@ -230,8 +234,11 @@
 	bind:groupAssignment={confirmAuditorAdditionToGroup}
 	{loading}
 	onsuccess={(groupAssignment) => {
-		// Check if owner is also selected
-		if ((groupAssignment.assignment.role & Role.OWNER) !== 0) {
+		// Check if also changing to owner role
+		const originalRoleId = getRoleId(updatingRole?.assignment?.role || 0);
+		const newRoleId = getRoleId(groupAssignment.assignment.role);
+
+		if (newRoleId === Role.OWNER && originalRoleId !== Role.OWNER) {
 			confirmOwnerGroupAssignment = groupAssignment;
 			confirmAuditorAdditionToGroup = undefined;
 			return;
