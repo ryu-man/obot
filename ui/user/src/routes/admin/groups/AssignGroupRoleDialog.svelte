@@ -106,21 +106,17 @@
 			}
 		};
 
-		// Check for Owner role assignment first
-		if (draftRoleId === Role.OWNER) {
-			dialog?.close();
-			onOwnerConfirm(result);
-			groupAssignment = undefined;
-			return;
-		}
-
-		// If group has no auditor flag but user is adding it
+		// Check for Auditor role addition first
 		const hadAuditor =
 			groupAssignment.assignment.role && (groupAssignment.assignment.role & Role.AUDITOR) !== 0;
 		if (!hadAuditor && draftAuditor && draftRoleId !== 0) {
-			dialog?.close();
 			onAuditorConfirm(result);
-			groupAssignment = undefined;
+			return;
+		}
+
+		// Check for Owner role assignment
+		if (draftRoleId === Role.OWNER) {
+			onOwnerConfirm(result);
 			return;
 		}
 
