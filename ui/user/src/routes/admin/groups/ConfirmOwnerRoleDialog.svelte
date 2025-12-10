@@ -29,7 +29,7 @@
 
 	{#snippet note()}
 		<div class="mt-4 mb-8 flex flex-col gap-4">
-			<p class="text-left font-semibold text-orange-600 dark:text-orange-400">
+			<p class="text-left text-yellow-500">
 				Warning: Assigning the Owner role to a group grants extensive privileges.
 			</p>
 			<div class="text-left text-sm">
@@ -43,7 +43,7 @@
 				</ul>
 			</div>
 			<p class="text-left text-sm">
-				This feature is currently under review. Please ensure you understand the implications before
+				Please ensure you understand the implications before
 				proceeding.
 			</p>
 			<p class="text-left font-semibold">
