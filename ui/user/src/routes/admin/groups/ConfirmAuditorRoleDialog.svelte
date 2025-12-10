@@ -26,13 +26,13 @@
 	{oncancel}
 >
 	{#snippet title()}
-		<div class="flex items-center justify-center gap-2">
+		<div class="flex items-center gap-2">
 			<h3 class="text-xl font-semibold">Confirm Auditor Role for Group</h3>
 		</div>
 	{/snippet}
 	{#snippet note()}
-		<div class="mt-4 mb-8 flex flex-col gap-4">
-			<p class="text-left">
+		<div class="mt-4 mb-8 flex flex-col gap-4 text-center">
+			<p>
 				{#if auditorReadonlyAdminRoles.includes(roleId)}
 					All members of this group will have read-only access to the admin system and can see
 					additional details such as response, request, and header information in the audit logs.
