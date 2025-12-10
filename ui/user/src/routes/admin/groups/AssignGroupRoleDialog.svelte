@@ -23,6 +23,19 @@
 		label: string;
 	}
 
+	// Helper functions to work with roles
+	function getRoleId(role: number): number {
+		return role & ~Role.AUDITOR;
+	}
+
+	function hasAuditorFlag(role: number): boolean {
+		return (role & Role.AUDITOR) !== 0;
+	}
+
+	function addAuditorFlag(role: number): number {
+		return role | Role.AUDITOR;
+	}
+
 	let {
 		groupAssignment = $bindable(),
 		loading = false,
@@ -50,18 +63,22 @@
 			.map((d) => ({ id: d.id, label: d.label }))
 	]);
 
+	const hasRoleChanged = $derived.by(
+		() => draftRoleId !== (groupAssignment ? groupAssignment.assignment.role : draftRoleId)
+	);
+	const hasAuditorChanged = $derived.by(
+		() =>
+			hasAuditorFlag(groupAssignment ? groupAssignment.assignment.role : 0) !==
+			draftHaveAuditorPrevielage
+	);
+	const hasDescriptionChanged = $derived.by(
+		() =>
+			draftDescription !==
+			(groupAssignment ? groupAssignment.assignment.description : draftDescription)
+	);
+
 	// Check if any changes were made
-	const hasChanges = $derived.by(() => {
-		if (!groupAssignment?.assignment) return true;
-		const currentRole = groupAssignment.assignment.role & ~Role.AUDITOR;
-		const currentAuditor = (groupAssignment.assignment.role & Role.AUDITOR) !== 0;
-		const currentDescription = groupAssignment.assignment.description || '';
-		return (
-			currentRole !== draftRoleId ||
-			currentAuditor !== draftHaveAuditorPrevielage ||
-			currentDescription !== draftDescription
-		);
-	});
+	const hasChanges = $derived(hasRoleChanged || hasAuditorChanged || hasDescriptionChanged);
 
 	const roleDescriptionMap = $derived(
 		groupRoleOptions.reduce(
@@ -79,8 +96,8 @@
 		if (groupAssignment) {
 			// Initialize draft values from assignment
 			const role = groupAssignment.assignment.role || 0;
-			draftRoleId = role & ~Role.AUDITOR;
-			draftHaveAuditorPrevielage = (role & Role.AUDITOR) !== 0;
+			draftRoleId = getRoleId(role);
+			draftHaveAuditorPrevielage = hasAuditorFlag(role);
 			draftDescription = groupAssignment.assignment.description || '';
 			dialog?.showModal();
 		} else {
@@ -96,7 +113,7 @@
 	function handleConfirm() {
 		if (!groupAssignment) return;
 
-		const role = draftHaveAuditorPrevielage ? draftRoleId | Role.AUDITOR : draftRoleId;
+		const role = draftHaveAuditorPrevielage ? addAuditorFlag(draftRoleId) : draftRoleId;
 		const result: GroupAssignment = {
 			group: groupAssignment.group,
 			assignment: {
@@ -106,32 +123,21 @@
 			}
 		};
 
-		// Check if only description changed
-		const currentRole = groupAssignment.assignment.role || 0;
-		const currentRoleId = currentRole & ~Role.AUDITOR;
-		const currentHaveAuditorPrevielage = (currentRole & Role.AUDITOR) !== 0;
-		const currentDescription = groupAssignment.assignment.description || '';
-
-		const isRoleChanged =
-			currentRoleId !== draftRoleId || currentHaveAuditorPrevielage !== draftHaveAuditorPrevielage;
-		const isDescriptionChanged = currentDescription !== draftDescription;
-		const onlyDescriptionChanged = !isRoleChanged && isDescriptionChanged;
-
-		if (onlyDescriptionChanged) {
+		// Only description changed - update directly
+		if (!hasRoleChanged && !hasAuditorChanged && hasDescriptionChanged) {
 			onConfirm(result);
 			return;
 		}
 
-		// Check for Auditor role addition first
-		const hadAuditor =
-			groupAssignment.assignment.role && (groupAssignment.assignment.role & Role.AUDITOR) !== 0;
-		if (!hadAuditor && draftHaveAuditorPrevielage && draftRoleId !== 0) {
+		// Auditor changed - show auditor confirmation
+		if (hasAuditorChanged && draftHaveAuditorPrevielage && draftRoleId !== 0) {
 			onAuditorConfirm(result);
 			return;
 		}
 
-		// Check for Owner role assignment
-		if (draftRoleId === Role.OWNER) {
+		// Changing to owner role - show owner confirmation
+		const currentRoleId = getRoleId(groupAssignment.assignment.role || 0);
+		if (draftRoleId === Role.OWNER && currentRoleId !== Role.OWNER) {
 			onOwnerConfirm(result);
 			return;
 		}
@@ -142,7 +148,7 @@
 
 {#snippet roleUi(role: RoleOption)}
 	<label
-		class="border-surface3 hover:bg-black/2 dark:hover:bg-white/2 flex cursor-pointer gap-4 rounded-lg border p-3 active:bg-black/5 dark:active:bg-white/5"
+		class="border-surface3 flex cursor-pointer gap-4 rounded-lg border p-3 hover:bg-black/2 active:bg-black/5 dark:hover:bg-white/2 dark:active:bg-white/5"
 	>
 		<input
 			type="radio"
@@ -156,7 +162,7 @@
 			class:opacity-50={!profile.current.groups.includes(Group.OWNER) &&
 				(role.id === Role.OWNER || role.id === 0)}
 		>
-			<div class="w-28 flex-shrink-0 whitespace-nowrap font-semibold">{role.label}</div>
+			<div class="w-28 flex-shrink-0 font-semibold whitespace-nowrap">{role.label}</div>
 			<p class="text-xs text-gray-500">
 				{#if role.id === Role.OWNER}
 					All group members will have Owner privileges and can manage all aspects of the platform.
@@ -204,7 +210,7 @@
 				{@const isDisabled = draftRoleId === 0}
 				<label
 					class={twMerge(
-						'border-surface3 hover:bg-black/2 dark:hover:bg-white/2 my-4 flex cursor-pointer gap-4 rounded-lg border p-3 active:bg-black/5 dark:active:bg-black/5',
+						'border-surface3 my-4 flex cursor-pointer gap-4 rounded-lg border p-3 hover:bg-black/2 active:bg-black/5 dark:hover:bg-white/2 dark:active:bg-black/5',
 						isDisabled ? 'pointer-events-none opacity-50' : ''
 					)}
 					aria-disabled={isDisabled}
