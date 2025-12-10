@@ -42,8 +42,8 @@ import type {
 	K8sSettings,
 	ServerK8sSettings,
 	MCPCompositeDeletionDependency,
-	AppPreferences
-	MCPCompositeDeletionDependency
+	AppPreferences,
+	MCPCompositeDeletionDependency,
 	GroupRoleAssignment,
 	GroupRoleAssignmentList
 } from './types';
@@ -1147,7 +1147,8 @@ export async function updateAppPreferences(
 	opts?: { fetch?: Fetcher }
 ) {
 	return (await doPut('/app-preferences', preferences, opts)) as AppPreferences;
-// Group Role Assignments
+}
+
 export async function listGroupRoleAssignments(opts?: {
 	fetch?: Fetcher;
 }): Promise<GroupRoleAssignment[]> {
