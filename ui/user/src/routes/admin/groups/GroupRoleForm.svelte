@@ -7,7 +7,6 @@
 	interface Props {
 		roleId: number;
 		hasAuditorPrivilege?: boolean;
-		showRemoveOption?: boolean;
 		onRoleChange?: (roleId: number) => void;
 		onAuditorChange?: (hasAuditor: boolean) => void;
 	}
@@ -20,7 +19,6 @@
 	let {
 		roleId = $bindable(),
 		hasAuditorPrivilege = $bindable(false),
-		showRemoveOption = false,
 		onRoleChange,
 		onAuditorChange
 	}: Props = $props();
@@ -32,8 +30,7 @@
 		...(canAssignOwner ? [{ label: 'Owner', id: Role.OWNER }] : []),
 		...groupRoleOptions
 			.filter((role) => (role.id === Role.ADMIN ? canAssignAdmin : true))
-			.map((d) => ({ id: d.id, label: d.label })),
-		...(showRemoveOption ? [{ label: 'No Role', id: 0 }] : [])
+			.map((d) => ({ id: d.id, label: d.label }))
 	]);
 
 	const roleDescriptionMap = $derived(
@@ -66,13 +63,11 @@
 			value={role.id}
 			bind:group={roleId}
 			onchange={handleRoleChange}
-			disabled={!profile.current.groups.includes(Group.OWNER) &&
-				(role.id === Role.OWNER || role.id === 0)}
+			disabled={!profile.current.groups.includes(Group.OWNER) && role.id === Role.OWNER}
 		/>
 		<div
 			class="flex flex-col"
-			class:opacity-50={!profile.current.groups.includes(Group.OWNER) &&
-				(role.id === Role.OWNER || role.id === 0)}
+			class:opacity-50={!profile.current.groups.includes(Group.OWNER) && role.id === Role.OWNER}
 		>
 			<div class="w-28 flex-shrink-0 font-semibold whitespace-nowrap">{role.label}</div>
 			<p class="text-on-surface1 text-xs">
@@ -80,8 +75,6 @@
 					All group members will have Owner privileges and can manage all aspects of the platform.
 				{:else if role.id === Role.ADMIN}
 					All group members will have Admin privileges and can manage all aspects of the platform.
-				{:else if role.id === 0}
-					Remove role assignment from this group.
 				{:else}
 					{roleDescriptionMap[role.id] || `All group members will have ${role.label} privileges.`}
 				{/if}

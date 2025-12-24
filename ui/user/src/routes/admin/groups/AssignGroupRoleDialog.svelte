@@ -145,7 +145,6 @@
 			<GroupRoleForm
 				bind:roleId={draftRoleId}
 				bind:hasAuditorPrivilege={draftHaveAuditorPrivilege}
-				showRemoveOption={true}
 			/>
 		</div>
 

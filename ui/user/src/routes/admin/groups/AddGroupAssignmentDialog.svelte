@@ -196,7 +196,6 @@
 			<GroupRoleForm
 				bind:roleId={draftRoleId}
 				bind:hasAuditorPrivilege={draftHaveAuditorPrivilege}
-				showRemoveOption={selectedGroup && !!groupRoleMap[selectedGroup.name]}
 			/>
 		{:else}
 			<div class="text-on-surface1 flex h-full items-center justify-center py-12 text-sm">
