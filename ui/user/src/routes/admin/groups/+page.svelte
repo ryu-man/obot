@@ -143,7 +143,6 @@
 			<div class="flex flex-col gap-2">
 				<Search
 					value={query}
-					class="dark:bg-surface1 dark:border-surface3 border border-transparent bg-white shadow-sm"
 					onChange={updateQuery}
 					placeholder="Search by group name..."
 				/>
