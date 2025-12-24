@@ -131,10 +131,13 @@
 <Layout>
 	<div class="my-4" in:fade={{ duration }} out:fade={{ duration }}>
 		<div class="flex flex-col gap-8">
-			<div class="flex items-center justify-between">
+			<div class="flex flex-col items-stretch justify-between gap-4 sm:flex-row sm:items-center">
 				<h1 class="text-2xl font-semibold">Group Role Assignments</h1>
 				{#if !isAdminReadonly}
-					<button class="button-primary" onclick={() => (showAddAssignment = true)}>
+					<button
+						class="button-primary w-full sm:w-auto"
+						onclick={() => (showAddAssignment = true)}
+					>
 						Add Assignment
 					</button>
 				{/if}
