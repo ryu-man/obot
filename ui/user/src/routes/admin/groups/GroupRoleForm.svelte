@@ -59,7 +59,7 @@
 
 {#snippet roleUi(role: RoleOption)}
 	<label
-		class="border-surface3 flex cursor-pointer gap-4 rounded-lg border p-3 hover:bg-black/2 active:bg-black/5 dark:hover:bg-white/2 dark:active:bg-white/5"
+		class="border-surface3 hover:bg-background/2 active:bg-background/5 flex cursor-pointer gap-4 rounded-lg border p-3"
 	>
 		<input
 			type="radio"
@@ -74,7 +74,7 @@
 			class:opacity-50={!profile.current.groups.includes(Group.OWNER) &&
 				(role.id === Role.OWNER || role.id === 0)}
 		>
-			<div class="w-28 flex-shrink-0 font-semibold whitespace-nowrap">{role.label}</div>
+			<div class="w-28 flex-shrink-0 whitespace-nowrap font-semibold">{role.label}</div>
 			<p class="text-on-surface1 text-xs">
 				{#if role.id === Role.OWNER}
 					All group members will have Owner privileges and can manage all aspects of the platform.
