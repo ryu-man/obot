@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { LoaderCircle, Group as GroupIcon, X } from 'lucide-svelte';
+	import { LoaderCircle, Group as GroupIcon } from 'lucide-svelte';
 
 	import { Role } from '$lib/services/admin/types';
 	import { getUserRoleLabel } from '$lib/utils';
 
 	import GroupRoleForm from './GroupRoleForm.svelte';
 	import type { GroupAssignment } from './types';
-	import { responsive } from '$lib/stores';
+	import ResponsiveDialog from '$lib/components/ResponsiveDialog.svelte';
 
 	interface Props {
 		groupAssignment?: GroupAssignment;
@@ -39,20 +39,18 @@
 		onOwnerConfirm
 	}: Props = $props();
 
-	let dialog = $state<HTMLDialogElement>();
+	let dialog = $state<ReturnType<typeof ResponsiveDialog>>();
 
 	let draftRoleId = $state(0);
-	let draftHaveAuditorPrevielage = $state(false);
+	let draftHaveAuditorPrivilege = $state(false);
 
-	let isSmallScreen = $derived(responsive.isMobile);
-
-	const hasRoleChanged = $derived.by(
-		() => draftRoleId !== (groupAssignment ? groupAssignment.assignment.role : draftRoleId)
+	const hasRoleChanged = $derived(
+		draftRoleId !== (groupAssignment ? groupAssignment.assignment.role : draftRoleId)
 	);
-	const hasAuditorChanged = $derived.by(
-		() =>
-			hasAuditorFlag(groupAssignment ? groupAssignment.assignment.role : 0) !==
-			draftHaveAuditorPrevielage
+
+	const hasAuditorChanged = $derived(
+		hasAuditorFlag(groupAssignment ? groupAssignment.assignment.role : 0) !==
+			draftHaveAuditorPrivilege
 	);
 
 	// Check if any changes were made
@@ -63,9 +61,9 @@
 			// Initialize draft values from assignment
 			const role = groupAssignment.assignment.role || 0;
 			draftRoleId = getRoleId(role);
-			draftHaveAuditorPrevielage = hasAuditorFlag(role);
+			draftHaveAuditorPrivilege = hasAuditorFlag(role);
 
-			dialog?.showModal();
+			dialog?.open();
 		} else {
 			dialog?.close();
 		}
@@ -79,7 +77,7 @@
 	function handleConfirm() {
 		if (!groupAssignment) return;
 
-		const role = draftHaveAuditorPrevielage ? addAuditorFlag(draftRoleId) : draftRoleId;
+		const role = draftHaveAuditorPrivilege ? addAuditorFlag(draftRoleId) : draftRoleId;
 		const result: GroupAssignment = {
 			group: groupAssignment.group,
 			assignment: {
@@ -95,7 +93,7 @@
 		}
 
 		// Auditor changed - show auditor confirmation
-		if (hasAuditorChanged && draftHaveAuditorPrevielage && draftRoleId !== 0) {
+		if (hasAuditorChanged && draftHaveAuditorPrivilege && draftRoleId !== 0) {
 			onAuditorConfirm(result);
 			return;
 		}
@@ -112,41 +110,43 @@
 </script>
 
 {#if groupAssignment}
-	<dialog
+	<ResponsiveDialog
 		bind:this={dialog}
-		class="flex max-h-[90svh] w-full max-w-[94svw] flex-col overflow-visible p-4 md:max-w-xl"
+		onClose={handleClose}
+		class="flex max-h-[90svh] w-full max-w-[94svw] flex-col overflow-visible md:max-w-xl"
+		classes={{ content: 'p-4', header: 'mb-4' }}
 	>
-		<div class="mb-6 flex flex-shrink-0 flex-col">
-			<div class="flex items-center">
-				{#if isSmallScreen}
-					<div class="size-10"></div>
-				{/if}
-				<h3 class="default-dialog-title block flex-1 text-center md:text-start">
+		{#snippet titleContent()}
+			<div class="flex w-full flex-col gap-3">
+				<span class="block text-center text-lg font-semibold md:text-start md:text-xl">
 					{groupAssignment.assignment.role ? 'Update' : 'Assign'} Group Role
-				</h3>
-
-				<button onclick={handleClose} class="icon-button">
-					<X class="size-5" />
-				</button>
+				</span>
+				{#if groupAssignment.assignment.role}
+					<div class="dark:bg-surface1 flex flex-col gap-1 rounded-lg bg-gray-50 p-3">
+						<div class="flex items-center gap-2">
+							{#if groupAssignment.group.iconURL}
+								<img
+									src={groupAssignment.group.iconURL}
+									alt={groupAssignment.group.name}
+									class="size-5 rounded-full"
+								/>
+							{:else}
+								<GroupIcon class="text-on-surface1 size-5" />
+							{/if}
+							<span class="font-semibold">{groupAssignment.group.name}</span>
+						</div>
+						<div class="text-on-surface1 text-xs">
+							Current: {getUserRoleLabel(groupAssignment.assignment.role)}
+						</div>
+					</div>
+				{/if}
 			</div>
-
-			{#if groupAssignment.assignment.role}
-				<div class="dark:bg-surface1 mt-3 flex flex-col gap-1 rounded-lg bg-gray-50 p-3">
-					<div class="text-md flex items-center gap-1 text-black/50 dark:text-white/50">
-						<GroupIcon class="size-5" />
-						<span class="font-semibold">{groupAssignment.group.name}</span>
-					</div>
-					<div class="text-xs text-gray-600 dark:text-gray-400">
-						{getUserRoleLabel(groupAssignment.assignment.role)}
-					</div>
-				</div>
-			{/if}
-		</div>
+		{/snippet}
 
 		<div class="flex-1 overflow-y-auto pr-2">
 			<GroupRoleForm
 				bind:roleId={draftRoleId}
-				bind:hasAuditorPrivilege={draftHaveAuditorPrevielage}
+				bind:hasAuditorPrivilege={draftHaveAuditorPrivilege}
 				showRemoveOption={true}
 			/>
 		</div>
@@ -165,5 +165,5 @@
 				{/if}
 			</button>
 		</div>
-	</dialog>
+	</ResponsiveDialog>
 {/if}

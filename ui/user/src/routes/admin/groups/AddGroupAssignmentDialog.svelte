@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { debounce } from 'es-toolkit';
-	import { LoaderCircle, Group as GroupIcon, X, Search as SearchIcon } from 'lucide-svelte';
+	import { LoaderCircle, Group as GroupIcon, ChevronLeft } from 'lucide-svelte';
 	import { twMerge } from 'tailwind-merge';
 	import { Role, type OrgGroup, type GroupRoleAssignment } from '$lib/services/admin/types';
 	import { responsive } from '$lib/stores/index.js';
 	import { getUserRoleLabel } from '$lib/utils';
 	import GroupRoleForm from './GroupRoleForm.svelte';
 	import type { GroupAssignment } from './types';
+	import Search from '$lib/components/Search.svelte';
+	import ResponsiveDialog from '$lib/components/ResponsiveDialog.svelte';
 
 	interface Props {
 		open?: boolean;
@@ -38,11 +40,11 @@
 		onOwnerConfirm
 	}: Props = $props();
 
-	let dialogElement = $state<HTMLDialogElement>();
+	let dialog = $state<ReturnType<typeof ResponsiveDialog>>();
 	let searchQuery = $state('');
 	let selectedGroup = $state<OrgGroup | undefined>();
 	let draftRoleId = $state(0);
-	let draftHaveAuditorPrevielage = $state(false);
+	let draftHaveAuditorPrivilege = $state(false);
 
 	let isSmallScreen = $derived(responsive.isMobile);
 
@@ -55,20 +57,20 @@
 		searchQuery = '';
 		selectedGroup = undefined;
 		draftRoleId = 0;
-		draftHaveAuditorPrevielage = false;
+		draftHaveAuditorPrivilege = false;
 	}
 
 	$effect(() => {
 		if (open) {
 			resetForm();
-			dialogElement?.showModal();
+			dialog?.open();
 		} else {
-			dialogElement?.close();
+			dialog?.close();
 		}
 	});
 
 	function handleClose() {
-		dialogElement?.close();
+		dialog?.close();
 		open = false;
 		onClose();
 	}
@@ -80,10 +82,10 @@
 		if (existingAssignment) {
 			const role = existingAssignment.role || 0;
 			draftRoleId = role & ~Role.AUDITOR;
-			draftHaveAuditorPrevielage = hasAuditorFlag(role);
+			draftHaveAuditorPrivilege = hasAuditorFlag(role);
 		} else {
 			draftRoleId = 0;
-			draftHaveAuditorPrevielage = false;
+			draftHaveAuditorPrivilege = false;
 		}
 	}
 
@@ -94,7 +96,7 @@
 	function handleConfirm() {
 		if (!selectedGroup) return;
 
-		const role = draftHaveAuditorPrevielage ? addAuditorFlag(draftRoleId) : draftRoleId;
+		const role = draftHaveAuditorPrivilege ? addAuditorFlag(draftRoleId) : draftRoleId;
 		const result: GroupAssignment = {
 			group: selectedGroup,
 			assignment: {
@@ -104,7 +106,7 @@
 		};
 
 		// Auditor changed - show auditor confirmation
-		if (draftHaveAuditorPrevielage && draftRoleId !== 0) {
+		if (draftHaveAuditorPrivilege && draftRoleId !== 0) {
 			onAuditorConfirm(result);
 			return;
 		}
@@ -125,20 +127,11 @@
 
 {#snippet groupList()}
 	<div class="flex flex-col gap-4 overflow-y-auto pr-2">
-		<div class="relative sticky top-0 z-10 flex-shrink-0 bg-white">
-			<SearchIcon class="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-gray-400" />
-			<input
-				type="text"
-				value={searchQuery}
-				oninput={(e) => updateSearch(e.currentTarget.value)}
-				placeholder="Search groups..."
-				class="dark:bg-surface2 dark:border-surface3 w-full rounded-lg border py-2 pr-3 pl-10 text-sm"
-			/>
-		</div>
+		<Search value={searchQuery} onChange={updateSearch} />
 
 		<div class="flex flex-col gap-2">
 			{#if availableGroups.length === 0}
-				<p class="py-8 text-center text-sm text-gray-500">
+				<p class="text-on-surface1 py-8 text-center text-sm">
 					{searchQuery ? 'No groups found matching your search.' : 'No groups available.'}
 				</p>
 			{:else}
@@ -165,7 +158,7 @@
 							<div class="flex flex-1 flex-col">
 								<span class="font-medium">{group.name}</span>
 								{#if hasAssignment && assignedRole}
-									<span class="text-xs text-gray-500">{getUserRoleLabel(assignedRole)}</span>
+									<span class="text-on-surface1 text-xs">{getUserRoleLabel(assignedRole)}</span>
 								{/if}
 							</div>
 						</div>
@@ -188,7 +181,7 @@
 					{/if}
 					<span class="font-semibold">{selectedGroup.name}</span>
 				</div>
-				<div class="text-xs text-gray-600 dark:text-gray-400">
+				<div class="text-on-surface1 text-xs">
 					{#if groupRoleMap[selectedGroup.name]}
 						Update the role for this group
 					{:else}
@@ -199,11 +192,11 @@
 
 			<GroupRoleForm
 				bind:roleId={draftRoleId}
-				bind:hasAuditorPrivilege={draftHaveAuditorPrevielage}
+				bind:hasAuditorPrivilege={draftHaveAuditorPrivilege}
 				showRemoveOption={selectedGroup && !!groupRoleMap[selectedGroup.name]}
 			/>
 		{:else}
-			<div class="flex h-full items-center justify-center py-12 text-sm text-gray-500">
+			<div class="text-on-surface1 flex h-full items-center justify-center py-12 text-sm">
 				Select a group to assign a role
 			</div>
 		{/if}
@@ -211,46 +204,36 @@
 {/snippet}
 
 {#if open}
-	<dialog
-		bind:this={dialogElement}
+	<ResponsiveDialog
+		bind:this={dialog}
+		onClose={handleClose}
 		class={twMerge(
-			'flex max-h-[90svh] max-w-[94svw] flex-col overflow-visible p-4 md:min-h-[768px]',
+			'flex max-h-[90svh] max-w-[94svw] flex-col overflow-visible md:min-h-[768px]',
 			!isSmallScreen ? 'w-full max-w-4xl' : 'w-full'
 		)}
+		classes={{ content: 'p-4 overflow-hidden', header: 'mb-4' }}
 	>
-		<div class="mb-6 flex items-center gap-0">
-			{#if isSmallScreen && selectedGroup}
-				<button onclick={handleBack} class="icon-button">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="20"
-						height="20"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					>
-						<path d="m15 18-6-6 6-6" />
-					</svg>
-				</button>
-			{:else if isSmallScreen}
-				<div class="size-10"></div>
-			{/if}
-
-			<h3 class="default-dialog-title block flex-1 text-center md:text-start">
-				{#if selectedGroup && groupRoleMap[selectedGroup.name]}
-					Update Group Role
-				{:else}
-					Assign Group Role
+		{#snippet titleContent()}
+			<div class="flex w-full items-center gap-2">
+				{#if isSmallScreen && selectedGroup}
+					<button onclick={handleBack} class="icon-button -ml-2 flex-shrink-0" aria-label="Go back">
+						<ChevronLeft class="size-5" />
+					</button>
+				{:else if isSmallScreen}
+					<div class="w-8 flex-shrink-0"></div>
 				{/if}
-			</h3>
-
-			<button onclick={handleClose} class="icon-button">
-				<X class="size-5" />
-			</button>
-		</div>
+				<span class="flex-1 text-center text-lg font-semibold md:text-start md:text-xl">
+					{#if selectedGroup && groupRoleMap[selectedGroup.name]}
+						Update Group Role
+					{:else}
+						Assign Group Role
+					{/if}
+				</span>
+				{#if isSmallScreen}
+					<div class="w-8 flex-shrink-0"></div>
+				{/if}
+			</div>
+		{/snippet}
 
 		{#if !isSmallScreen}
 			<!-- Large screen: two-column layout -->
@@ -294,5 +277,5 @@
 				{/if}
 			</button>
 		</div>
-	</dialog>
+	</ResponsiveDialog>
 {/if}
