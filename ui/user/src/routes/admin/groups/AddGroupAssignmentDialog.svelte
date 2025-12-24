@@ -211,7 +211,7 @@
 			'flex max-h-[90svh] max-w-[94svw] flex-col overflow-visible md:min-h-[768px]',
 			!isSmallScreen ? 'w-full max-w-4xl' : 'w-full'
 		)}
-		classes={{ content: 'p-4 overflow-hidden', header: 'mb-4' }}
+		classes={{ content: 'p-4 overflow-hidden', header: 'mb-4 flex', title: 'flex flex-1' }}
 	>
 		{#snippet titleContent()}
 			{#if isSmallScreen && selectedGroup}
@@ -222,7 +222,10 @@
 				>
 					<ChevronLeft class="size-5" />
 				</button>
+			{:else if isSmallScreen}
+				<div class="size-10"></div>
 			{/if}
+
 			<span class="flex-1 text-center text-lg font-semibold md:text-start md:text-xl">
 				{#if selectedGroup && groupRoleMap[selectedGroup.name]}
 					Update Group Role
