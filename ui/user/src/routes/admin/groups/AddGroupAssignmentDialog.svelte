@@ -263,7 +263,7 @@
 			{/if}
 		{/if}
 
-		<div class="mt-6 flex flex-shrink-0 justify-end gap-2">
+		<div class="mt-6 flex flex-shrink-0 flex-col justify-end gap-2 md:flex-row">
 			<button class="button" onclick={handleClose}>Cancel</button>
 			<button
 				class="button-primary"
