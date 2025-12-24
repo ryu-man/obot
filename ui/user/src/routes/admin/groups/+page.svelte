@@ -144,7 +144,12 @@
 			</div>
 
 			<div class="flex flex-col gap-2">
-				<Search class="dark:bg-surface1 dark:border-surface3 bg-background border border-transparent shadow-sm" value={query} onChange={updateQuery} placeholder="Search by group name..." />
+				<Search
+					class="dark:bg-surface1 dark:border-surface3 bg-background border border-transparent shadow-sm"
+					value={query}
+					onChange={updateQuery}
+					placeholder="Search by group name..."
+				/>
 				<div class="groups-table">
 					<Table
 						data={filteredGroups}
