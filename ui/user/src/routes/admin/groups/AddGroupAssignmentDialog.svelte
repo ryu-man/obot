@@ -64,13 +64,10 @@
 		if (open) {
 			resetForm();
 			dialog?.open();
-		} else {
-			dialog?.close();
 		}
 	});
 
 	function handleClose() {
-		dialog?.close();
 		open = false;
 		onClose();
 	}

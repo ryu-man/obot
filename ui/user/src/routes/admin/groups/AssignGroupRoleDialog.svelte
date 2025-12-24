@@ -64,13 +64,10 @@
 			draftHaveAuditorPrivilege = hasAuditorFlag(role);
 
 			dialog?.open();
-		} else {
-			dialog?.close();
 		}
 	});
 
 	function handleClose() {
-		dialog?.close();
 		onClose();
 	}
 
