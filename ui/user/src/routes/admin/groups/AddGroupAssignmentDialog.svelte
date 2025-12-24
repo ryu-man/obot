@@ -141,7 +141,7 @@
 					<button
 						onclick={() => handleGroupSelect(group)}
 						class={twMerge(
-							'border-surface3 flex items-center gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-black/5 dark:hover:bg-white/5',
+							'border-surface3 hover:bg-background/5 flex items-center gap-3 rounded-lg border p-3 text-left transition-colors',
 							selectedGroup?.id === group.id && 'bg-primary/10 border-primary'
 						)}
 					>

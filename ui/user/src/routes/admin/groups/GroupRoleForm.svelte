@@ -75,7 +75,7 @@
 				(role.id === Role.OWNER || role.id === 0)}
 		>
 			<div class="w-28 flex-shrink-0 font-semibold whitespace-nowrap">{role.label}</div>
-			<p class="text-xs text-gray-500">
+			<p class="text-on-surface1 text-xs">
 				{#if role.id === Role.OWNER}
 					All group members will have Owner privileges and can manage all aspects of the platform.
 				{:else if role.id === Role.ADMIN}
@@ -99,7 +99,7 @@
 		{@const isDisabled = roleId === 0}
 		<label
 			class={twMerge(
-				'border-surface3 my-4 flex cursor-pointer gap-4 rounded-lg border p-3 hover:bg-black/2 active:bg-black/5 dark:hover:bg-white/2 dark:active:bg-black/5',
+				'border-surface3 hover:bg-background/2 active:bg-background/5 my-4 flex cursor-pointer gap-4 rounded-lg border p-3',
 				isDisabled ? 'pointer-events-none opacity-50' : ''
 			)}
 			aria-disabled={isDisabled}
@@ -112,7 +112,7 @@
 			/>
 			<div class="flex flex-col">
 				<div class="w-28 flex-shrink-0 font-semibold">Auditor</div>
-				<p class="text-xs text-gray-500">
+				<p class="text-on-surface1 text-xs">
 					{#if auditorReadonlyAdminRoles.includes(roleId)}
 						All group members will have read-only access to the admin system and see additional
 						details such as response, request, and header information in the audit logs.
