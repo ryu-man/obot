@@ -21,6 +21,7 @@
 	} from '$lib/url.js';
 	import { getUserRoleLabel } from '$lib/utils';
 
+	import AddGroupAssignmentDialog from './AddGroupAssignmentDialog.svelte';
 	import AssignGroupRoleDialog from './AssignGroupRoleDialog.svelte';
 	import ConfirmAuditorRoleDialog from './ConfirmAuditorRoleDialog.svelte';
 	import ConfirmOwnerRoleDialog from './ConfirmOwnerRoleDialog.svelte';
@@ -69,6 +70,7 @@
 
 	let updatingRole = $state<TableItem>();
 	let deletingGroup = $state<TableItem>();
+	let showAddAssignment = $state(false);
 	let confirmAuditorAdditionToGroup = $state<GroupAssignment>();
 	let confirmOwnerGroupAssignment = $state<GroupAssignment>();
 	let loading = $state(false);
@@ -90,6 +92,10 @@
 				// Create new assignment
 				await AdminService.createGroupRoleAssignment(assignment);
 			}
+
+			showAddAssignment = false;
+			confirmAuditorAdditionToGroup = undefined;
+			confirmAuditorAdditionToGroup = undefined;
 
 			// Refresh data
 			groupRoleAssignments = await AdminService.listGroupRoleAssignments();
@@ -125,6 +131,11 @@
 		<div class="flex flex-col gap-8">
 			<div class="flex items-center justify-between">
 				<h1 class="text-2xl font-semibold">Group Role Assignments</h1>
+				{#if !isAdminReadonly}
+					<button class="button-primary" onclick={() => (showAddAssignment = true)}>
+						Add Assignment
+					</button>
+				{/if}
 			</div>
 
 			<div class="flex flex-col gap-2">
@@ -137,8 +148,8 @@
 				<div class="groups-table">
 					<Table
 						data={filteredGroups}
-						fields={['name', 'role', 'description']}
-						filterable={['name', 'role', 'description']}
+						fields={['name', 'role']}
+						filterable={['name', 'role']}
 						filters={urlFilters}
 						onFilter={setFilterUrlParams}
 						onClearAllFilters={clearUrlParams}
@@ -151,10 +162,6 @@
 							{#if property === 'role'}
 								<div class="flex items-center gap-1">
 									{d.role}
-								</div>
-							{:else if property === 'description'}
-								<div class="absolute inset-0 flex items-center [padding:inherit]">
-									<p class="max-w-full truncate opacity-50">{d.description || '-'}</p>
 								</div>
 							{:else}
 								{d[property as keyof typeof d]}
@@ -210,6 +217,21 @@
 		deletingGroup = undefined;
 	}}
 	oncancel={() => (deletingGroup = undefined)}
+/>
+
+<AddGroupAssignmentDialog
+	bind:open={showAddAssignment}
+	{groups}
+	{groupRoleMap}
+	{loading}
+	onClose={() => (showAddAssignment = false)}
+	onConfirm={updateGroupRole}
+	onOwnerConfirm={(groupAssignment) => {
+		confirmOwnerGroupAssignment = groupAssignment;
+	}}
+	onAuditorConfirm={(groupAssignment) => {
+		confirmAuditorAdditionToGroup = groupAssignment;
+	}}
 />
 
 <AssignGroupRoleDialog
