@@ -118,27 +118,28 @@
 				<span class="block text-center text-lg font-semibold md:text-start md:text-xl">
 					{groupAssignment.assignment.role ? 'Update' : 'Assign'} Group Role
 				</span>
-				{#if groupAssignment.assignment.role}
-					<div class="dark:bg-surface1 flex flex-col gap-1 rounded-lg bg-gray-50 p-3">
-						<div class="flex items-center gap-2">
-							{#if groupAssignment.group.iconURL}
-								<img
-									src={groupAssignment.group.iconURL}
-									alt={groupAssignment.group.name}
-									class="size-5 rounded-full"
-								/>
-							{:else}
-								<GroupIcon class="text-on-surface1 size-5" />
-							{/if}
-							<span class="font-semibold">{groupAssignment.group.name}</span>
-						</div>
-						<div class="text-on-surface1 text-xs">
-							Current: {getUserRoleLabel(groupAssignment.assignment.role)}
-						</div>
-					</div>
-				{/if}
 			</div>
 		{/snippet}
+
+		{#if groupAssignment.assignment.role}
+			<div class="dark:bg-surface1 mb-8 flex flex-col gap-1 rounded-lg bg-gray-50 p-3">
+				<div class="flex items-center gap-2">
+					{#if groupAssignment.group.iconURL}
+						<img
+							src={groupAssignment.group.iconURL}
+							alt={groupAssignment.group.name}
+							class="size-5 rounded-full"
+						/>
+					{:else}
+						<GroupIcon class="text-on-surface1 size-5" />
+					{/if}
+					<span class="font-semibold">{groupAssignment.group.name}</span>
+				</div>
+				<div class="text-on-surface1 text-xs">
+					Current: {getUserRoleLabel(groupAssignment.assignment.role)}
+				</div>
+			</div>
+		{/if}
 
 		<div class="flex-1 overflow-y-auto pr-2">
 			<GroupRoleForm
