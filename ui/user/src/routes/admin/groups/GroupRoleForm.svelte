@@ -74,7 +74,7 @@
 			class:opacity-50={!profile.current.groups.includes(Group.OWNER) &&
 				(role.id === Role.OWNER || role.id === 0)}
 		>
-			<div class="w-28 flex-shrink-0 whitespace-nowrap font-semibold">{role.label}</div>
+			<div class="w-28 flex-shrink-0 font-semibold whitespace-nowrap">{role.label}</div>
 			<p class="text-on-surface1 text-xs">
 				{#if role.id === Role.OWNER}
 					All group members will have Owner privileges and can manage all aspects of the platform.

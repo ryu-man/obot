@@ -214,7 +214,7 @@
 			{#if isSmallScreen && selectedGroup}
 				<button
 					onclick={handleBack}
-					class="icon-button -ml-2 mr-2 flex-shrink-0"
+					class="icon-button mr-2 -ml-2 flex-shrink-0"
 					aria-label="Go back"
 				>
 					<ChevronLeft class="size-6" />

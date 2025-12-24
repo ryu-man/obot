@@ -141,11 +141,7 @@
 			</div>
 
 			<div class="flex flex-col gap-2">
-				<Search
-					value={query}
-					onChange={updateQuery}
-					placeholder="Search by group name..."
-				/>
+				<Search value={query} onChange={updateQuery} placeholder="Search by group name..." />
 				<div class="groups-table">
 					<Table
 						data={filteredGroups}
