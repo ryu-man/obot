@@ -45,7 +45,7 @@
 	let draftHaveAuditorPrivilege = $state(false);
 
 	const hasRoleChanged = $derived(
-		draftRoleId !== (groupAssignment ? groupAssignment.assignment.role : draftRoleId)
+		draftRoleId !== getRoleId(groupAssignment ? groupAssignment.assignment.role : 0)
 	);
 
 	const hasAuditorChanged = $derived(

@@ -55,7 +55,7 @@
 			return {
 				...group,
 				assignment,
-				role: role ? getUserRoleLabel(role).split(',') : ['No Role'],
+				role: role ? getUserRoleLabel(role).split(',') : [],
 				roleId: getRoleId(role),
 				description: assignment?.description || ''
 			};
@@ -97,7 +97,7 @@
 
 			showAddAssignment = false;
 			confirmAuditorAdditionToGroup = undefined;
-			confirmAuditorAdditionToGroup = undefined;
+			confirmOwnerGroupAssignment = undefined;
 
 			// Refresh data
 			groupRoleAssignments = await AdminService.listGroupRoleAssignments();
