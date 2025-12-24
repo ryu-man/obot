@@ -214,25 +214,22 @@
 		classes={{ content: 'p-4 overflow-hidden', header: 'mb-4' }}
 	>
 		{#snippet titleContent()}
-			<div class="flex w-full items-center gap-2">
-				{#if isSmallScreen && selectedGroup}
-					<button onclick={handleBack} class="icon-button -ml-2 flex-shrink-0" aria-label="Go back">
-						<ChevronLeft class="size-5" />
-					</button>
-				{:else if isSmallScreen}
-					<div class="w-8 flex-shrink-0"></div>
+			{#if isSmallScreen && selectedGroup}
+				<button
+					onclick={handleBack}
+					class="icon-button -ml-2 mr-2 flex-shrink-0"
+					aria-label="Go back"
+				>
+					<ChevronLeft class="size-5" />
+				</button>
+			{/if}
+			<span class="flex-1 text-center text-lg font-semibold md:text-start md:text-xl">
+				{#if selectedGroup && groupRoleMap[selectedGroup.name]}
+					Update Group Role
+				{:else}
+					Assign Group Role
 				{/if}
-				<span class="flex-1 text-center text-lg font-semibold md:text-start md:text-xl">
-					{#if selectedGroup && groupRoleMap[selectedGroup.name]}
-						Update Group Role
-					{:else}
-						Assign Group Role
-					{/if}
-				</span>
-				{#if isSmallScreen}
-					<div class="w-8 flex-shrink-0"></div>
-				{/if}
-			</div>
+			</span>
 		{/snippet}
 
 		{#if !isSmallScreen}
