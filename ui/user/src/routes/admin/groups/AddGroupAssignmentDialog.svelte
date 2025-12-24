@@ -217,10 +217,10 @@
 					class="icon-button -ml-2 mr-2 flex-shrink-0"
 					aria-label="Go back"
 				>
-					<ChevronLeft class="size-5" />
+					<ChevronLeft class="size-6" />
 				</button>
 			{:else if isSmallScreen}
-				<div class="size-10"></div>
+				<div class="size-11"></div>
 			{/if}
 
 			<span class="flex-1 text-center text-lg font-semibold md:text-start md:text-xl">
