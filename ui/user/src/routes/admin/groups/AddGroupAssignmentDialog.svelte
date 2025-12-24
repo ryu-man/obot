@@ -102,8 +102,14 @@
 			}
 		};
 
-		// Auditor changed - show auditor confirmation
-		if (draftHaveAuditorPrivilege && draftRoleId !== 0) {
+		// Check if group already had auditor privilege
+		const existingAssignment = groupRoleMap[selectedGroup.name];
+		const hadAuditorBefore = existingAssignment
+			? hasAuditorFlag(existingAssignment.role || 0)
+			: false;
+
+		// Auditor changed - show auditor confirmation only if they didn't have it before
+		if (draftHaveAuditorPrivilege && !hadAuditorBefore && draftRoleId !== 0) {
 			onAuditorConfirm(result);
 			return;
 		}
