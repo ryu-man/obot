@@ -63,7 +63,9 @@
 	);
 
 	const filteredGroups = $derived(
-		preparedGroups.filter((group) => group.name.toLowerCase().includes(query.toLowerCase()))
+		preparedGroups.filter(
+			(group) => group.name.toLowerCase().includes(query.toLowerCase()) && group.assignment
+		)
 	);
 
 	type TableItem = (typeof filteredGroups)[0];
