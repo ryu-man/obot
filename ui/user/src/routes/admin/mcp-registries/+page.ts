@@ -4,9 +4,9 @@ import type { AccessControlRule } from '$lib/services/admin/types';
 import { profile } from '$lib/stores';
 import type { PageLoad } from './$types';
 
-export const load: PageLoad = async ({ fetch, depends, url }) => {
+export const load: PageLoad = async ({ fetch, depends }) => {
 	depends('mcp-registries:data');
-	
+
 	let accessControlRules: AccessControlRule[] = [];
 
 	try {
