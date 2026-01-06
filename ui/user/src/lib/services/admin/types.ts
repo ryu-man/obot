@@ -82,7 +82,6 @@ export interface MCPCatalogEntry {
 	powerUserWorkspaceID?: string;
 	isCatalogEntry: boolean;
 	needsUpdate?: boolean;
-	needsK8sUpdate?: boolean;
 }
 
 // Matches the backend compositeDeletionDependency struct used when preventing
