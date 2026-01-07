@@ -654,7 +654,7 @@
 										{:else}
 											<CircleFadingArrowUp class="size-4" />
 										{/if}
-										Update Kubernetes Settings
+										Update Scheduling Configuration
 									</button>
 								{/if}
 
