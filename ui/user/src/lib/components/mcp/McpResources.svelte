@@ -281,7 +281,7 @@
 			<LoaderCircle class="size-4 animate-spin" />
 		{:else}
 			<HardDrive class="size-4" />
-			Add from MCP Servers
+			Add MCP Servers
 		{/if}
 	</button>
 {/if}
