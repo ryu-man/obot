@@ -235,7 +235,7 @@
 												class={twMerge(
 													'bg-surface1 hover:bg-surface2 text-gray rounded-md px-4 py-2 text-sm font-medium transition-all duration-200',
 													isSelected &&
-														'bg-primary text-white shadow-sm hover:bg-primary/90 active:bg-primary',
+														'bg-primary hover:bg-primary/90 active:bg-primary text-white shadow-sm',
 													isSelected &&
 														hasError &&
 														'bg-red-500 text-white hover:bg-red-600/90 active:bg-red-600'
