@@ -11,13 +11,16 @@
 	} from '$lib/services';
 
 	import {
+		Captions,
 		CircleFadingArrowUp,
 		Ellipsis,
 		GitCompare,
 		LoaderCircle,
+		Power,
 		Router,
 		Square,
-		SquareCheck
+		SquareCheck,
+		Trash2
 	} from 'lucide-svelte';
 	import { formatTimeAgo } from '$lib/time';
 	import { profile } from '$lib/stores';
@@ -28,7 +31,7 @@
 	import { tooltip } from '$lib/actions/tooltip.svelte';
 	import Confirm from '../Confirm.svelte';
 	import McpServerK8sInfo from './McpServerK8sInfo.svelte';
-	import { openUrl } from '$lib/utils';
+	import { delay, openUrl } from '$lib/utils';
 	import DiffDialog from './DiffDialog.svelte';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
@@ -49,16 +52,24 @@
 	let showConfirm = $state<
 		{ type: 'multi' } | { type: 'single'; server: MCPCatalogServer } | undefined
 	>();
+	let showRestartConfirm = $state<
+		{ server: MCPCatalogServer; onsuccess: () => void } | undefined
+	>();
+	let showDeleteConfirm = $state<{ server: MCPCatalogServer; onsuccess: () => void } | undefined>();
 	let diffDialog = $state<ReturnType<typeof DiffDialog>>();
 	let diffServer = $state<MCPCatalogServer>();
 	let selected = $state<Record<string, MCPCatalogServer>>({});
+	let restarting = $state(false);
+	let deleting = $state(false);
 	let updating = $state<Record<string, { inProgress: boolean; error: string }>>({});
 
 	let hasSelected = $derived(Object.values(selected).some((v) => v));
 	let usersMap = $derived(new Map(users.map((u) => [u.id, u])));
 	let isAdminUrl = $derived(page.url.pathname.includes('/admin'));
 
-	onMount(() => {
+	onMount(load);
+
+	function load() {
 		if (entry && !('isCatalogEntry' in entry) && id) {
 			if (entry.catalogEntryID) {
 				listServerInstances = Promise.resolve([
@@ -70,13 +81,16 @@
 				listServerInstances = AdminService.listMcpCatalogServerInstances(id, entry.id);
 			}
 		} else if (entry && 'isCatalogEntry' in entry && id) {
-			if (entity === 'workspace') {
-				listEntryServers = ChatService.listWorkspaceMCPServersForEntry(id, entry.id);
-			} else {
-				listEntryServers = AdminService.listMCPServersForEntry(id, entry.id);
-			}
+			loadEntryServers(id, entry);
 		}
-	});
+	}
+
+	function loadEntryServers(id: string, entry: MCPCatalogEntry) {
+		listEntryServers =
+			entity === 'workspace'
+				? ChatService.listWorkspaceMCPServersForEntry(id, entry.id)
+				: AdminService.listMCPServersForEntry(id, entry.id);
+	}
 
 	async function handleMultiUpdate() {
 		if (!id || !entry) return;
@@ -97,10 +111,7 @@
 			}
 		}
 
-		listEntryServers =
-			entity === 'workspace'
-				? ChatService.listWorkspaceMCPServersForEntry(id, entry.id)
-				: AdminService.listMCPServersForEntry(id, entry.id);
+		load();
 		selected = {};
 	}
 
@@ -112,10 +123,8 @@
 			await (entity === 'workspace' && id && entry
 				? ChatService.triggerWorkspaceMcpServerUpdate(id, entry.id, server.id)
 				: ChatService.triggerMcpServerUpdate(server.id));
-			listEntryServers =
-				entity === 'workspace'
-					? ChatService.listWorkspaceMCPServersForEntry(id, entry.id)
-					: AdminService.listMCPServersForEntry(id, entry.id);
+
+			load();
 		} catch (err) {
 			updating[server.id] = {
 				inProgress: false,
@@ -146,6 +155,69 @@
 		return profile.current?.groups.includes(Group.POWERUSER)
 			? `/mcp-servers/c/${entry?.id}?view=audit-logs&mcp_id=${d.id}&user_id=${d.userID}`
 			: null;
+	}
+
+	async function handleRestartServer(server: MCPCatalogServer) {
+		if (!id || !entry) return;
+
+		restarting = true;
+		try {
+			if (entity === 'workspace') {
+				// Check if we're in a catalog entry context
+				if ('isCatalogEntry' in entry) {
+					// Restart server from a catalog entry in a workspace
+					await ChatService.restartWorkspaceCatalogEntryServerDeployment(
+						id, // workspace ID
+						entry.id, // catalog entry ID
+						server.id // server deployment ID
+					);
+				} else {
+					// Restart a direct multi-user server in a workspace
+					await ChatService.restartWorkspaceK8sServerDeployment(
+						id, // workspace ID
+						server.id // server deployment ID
+					);
+				}
+			} else {
+				// For global catalog, restart the deployed server
+				await AdminService.restartK8sDeployment(server.id);
+			}
+		} catch (err) {
+			console.error('Failed to restart server:', err);
+		} finally {
+			restarting = false;
+			showRestartConfirm = undefined;
+		}
+	}
+
+	async function handleDeleteServer(server: MCPCatalogServer) {
+		if (!id || !entry || !('isCatalogEntry' in entry)) return;
+
+		deleting = true;
+		try {
+			if (entity === 'workspace') {
+				// Delete server from workspace
+				await ChatService.deleteWorkspaceMCPCatalogServer(
+					id, // workspace ID
+					server.id // server ID
+				);
+			} else {
+				// Delete server from global catalog
+				// Note: We're deleting a deployed server instance, not the catalog entry
+				await ChatService.deleteSingleOrRemoteMcpServer(server.id);
+			}
+
+			// Small delay to allow backend to process the deletion
+			await delay(500);
+
+			// Refresh the list - create a new promise to trigger reactivity
+			loadEntryServers(id, entry);
+		} catch (err) {
+			console.error('Failed to delete server:', err);
+		} finally {
+			deleting = false;
+			showDeleteConfirm = undefined;
+		}
 	}
 </script>
 
@@ -190,7 +262,7 @@
 		{#if servers.length > 0}
 			{#if numServerUpdatesNeeded}
 				<button
-					class="group bg-background mb-2 w-fit rounded-md"
+					class="bg-background group mb-2 w-fit rounded-md"
 					onclick={() => {
 						// TODO: show all servers with upgrade & update all option
 					}}
@@ -278,54 +350,117 @@
 
 				{#snippet actions(d)}
 					{@const auditLogsUrl = getAuditLogUrl(d)}
+
+					<!-- Check for permissions -->
+					{@const isInstanceOwner = d.userID === profile.current.id}
+					{@const hasAdminAccess = profile.current.hasAdminAccess?.()}
+					{@const canRestart =
+						hasAdminAccess ||
+						(entity === 'workspace' && isInstanceOwner) ||
+						(type === 'single' && isInstanceOwner)}
+					{@const canDelete = hasAdminAccess || isInstanceOwner}
+
 					<div class="flex items-center gap-1">
-						{#if auditLogsUrl}
-							<a class="button-text" href={resolve(auditLogsUrl as `/${string}`)}>
-								View Audit Logs
-							</a>
-						{/if}
+						<DotDotDot class="icon-button hover:dark:bg-background/50" classes={{ menu: 'gap-1' }}>
+							{#snippet icon()}
+								<Ellipsis class="size-4" />
+							{/snippet}
+
+							{#snippet children({ toggle })}
+								{#if auditLogsUrl}
+									<a class="menu-button" href={resolve(auditLogsUrl as `/${string}`)}>
+										<Captions class="size-4" /> View Audit Logs
+									</a>
+								{/if}
+
+								{#if canRestart}
+									<button
+										class="menu-button"
+										disabled={restarting}
+										onclick={(e) => {
+											e.stopPropagation();
+											showRestartConfirm = {
+												server: d,
+												onsuccess: () => {
+													toggle(false);
+												}
+											};
+										}}
+									>
+										{#if restarting}
+											<LoaderCircle class="size-4 animate-spin" />
+										{:else}
+											<Power class="size-4" />
+										{/if}
+										Restart Server
+									</button>
+								{/if}
+
+								{#if canDelete}
+									<button
+										class="menu-button"
+										disabled={deleting}
+										onclick={(e) => {
+											e.stopPropagation();
+											showDeleteConfirm = {
+												server: d,
+												onsuccess: () => {
+													toggle(false);
+												}
+											};
+										}}
+									>
+										{#if deleting}
+											<LoaderCircle class="size-4 animate-spin" />
+										{:else}
+											<Trash2 class="size-4" />
+										{/if}
+										Delete Server
+									</button>
+								{/if}
+
+								{#if d.needsUpdate}
+									<button
+										class="menu-button bg-primary/10 text-primary hover:bg-primary/20"
+										disabled={updating[d.id]?.inProgress || !!d.compositeName}
+										onclick={async (e) => {
+											e.stopPropagation();
+											showConfirm = {
+												type: 'single',
+												server: d
+											};
+										}}
+										use:tooltip={d.compositeName
+											? {
+													text: 'Cannot directly update a descendant of a composite server; update the composite MCP server instead.',
+													classes: ['w-md'],
+													disablePortal: true
+												}
+											: undefined}
+									>
+										{#if updating[d.id]?.inProgress}
+											<LoaderCircle class="size-4 animate-spin" />
+										{:else}
+											<CircleFadingArrowUp class="size-4" />
+										{/if}
+										Update Server
+									</button>
+
+									<button
+										class="menu-button"
+										onclick={(e) => {
+											e.stopPropagation();
+											diffServer = d;
+											diffDialog?.open();
+										}}
+									>
+										<GitCompare class="size-4" /> View Diff
+									</button>
+								{/if}
+							{/snippet}
+						</DotDotDot>
 
 						{#if d.needsUpdate}
-							<DotDotDot class="icon-button hover:dark:bg-background/50">
-								{#snippet icon()}
-									<Ellipsis class="size-4" />
-								{/snippet}
-								<button
-									class="menu-button"
-									onclick={(e) => {
-										e.stopPropagation();
-										diffServer = d;
-										diffDialog?.open();
-									}}
-								>
-									<GitCompare class="size-4" /> View Diff
-								</button>
-								<button
-									class="menu-button bg-primary/10 text-primary hover:bg-primary/20"
-									disabled={updating[d.id]?.inProgress || !!d.compositeName}
-									onclick={async (e) => {
-										e.stopPropagation();
-										showConfirm = {
-											type: 'single',
-											server: d
-										};
-									}}
-									use:tooltip={d.compositeName
-										? {
-												text: 'Cannot directly update a descendant of a composite server; update the composite MCP server instead.',
-												classes: ['w-md'],
-												disablePortal: true
-											}
-										: undefined}
-								>
-									{#if updating[d.id]?.inProgress}
-										<LoaderCircle class="size-4 animate-spin" />
-									{:else}
-										<CircleFadingArrowUp class="size-4" />
-									{/if}
-									Update Server
-								</button>
-							</DotDotDot>
 							<button
 								class="icon-button hover:bg-black/50"
 								onclick={(e) => {
@@ -401,12 +536,52 @@
 <DiffDialog bind:this={diffDialog} fromServer={diffServer} toServer={entry} />
 
 {#snippet emptyInstancesContent()}
-	<div class="mt-12 flex w-md flex-col items-center gap-4 self-center text-center">
+	<div class="w-md mt-12 flex flex-col items-center gap-4 self-center text-center">
 		<Router class="text-on-surface1 size-24 opacity-50" />
 		<h4 class="text-on-surface1 text-lg font-semibold">No server details</h4>
 		<p class="text-on-surface1 text-sm font-light">No details available yet for this server.</p>
 	</div>
 {/snippet}
+
+<Confirm
+	show={!!showRestartConfirm}
+	onsuccess={async () => {
+		if (!showRestartConfirm) return;
+		await handleRestartServer(showRestartConfirm.server);
+		showRestartConfirm.onsuccess();
+
+		showRestartConfirm = undefined;
+	}}
+	oncancel={() => (showRestartConfirm = undefined)}
+	loading={restarting}
+	msg={`Restart server instance created by ${usersMap.get(showRestartConfirm?.server.userID || '')?.email || usersMap.get(showRestartConfirm?.server.userID || '')?.username || profile.current.email || 'Unknown'}?`}
+	type="info"
+	title="Confirm Restart"
+>
+	{#snippet note()}
+		The server deployment will be restarted. This may cause temporary interruption for the user.
+	{/snippet}
+</Confirm>
+
+<Confirm
+	show={!!showDeleteConfirm}
+	onsuccess={async () => {
+		if (!showDeleteConfirm) return;
+		await handleDeleteServer(showDeleteConfirm.server);
+		showDeleteConfirm.onsuccess();
+
+		showDeleteConfirm = undefined;
+	}}
+	oncancel={() => (showDeleteConfirm = undefined)}
+	loading={deleting}
+	msg={`Delete server instance created by ${usersMap.get(showDeleteConfirm?.server.userID || '')?.email || usersMap.get(showDeleteConfirm?.server.userID || '')?.username || profile.current.email || 'Unknown'}?`}
+	type="delete"
+	title="Confirm Delete"
+>
+	{#snippet note()}
+		This will permanently delete the server instance. This action cannot be undone.
+	{/snippet}
+</Confirm>
 
 <Confirm
 	show={!!showConfirm}

@@ -17,7 +17,12 @@
 		LoaderCircle,
 		RotateCcw,
 		RefreshCw,
-		CircleFadingArrowUp
+		CircleFadingArrowUp,
+		Captions,
+		Ellipsis,
+		Power,
+		Trash2,
+		Unplug
 	} from 'lucide-svelte';
 	import { onDestroy, onMount } from 'svelte';
 	import Table from '../table/Table.svelte';
@@ -30,6 +35,8 @@
 	import SensitiveInput from '../SensitiveInput.svelte';
 	import { resolve } from '$app/paths';
 	import { DEFAULT_MCP_CATALOG_ID } from '$lib/constants';
+	import DotDotDot from '../DotDotDot.svelte';
+	import { delay } from '$lib/utils';
 
 	interface Props {
 		id?: string;
@@ -69,12 +76,20 @@
 	let error = $state<string>();
 	let logsContainer: HTMLDivElement;
 	let showRestartConfirm = $state(false);
+	let showDeleteInstanceConfirm = $state<(typeof connectedUsers)[number] | undefined>();
+	let deletedUserIds = $state<Set<string>>(new Set());
 	let restarting = $state(false);
+	let deleting = $state(false);
 	let refreshingEvents = $state(false);
 	let refreshingLogs = $state(false);
 	let showUpdateK8sSettingsConfirm = $state(false);
 	let updatingK8sSettings = $state(false);
 	let isAdminUrl = $derived(page.url.pathname.includes('/admin'));
+
+	// Filter out deleted users for immediate UI update
+	let visibleConnectedUsers = $derived(
+		connectedUsers.filter((user) => !deletedUserIds.has(user.mcpInstanceId || ''))
+	);
 
 	let logsUrl = $derived.by(() => {
 		if (entity === 'workspace') {
@@ -190,6 +205,35 @@
 		} finally {
 			restarting = false;
 			showRestartConfirm = false;
+		}
+	}
+
+	async function handleDeleteInstance(user: (typeof connectedUsers)[number]) {
+		if (!user.mcpInstanceId) return;
+
+		deleting = true;
+		try {
+			await ChatService.deleteMcpServerInstance(user.mcpInstanceId);
+
+			// Immediately remove from UI
+			deletedUserIds.add(user.mcpInstanceId);
+			deletedUserIds = new Set(deletedUserIds); // Trigger reactivity
+
+			// Small delay to allow backend to process the deletion
+			await delay(500);
+
+			// Refresh the k8s info after deletion
+			listK8sInfo = getK8sInfo();
+		} catch (err) {
+			console.error('Failed to delete instance:', err);
+			// Remove from deleted set if deletion failed
+			if (user.mcpInstanceId) {
+				deletedUserIds.delete(user.mcpInstanceId);
+				deletedUserIds = new Set(deletedUserIds);
+			}
+		} finally {
+			deleting = false;
+			showDeleteInstanceConfirm = undefined;
 		}
 	}
 
@@ -471,7 +515,7 @@
 						User Configuration Update Required
 					</p>
 				</div>
-				<span class="text-sm font-light break-all">
+				<span class="break-all text-sm font-light">
 					The server was recently updated and requires the user to update their configuration.
 					Server details and logs are temporarily unavailable as a result.
 				</span>
@@ -513,7 +557,7 @@
 	</div>
 	<div
 		bind:this={logsContainer}
-		class="dark:bg-surface1 dark:border-surface3 default-scrollbar-thin bg-background flex max-h-84 min-h-64 flex-col overflow-y-auto rounded-lg border border-transparent p-4 shadow-sm"
+		class="dark:bg-surface1 dark:border-surface3 default-scrollbar-thin bg-background max-h-84 flex min-h-64 flex-col overflow-y-auto rounded-lg border border-transparent p-4 shadow-sm"
 	>
 		{#if messages.length > 0}
 			<div class="space-y-2">
@@ -531,7 +575,7 @@
 
 <div>
 	<h2 class="mb-2 text-lg font-semibold">Connected Users</h2>
-	<Table data={connectedUsers ?? []} fields={['name']}>
+	<Table data={visibleConnectedUsers ?? []} fields={['name']}>
 		{#snippet onRenderColumn(property, d)}
 			{#if property === 'name'}
 				{d.email || d.username || 'Unknown'}
@@ -542,9 +586,44 @@
 
 		{#snippet actions(d)}
 			{@const auditLogsUrl = getAuditLogUrl(d)}
-			{#if auditLogsUrl}
-				<a href={resolve(auditLogsUrl as `/${string}`)} class="button-text"> View Audit Logs </a>
-			{/if}
+
+			<!-- Check for permissions -->
+			{@const isInstanceOwner = d.userID === profile.current.id}
+			{@const hasAdminAccess = profile.current.hasAdminAccess?.()}
+			{@const canDelete = hasAdminAccess || isInstanceOwner}
+
+			<DotDotDot class="icon-button hover:dark:bg-background/50" classes={{ menu: 'gap-1' }}>
+				{#snippet icon()}
+					<Ellipsis class="size-4" />
+				{/snippet}
+
+				{#snippet children({ toggle })}
+					{#if auditLogsUrl}
+						<a class="menu-button" href={resolve(auditLogsUrl as `/${string}`)}>
+							<Captions class="size-4" /> View Audit Logs
+						</a>
+					{/if}
+
+					{#if canDelete && d.mcpInstanceId}
+						<button
+							class="menu-button"
+							disabled={deleting}
+							onclick={(e) => {
+								e.stopPropagation();
+								showDeleteInstanceConfirm = d;
+								toggle(false);
+							}}
+						>
+							{#if deleting}
+								<LoaderCircle class="size-4 animate-spin" />
+							{:else}
+								<Unplug class="size-4" />
+							{/if}
+							Disconnect from Server
+						</button>
+					{/if}
+				{/snippet}
+			</DotDotDot>
 		{/snippet}
 	</Table>
 </div>
@@ -627,5 +706,22 @@
 	{#snippet note()}
 		Are you sure you want to redeploy this server with the latest Kubernetes settings? This will
 		cause a brief service interruption.
+	{/snippet}
+</Confirm>
+
+<Confirm
+	show={!!showDeleteInstanceConfirm}
+	onsuccess={async () => {
+		if (!showDeleteInstanceConfirm) return;
+		await handleDeleteInstance(showDeleteInstanceConfirm);
+	}}
+	oncancel={() => (showDeleteInstanceConfirm = undefined)}
+	loading={deleting}
+	msg={`Delete server instance for ${showDeleteInstanceConfirm?.email || showDeleteInstanceConfirm?.username || 'Unknown'}?`}
+	type="delete"
+	title="Confirm Delete"
+>
+	{#snippet note()}
+		This will permanently delete the server instance. This action cannot be undone.
 	{/snippet}
 </Confirm>
