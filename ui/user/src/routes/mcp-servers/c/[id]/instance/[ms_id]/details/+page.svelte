@@ -46,9 +46,6 @@
 </script>
 
 <Layout {title} showBackButton>
-	{#snippet rightNavActions()}
-		<McpServerActions server={mcpServer} entry={catalogEntry} />
-	{/snippet}
 	<div class="flex flex-col gap-6 pb-8" in:fly={{ x: 100, delay: duration, duration }}>
 		{#if mcpServerId}
 			{#if catalogEntry?.manifest.runtime === 'composite'}

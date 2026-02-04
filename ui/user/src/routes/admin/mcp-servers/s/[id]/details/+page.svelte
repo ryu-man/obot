@@ -30,10 +30,6 @@
 </script>
 
 <Layout {title} showBackButton>
-	{#snippet rightNavActions()}
-		<McpServerActions server={mcpServer} {loading} />
-	{/snippet}
-
 	<div class="flex flex-col gap-6 pb-8" in:fly={{ x: 100, delay: PAGE_TRANSITION_DURATION }}>
 		{#if loading}
 			<div class="flex w-full justify-center">

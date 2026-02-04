@@ -20,7 +20,6 @@
 		CircleFadingArrowUp,
 		Captions,
 		Ellipsis,
-		Power,
 		Trash2,
 		Unplug
 	} from 'lucide-svelte';
@@ -83,13 +82,31 @@
 	let refreshingEvents = $state(false);
 	let refreshingLogs = $state(false);
 	let showUpdateK8sSettingsConfirm = $state(false);
-	let updatingK8sSettings = $state(false);
+	let restartingK8s = $state(false);
 	let isAdminUrl = $derived(page.url.pathname.includes('/admin'));
 
 	// Filter out deleted users for immediate UI update
 	let visibleConnectedUsers = $derived(
 		connectedUsers.filter((user) => !deletedUserIds.has(user.mcpInstanceId || ''))
 	);
+
+	// Check if the current user is connected to this server instance
+	let isCurrentUserConnected = $derived(
+		visibleConnectedUsers.some((user) => user.id === profile.current.id)
+	);
+
+	// Determine if the user cannot modify the server
+	// This is true if the user is readonly (e.g., auditor) and not connected to the server
+	let isNonConnectedAuditor = $derived(readonly && !isCurrentUserConnected);
+
+	const runtime = $derived(catalogEntry?.manifest.runtime);
+	const mcpServerType = $derived.by(() => {
+		if (runtime === 'composite') return 'composite';
+		if (runtime === 'remote') return 'remote';
+		if (catalogEntry && 'isCatalogEntry' in catalogEntry) return 'single-user';
+
+		return 'multi-user';
+	});
 
 	let logsUrl = $derived.by(() => {
 		if (entity === 'workspace') {
@@ -301,7 +318,7 @@
 	}
 
 	async function handleRedeployWithK8sSettings() {
-		updatingK8sSettings = true;
+		restartingK8s = true;
 		try {
 			await (entity === 'workspace' && entityId
 				? catalogEntry?.id
@@ -321,7 +338,7 @@
 		} catch (err) {
 			console.error('Failed to update Kubernetes settings:', err);
 		} finally {
-			updatingK8sSettings = false;
+			restartingK8s = false;
 			showUpdateK8sSettingsConfirm = false;
 		}
 	}
@@ -393,23 +410,99 @@
 	}
 </script>
 
-<div class="flex items-center gap-3">
-	<h1 class={twMerge('text-2xl font-semibold', classes?.title)}>
-		{#if title}
-			{title}
-		{:else if mcpServerInstanceId}
-			{name} | {mcpServerInstanceId}
-		{:else}
-			{name}
+<div class="flex items-center justify-between gap-3">
+	<div class="flex gap-2">
+		<h1 class={twMerge('text-2xl font-semibold', classes?.title)}>
+			{#if title}
+				{title}
+			{:else if mcpServerInstanceId}
+				{name} | {mcpServerInstanceId}
+			{:else}
+				{name}
+			{/if}
+		</h1>
+		<button
+			onclick={handleRefreshEvents}
+			class="aspect-square h-8 rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+			disabled={refreshingEvents}
+		>
+			<RefreshCw class="h-full {refreshingEvents ? 'animate-spin' : ''}" />
+		</button>
+	</div>
+
+	<div class="flex gap-2">
+		{#if isCurrentUserConnected || mcpServerType !== 'multi-user'}
+			<!-- Multi-user servers: Show disconnect button if current user is connected -->
+			<!-- Single-user servers: Show delete button if user is creator or has admin access -->
+			{@const isServerCreatedByCurrentUser = mcpServer && mcpServer.userID === profile.current.id}
+
+			<button
+				onclick={() => {
+					if (deleting) return;
+					if (!mcpServer) return;
+
+					let user: (typeof connectedUsers)[number] | undefined;
+
+					if (isServerCreatedByCurrentUser) {
+						user = visibleConnectedUsers.find((user) => user.id === profile.current.id);
+					} else if (profile.current?.hasAdminAccess?.()) {
+						user = visibleConnectedUsers.find((user) => user.id === mcpServer.userID);
+					}
+
+					if (!user) {
+						console.error('Unable to determine user for deletion');
+						return;
+					}
+
+					showDeleteInstanceConfirm = user;
+				}}
+				class="button-destructive flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium disabled:opacity-50"
+				disabled={deleting}
+			>
+				{#if mcpServerType === 'multi-user'}
+					<Unplug class="size-3" />
+					Disconnect from Server
+				{:else}
+					<Trash2 class="size-3" />
+					Delete Server
+				{/if}
+			</button>
 		{/if}
-	</h1>
-	<button
-		onclick={handleRefreshEvents}
-		class="rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300"
-		disabled={refreshingEvents}
-	>
-		<RefreshCw class="size-4 {refreshingEvents ? 'animate-spin' : ''}" />
-	</button>
+
+		<button
+			onclick={() => {
+				if (restarting) return;
+
+				showRestartConfirm = true;
+			}}
+			class="button-primary flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+			disabled={restarting}
+		>
+			<RotateCcw class="size-3" />
+			Restart
+		</button>
+
+		{#await listK8sSettingsStatus}
+			<div class="flex w-full justify-center">
+				<LoaderCircle class="size-6 animate-spin" />
+			</div>
+		{:then k8sSettingsStatus}
+			{#if k8sSettingsStatus?.needsK8sUpdate}
+				<button
+					class="flex items-center gap-2 rounded-md bg-yellow-500/75 px-3 py-1.5 text-xs font-medium text-white hover:bg-yellow-500 disabled:opacity-50"
+					disabled={restartingK8s}
+					onclick={() => {
+						if (restartingK8s) return;
+
+						showUpdateK8sSettingsConfirm = true;
+					}}
+				>
+					<CircleFadingArrowUp class="size-3" />
+					Redeploy with Latest Settings
+				</button>
+			{/if}
+		{/await}
+	</div>
 </div>
 
 {#if mcpServerInstanceId}
@@ -434,7 +527,7 @@
 		{#each k8sInfo as detail (detail.id)}
 			{@render detailRow(detail.label, detail.value, detail.id)}
 		{/each}
-		{#if catalogEntry?.manifest.runtime === 'remote' && mcpServer?.manifest.remoteConfig?.url}
+		{#if runtime === 'remote' && mcpServer?.manifest.remoteConfig?.url}
 			{@render configurationRow('URL', mcpServer?.manifest.remoteConfig?.url)}
 		{/if}
 	</div>
@@ -446,7 +539,7 @@
 			</div>
 		{:then revealedValues}
 			{@const { headers, envs } = compileRevealedValues(revealedValues, catalogEntry)}
-			{#if catalogEntry?.manifest.runtime === 'remote'}
+			{#if runtime === 'remote'}
 				<div>
 					<h2 class="mb-2 text-lg font-semibold">Headers</h2>
 					{#if headers.length > 0}
@@ -515,7 +608,7 @@
 						User Configuration Update Required
 					</p>
 				</div>
-				<span class="break-all text-sm font-light">
+				<span class="text-sm font-light break-all">
 					The server was recently updated and requires the user to update their configuration.
 					Server details and logs are temporarily unavailable as a result.
 				</span>
@@ -557,7 +650,7 @@
 	</div>
 	<div
 		bind:this={logsContainer}
-		class="dark:bg-surface1 dark:border-surface3 default-scrollbar-thin bg-background max-h-84 flex min-h-64 flex-col overflow-y-auto rounded-lg border border-transparent p-4 shadow-sm"
+		class="dark:bg-surface1 dark:border-surface3 default-scrollbar-thin bg-background flex max-h-84 min-h-64 flex-col overflow-y-auto rounded-lg border border-transparent p-4 shadow-sm"
 	>
 		{#if messages.length > 0}
 			<div class="space-y-2">
@@ -588,9 +681,10 @@
 			{@const auditLogsUrl = getAuditLogUrl(d)}
 
 			<!-- Check for permissions -->
-			{@const isInstanceOwner = d.userID === profile.current.id}
+			{@const isInstanceOwner = d.id === profile.current.id}
 			{@const hasAdminAccess = profile.current.hasAdminAccess?.()}
-			{@const canDelete = hasAdminAccess || isInstanceOwner}
+			{@const hasAuditorAccess = profile.current.isAdminReadonly?.()}
+			{@const canDelete = isInstanceOwner || (hasAdminAccess && !hasAuditorAccess)}
 
 			<DotDotDot class="icon-button hover:dark:bg-background/50" classes={{ menu: 'gap-1' }}>
 				{#snippet icon()}
@@ -604,11 +698,13 @@
 						</a>
 					{/if}
 
-					{#if canDelete && d.mcpInstanceId}
+					{#if d.mcpInstanceId}
 						<button
 							class="menu-button"
-							disabled={deleting}
+							disabled={deleting || !canDelete}
 							onclick={(e) => {
+								if (deleting || !canDelete) return;
+
 								e.stopPropagation();
 								showDeleteInstanceConfirm = d;
 								toggle(false);
@@ -619,7 +715,12 @@
 							{:else}
 								<Unplug class="size-4" />
 							{/if}
-							Disconnect from Server
+
+							{#if isInstanceOwner}
+								Disconnect from Server
+							{:else}
+								Remove User from Server
+							{/if}
 						</button>
 					{/if}
 				{/snippet}
@@ -636,33 +737,6 @@
 			<p class="col-span-4 text-sm font-semibold">{label}</p>
 			<div class="col-span-8 flex items-center justify-between">
 				<p class="truncate text-sm font-light">{value}</p>
-				{#if id === 'status' && !readonly}
-					<button
-						onclick={() => (showRestartConfirm = true)}
-						class="button-primary flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
-						disabled={restarting}
-					>
-						<RotateCcw class="size-3" />
-						Restart
-					</button>
-				{:else if id === 'kubernetes_deployments' && !readonly}
-					{#await listK8sSettingsStatus}
-						<div class="flex w-full justify-center">
-							<LoaderCircle class="size-6 animate-spin" />
-						</div>
-					{:then k8sSettingsStatus}
-						{#if k8sSettingsStatus?.needsK8sUpdate}
-							<button
-								class="flex items-center gap-2 rounded-md bg-yellow-500/75 px-3 py-1.5 text-xs font-medium text-white hover:bg-yellow-500 disabled:opacity-50"
-								disabled={readonly}
-								onclick={() => (showUpdateK8sSettingsConfirm = true)}
-							>
-								<CircleFadingArrowUp class="size-3" />
-								Redeploy with Latest Settings
-							</button>
-						{/if}
-					{/await}
-				{/if}
 			</div>
 		</div>
 	</div>
@@ -689,8 +763,12 @@
 	show={showRestartConfirm}
 	msg={`Restart ${title || name}?`}
 	onsuccess={handleRestart}
-	oncancel={() => (showRestartConfirm = false)}
+	oncancel={() => {
+		showRestartConfirm = false;
+		restarting = false;
+	}}
 	loading={restarting}
+	type="info"
 >
 	{#snippet note()}
 		Are you sure you want to restart this deployment? This will cause a brief service interruption.
@@ -700,8 +778,11 @@
 	show={showUpdateK8sSettingsConfirm}
 	msg={`Redeploy ${title || name}?`}
 	onsuccess={handleRedeployWithK8sSettings}
-	oncancel={() => (showUpdateK8sSettingsConfirm = false)}
-	loading={updatingK8sSettings}
+	oncancel={() => {
+		showUpdateK8sSettingsConfirm = false;
+		restartingK8s = false;
+	}}
+	loading={restartingK8s}
 >
 	{#snippet note()}
 		Are you sure you want to redeploy this server with the latest Kubernetes settings? This will
@@ -709,19 +790,60 @@
 	{/snippet}
 </Confirm>
 
-<Confirm
-	show={!!showDeleteInstanceConfirm}
-	onsuccess={async () => {
-		if (!showDeleteInstanceConfirm) return;
-		await handleDeleteInstance(showDeleteInstanceConfirm);
-	}}
-	oncancel={() => (showDeleteInstanceConfirm = undefined)}
-	loading={deleting}
-	msg={`Delete server instance for ${showDeleteInstanceConfirm?.email || showDeleteInstanceConfirm?.username || 'Unknown'}?`}
-	type="delete"
-	title="Confirm Delete"
->
-	{#snippet note()}
-		This will permanently delete the server instance. This action cannot be undone.
-	{/snippet}
-</Confirm>
+{#if mcpServerType === 'multi-user'}
+	<!-- Multi-user server disconnect confirmation -->
+	{@const isDisconnectingSelf = showDeleteInstanceConfirm?.id === profile.current.id}
+	<Confirm
+		show={!!showDeleteInstanceConfirm}
+		onsuccess={async () => {
+			if (!showDeleteInstanceConfirm) return;
+			await handleDeleteInstance(showDeleteInstanceConfirm);
+		}}
+		oncancel={() => {
+			showDeleteInstanceConfirm = undefined;
+			deleting = false;
+		}}
+		loading={deleting}
+		msg={isDisconnectingSelf
+			? 'Disconnect from server?'
+			: `Remove ${showDeleteInstanceConfirm?.email || showDeleteInstanceConfirm?.username || 'Unknown'} from server?`}
+		type="delete"
+		title={isDisconnectingSelf ? 'Confirm Disconnect' : 'Confirm Removal'}
+	>
+		{#snippet note()}
+			{#if isDisconnectingSelf}
+				This will disconnect your connection to this multi-user server.
+			{:else}
+				This will remove the user's connection to this multi-user server.
+			{/if}
+		{/snippet}
+	</Confirm>
+{:else if mcpServer}
+	<!-- Single-user server delete confirmation -->
+	{@const isDeletingOwnServer = showDeleteInstanceConfirm?.id === profile.current.id}
+	<Confirm
+		show={!!showDeleteInstanceConfirm}
+		onsuccess={async () => {
+			if (!showDeleteInstanceConfirm) return;
+			await handleDeleteInstance(showDeleteInstanceConfirm);
+		}}
+		oncancel={() => {
+			showDeleteInstanceConfirm = undefined;
+			deleting = false;
+		}}
+		loading={deleting}
+		msg={isDeletingOwnServer
+			? 'Delete your server instance?'
+			: `Delete server instance created by ${showDeleteInstanceConfirm?.email || showDeleteInstanceConfirm?.username || 'Unknown'}?`}
+		type="delete"
+		title="Confirm Delete"
+	>
+		{#snippet note()}
+			{#if isDeletingOwnServer}
+				This will permanently delete your server instance. This action cannot be undone.
+			{:else}
+				This will permanently delete the user's server instance. This action cannot be undone.
+			{/if}
+		{/snippet}
+	</Confirm>
+{/if}
