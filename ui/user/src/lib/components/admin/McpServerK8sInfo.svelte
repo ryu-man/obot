@@ -95,10 +95,6 @@
 		visibleConnectedUsers.some((user) => user.id === profile.current.id)
 	);
 
-	// Determine if the user cannot modify the server
-	// This is true if the user is readonly (e.g., auditor) and not connected to the server
-	let isNonConnectedAuditor = $derived(readonly && !isCurrentUserConnected);
-
 	const runtime = $derived(catalogEntry?.manifest.runtime);
 	const mcpServerType = $derived.by(() => {
 		if (runtime === 'composite') return 'composite';
