@@ -91,13 +91,13 @@
 	);
 
 	// Check if the current user is connected to this server instance
-	let isCurrentUserConnected = $derived(
+	const isCurrentUserConnected = $derived(
 		visibleConnectedUsers.some((user) => user.id === profile.current.id)
 	);
 
 	const runtime = $derived(catalogEntry?.manifest.runtime);
 	const mcpServerType = $derived.by(() => {
-		if (runtime === 'composite') return 'composite';
+		if (runtime === 'composite') return undefined;
 		if (runtime === 'remote') return 'remote';
 		if (catalogEntry && 'isCatalogEntry' in catalogEntry) return 'single-user';
 
@@ -226,7 +226,11 @@
 
 		deleting = true;
 		try {
-			await ChatService.deleteMcpServerInstance(user.mcpInstanceId);
+			if (mcpServerType === 'multi-user') {
+				await ChatService.deleteMcpServerInstance(user.mcpInstanceId);
+			} else {
+				await ChatService.deleteSingleOrRemoteMcpServer(user.mcpInstanceId);
+			}
 
 			// Immediately remove from UI
 			deletedUserIds.add(user.mcpInstanceId);
@@ -428,20 +432,16 @@
 
 	<div class="flex gap-2">
 		{#if isCurrentUserConnected || mcpServerType !== 'multi-user'}
-			<!-- Multi-user servers: Show disconnect button if current user is connected -->
-			<!-- Single-user servers: Show delete button if user is creator or has admin access -->
-			{@const isServerCreatedByCurrentUser = mcpServer && mcpServer.userID === profile.current.id}
-
 			<button
 				onclick={() => {
 					if (deleting) return;
-					if (!mcpServer) return;
+					if (mcpServerType === 'single-user' && !mcpServer) return;
 
 					let user: (typeof connectedUsers)[number] | undefined;
 
-					if (isServerCreatedByCurrentUser) {
+					if (mcpServerType === 'multi-user') {
 						user = visibleConnectedUsers.find((user) => user.id === profile.current.id);
-					} else if (profile.current?.hasAdminAccess?.()) {
+					} else if (profile.current?.hasAdminAccess?.() && mcpServer) {
 						user = visibleConnectedUsers.find((user) => user.id === mcpServer.userID);
 					}
 
@@ -789,6 +789,10 @@
 {#if mcpServerType === 'multi-user'}
 	<!-- Multi-user server disconnect confirmation -->
 	{@const isDisconnectingSelf = showDeleteInstanceConfirm?.id === profile.current.id}
+	{@const serverOwner = showDeleteInstanceConfirm
+		? showDeleteInstanceConfirm.email || showDeleteInstanceConfirm.username || 'Unknown'
+		: 'Unknown'}
+
 	<Confirm
 		show={!!showDeleteInstanceConfirm}
 		onsuccess={async () => {
@@ -800,23 +804,26 @@
 			deleting = false;
 		}}
 		loading={deleting}
-		msg={isDisconnectingSelf
-			? 'Disconnect from server?'
-			: `Remove ${showDeleteInstanceConfirm?.email || showDeleteInstanceConfirm?.username || 'Unknown'} from server?`}
+		msg={isDisconnectingSelf ? 'Disconnect Yourself from server?' : `Disconnect User from server?`}
 		type="delete"
-		title={isDisconnectingSelf ? 'Confirm Disconnect' : 'Confirm Removal'}
+		title="Confirm Disconnect"
 	>
 		{#snippet note()}
-			{#if isDisconnectingSelf}
-				This will disconnect your connection to this multi-user server.
-			{:else}
-				This will remove the user's connection to this multi-user server.
-			{/if}
+			<p class="text-sm">
+				You are about to disconnect <span class="font-semibold"
+					>{isDisconnectingSelf ? 'yourself' : `${serverOwner}`}</span
+				> from this server. All configurations and connections will be permanently removed.
+			</p>
+			<p class="mt-4 text-sm font-semibold text-red-500">This action cannot be undone.</p>
 		{/snippet}
 	</Confirm>
 {:else if mcpServer}
 	<!-- Single-user server delete confirmation -->
 	{@const isDeletingOwnServer = showDeleteInstanceConfirm?.id === profile.current.id}
+	{@const serverOwner = showDeleteInstanceConfirm
+		? showDeleteInstanceConfirm.email || showDeleteInstanceConfirm.username || 'Unknown'
+		: 'Unknown'}
+
 	<Confirm
 		show={!!showDeleteInstanceConfirm}
 		onsuccess={async () => {
@@ -828,17 +835,24 @@
 			deleting = false;
 		}}
 		loading={deleting}
-		msg={isDeletingOwnServer
-			? 'Delete your server instance?'
-			: `Delete server instance created by ${showDeleteInstanceConfirm?.email || showDeleteInstanceConfirm?.username || 'Unknown'}?`}
+		msg={isDeletingOwnServer ? 'Delete your MCP server?' : `Delete MCP server?`}
 		type="delete"
-		title="Confirm Delete"
+		title={isDeletingOwnServer ? 'Delete My Server' : "Delete User's Server"}
 	>
 		{#snippet note()}
 			{#if isDeletingOwnServer}
-				This will permanently delete your server instance. This action cannot be undone.
+				<p class="text-sm">
+					You are about to delete <span class="font-semibold">your own MCP server</span>. All
+					configurations and connections will be permanently removed.
+				</p>
+				<p class="mt-4 text-sm font-semibold text-red-500">This action cannot be undone.</p>
 			{:else}
-				This will permanently delete the user's server instance. This action cannot be undone.
+				<p class="text-sm">
+					You are about to delete an MCP server owned by <span class="font-semibold"
+						>{serverOwner}</span
+					>. All configurations and connections will be permanently removed.
+				</p>
+				<p class="mt-4 text-sm font-semibold text-red-500">This action cannot be undone.</p>
 			{/if}
 		{/snippet}
 	</Confirm>
