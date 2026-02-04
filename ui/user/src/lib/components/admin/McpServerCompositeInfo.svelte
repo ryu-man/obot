@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import {
 		AdminService,
+		ChatService,
 		type MCPCatalogEntry,
 		type MCPCatalogServer,
 		type OrgUser
@@ -10,10 +11,12 @@
 	import { twMerge } from 'tailwind-merge';
 	import Table from '../table/Table.svelte';
 	import { onMount } from 'svelte';
-	import { AlertCircle, ChevronRight, Server } from 'lucide-svelte';
+	import { AlertCircle, ChevronRight, Server, Trash2 } from 'lucide-svelte';
 	import { ADMIN_SESSION_STORAGE, DEFAULT_MCP_CATALOG_ID } from '$lib/constants';
-	import { openUrl } from '$lib/utils';
+	import { delay, openUrl } from '$lib/utils';
 	import { resolve } from '$app/paths';
+	import Confirm from '../Confirm.svelte';
+	import { goto } from '$lib/url';
 
 	interface Props {
 		entity?: 'workspace' | 'catalog';
@@ -32,6 +35,11 @@
 	let isAdminUrl = $derived(page.url.pathname.includes('/admin'));
 	let servers = $state<MCPCatalogServer[]>([]);
 	let serversMap = $derived(new Map(servers.map((s) => [s.catalogEntryID || s.id, s])));
+	let deleting = $state(false);
+	let showDeleteInstanceConfirm = $state(false);
+
+	const createdByUser = $derived(connectedUsers[0]);
+	const isServerCreatedByCurrentUser = $derived(createdByUser?.id === profile.current.id);
 
 	onMount(async () => {
 		if (!mcpServerId || !catalogEntry?.id || !entityId) return;
@@ -53,12 +61,51 @@
 		if (!profile.current?.hasAdminAccess?.()) return null;
 		return `/admin/mcp-servers/c/${catalogEntry.id}?view=audit-logs&user_id=${d.id}`;
 	}
+
+	async function handleDeleteInstance(serverId: typeof mcpServerId) {
+		if (!serverId) return;
+
+		deleting = true;
+		try {
+			await ChatService.deleteSingleOrRemoteMcpServer(serverId);
+
+			// Small delay to allow backend to process the deletion
+			await delay(500);
+
+			//
+			goto('/admin/mcp-servers');
+		} catch (err) {
+			console.error('Failed to delete instance:', err);
+			// Remove from deleted set if deletion failed
+		} finally {
+			deleting = false;
+			showDeleteInstanceConfirm = false;
+		}
+	}
 </script>
 
 <div class="flex items-center gap-3">
-	<h1 class={twMerge('text-2xl font-semibold', classes?.title)}>
-		{name}
-	</h1>
+	<div class="flex w-full items-center justify-between">
+		<h1 class={twMerge('text-2xl font-semibold', classes?.title)}>
+			{name}
+		</h1>
+
+		<div class="flex gap-2">
+			<button
+				onclick={() => {
+					if (deleting) return;
+					if (!mcpServerId) return;
+
+					showDeleteInstanceConfirm = true;
+				}}
+				class="button-destructive flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium disabled:opacity-50"
+				disabled={deleting}
+			>
+				<Trash2 class="size-3" />
+				Delete Server
+			</button>
+		</div>
+	</div>
 </div>
 
 {#if catalogEntry?.manifest.compositeConfig?.componentServers}
@@ -170,3 +217,41 @@
 		{/snippet}
 	</Table>
 </div>
+
+{#if mcpServerId}
+	<!-- Single-user server delete confirmation -->
+	{@const isDeletingOwnServer = isServerCreatedByCurrentUser}
+	{@const serverOwner = createdByUser?.email || createdByUser?.username || 'Unknown User'}
+	<Confirm
+		show={!!showDeleteInstanceConfirm}
+		onsuccess={async () => {
+			if (!showDeleteInstanceConfirm) return;
+			await handleDeleteInstance(mcpServerId);
+		}}
+		oncancel={() => {
+			showDeleteInstanceConfirm = false;
+			deleting = false;
+		}}
+		loading={deleting}
+		msg={isDeletingOwnServer ? 'Delete Your MCP Server?' : `Delete User MCP Server?`}
+		type="delete"
+		title={isDeletingOwnServer ? 'Delete My Server' : 'Delete User Server'}
+	>
+		{#snippet note()}
+			{#if isDeletingOwnServer}
+				<p class="text-sm">
+					You are about to delete <span class="font-semibold">your own MCP server</span>. All
+					configurations and connections will be permanently removed.
+				</p>
+				<p class="mt-4 text-sm font-semibold text-red-500">This action cannot be undone.</p>
+			{:else}
+				<p class="text-sm">
+					You are about to delete an MCP server owned by <span class="font-semibold"
+						>{serverOwner}</span
+					>. All configurations and connections will be permanently removed.
+				</p>
+				<p class="mt-4 text-sm font-semibold text-red-500">This action cannot be undone.</p>
+			{/if}
+		{/snippet}
+	</Confirm>
+{/if}
