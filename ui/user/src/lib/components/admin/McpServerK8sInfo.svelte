@@ -452,7 +452,7 @@
 
 					showDeleteInstanceConfirm = user;
 				}}
-				class="button-destructive flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium disabled:opacity-50"
+				class="button-destructive flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap disabled:opacity-50"
 				disabled={deleting}
 			>
 				{#if mcpServerType === 'multi-user'}
@@ -471,7 +471,7 @@
 
 				showRestartConfirm = true;
 			}}
-			class="button-primary flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+			class="button-primary flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap text-white disabled:opacity-50"
 			disabled={restarting}
 		>
 			<RotateCcw class="size-3" />
@@ -676,51 +676,55 @@
 		{#snippet actions(d)}
 			{@const auditLogsUrl = getAuditLogUrl(d)}
 
-			<!-- Check for permissions -->
-			{@const isInstanceOwner = d.id === profile.current.id}
-			{@const hasAdminAccess = profile.current.hasAdminAccess?.()}
-			{@const hasAuditorAccess = profile.current.isAdminReadonly?.()}
-			{@const canDelete = isInstanceOwner || (hasAdminAccess && !hasAuditorAccess)}
+			{#if mcpServerType === 'multi-user'}
+				<!-- Check for permissions -->
+				{@const isInstanceOwner = d.id === profile.current.id}
+				{@const hasAdminAccess = profile.current.hasAdminAccess?.()}
+				{@const hasAuditorAccess = profile.current.isAdminReadonly?.()}
+				{@const canDelete = isInstanceOwner || (hasAdminAccess && !hasAuditorAccess)}
 
-			<DotDotDot class="icon-button hover:dark:bg-background/50" classes={{ menu: 'gap-1' }}>
-				{#snippet icon()}
-					<Ellipsis class="size-4" />
-				{/snippet}
+				<DotDotDot class="icon-button hover:dark:bg-background/50" classes={{ menu: 'gap-1' }}>
+					{#snippet icon()}
+						<Ellipsis class="size-4" />
+					{/snippet}
 
-				{#snippet children({ toggle })}
-					{#if auditLogsUrl}
-						<a class="menu-button" href={resolve(auditLogsUrl as `/${string}`)}>
-							<Captions class="size-4" /> View Audit Logs
-						</a>
-					{/if}
+					{#snippet children({ toggle })}
+						{#if auditLogsUrl}
+							<a class="menu-button" href={resolve(auditLogsUrl as `/${string}`)}>
+								<Captions class="size-4" /> View Audit Logs
+							</a>
+						{/if}
 
-					{#if d.mcpInstanceId}
-						<button
-							class="menu-button"
-							disabled={deleting || !canDelete}
-							onclick={(e) => {
-								if (deleting || !canDelete) return;
+						{#if d.mcpInstanceId}
+							<button
+								class="menu-button"
+								disabled={deleting || !canDelete}
+								onclick={(e) => {
+									if (deleting || !canDelete) return;
 
-								e.stopPropagation();
-								showDeleteInstanceConfirm = d;
-								toggle(false);
-							}}
-						>
-							{#if deleting}
-								<LoaderCircle class="size-4 animate-spin" />
-							{:else}
-								<Unplug class="size-4" />
-							{/if}
+									e.stopPropagation();
+									showDeleteInstanceConfirm = d;
+									toggle(false);
+								}}
+							>
+								{#if deleting}
+									<LoaderCircle class="size-4 animate-spin" />
+								{:else}
+									<Unplug class="size-4" />
+								{/if}
 
-							{#if isInstanceOwner}
-								Disconnect from Server
-							{:else}
-								Remove User from Server
-							{/if}
-						</button>
-					{/if}
-				{/snippet}
-			</DotDotDot>
+								{#if isInstanceOwner}
+									Disconnect from Server
+								{:else}
+									Remove User from Server
+								{/if}
+							</button>
+						{/if}
+					{/snippet}
+				</DotDotDot>
+			{:else if auditLogsUrl}
+				<a href={resolve(auditLogsUrl as `/${string}`)} class="button-text"> View Audit Logs </a>
+			{/if}
 		{/snippet}
 	</Table>
 </div>
