@@ -525,7 +525,7 @@
 							{/await}
 						</button>
 
-						{#if mcpServerType === 'multi-user'}
+						{#if mcpServerType === 'multi-user' && isCurrentUserConnected}
 							<button
 								onclick={() => {
 									if (deleting) return;
