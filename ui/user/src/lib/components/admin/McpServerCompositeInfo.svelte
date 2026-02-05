@@ -72,7 +72,6 @@
 			// Small delay to allow backend to process the deletion
 			await delay(500);
 
-			//
 			goto('/admin/mcp-servers');
 		} catch (err) {
 			console.error('Failed to delete instance:', err);
