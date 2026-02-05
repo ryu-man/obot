@@ -536,7 +536,7 @@
 <DiffDialog bind:this={diffDialog} fromServer={diffServer} toServer={entry} />
 
 {#snippet emptyInstancesContent()}
-	<div class="w-md mt-12 flex flex-col items-center gap-4 self-center text-center">
+	<div class="mt-12 flex w-md flex-col items-center gap-4 self-center text-center">
 		<Router class="text-on-surface1 size-24 opacity-50" />
 		<h4 class="text-on-surface1 text-lg font-semibold">No server details</h4>
 		<p class="text-on-surface1 text-sm font-light">No details available yet for this server.</p>
