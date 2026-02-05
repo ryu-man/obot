@@ -19,7 +19,9 @@
 		RefreshCw,
 		CircleFadingArrowUp,
 		Trash2,
-		Unplug
+		Unplug,
+		ExternalLink,
+		Ellipsis
 	} from 'lucide-svelte';
 	import { onDestroy, onMount } from 'svelte';
 	import Table from '../table/Table.svelte';
@@ -34,6 +36,7 @@
 	import { DEFAULT_MCP_CATALOG_ID } from '$lib/constants';
 	import { delay } from '$lib/utils';
 	import { goto } from '$lib/url';
+	import DotDotDot from '../DotDotDot.svelte';
 
 	interface Props {
 		id?: string;
@@ -86,6 +89,9 @@
 	let restartingK8s = $state(false);
 	let isAdminUrl = $derived(page.url.pathname.includes('/admin'));
 
+	let needsK8sUpdate = $derived(false);
+	let doesSupportK8sUpdate = $derived(false);
+
 	// Filter out deleted users for immediate UI update
 	let visibleConnectedUsers = $derived(
 		connectedUsers.filter((user) => !deletedUserIds.has(user.mcpInstanceId || ''))
@@ -106,6 +112,7 @@
 	});
 
 	const showDeleteServerButton = $derived(usedAs === 'page');
+	const showDefinitionNavButton = $derived(usedAs === 'page');
 
 	let logsUrl = $derived.by(() => {
 		if (entity === 'workspace') {
@@ -178,7 +185,16 @@
 				})
 			: Promise.resolve<Record<string, string>>({});
 		listK8sInfo = getK8sInfo();
-		listK8sSettingsStatus = getK8sSettingsStatus();
+		listK8sSettingsStatus = getK8sSettingsStatus()
+			.then((status) => {
+				needsK8sUpdate = status.needsK8sUpdate;
+				doesSupportK8sUpdate = true;
+				return status;
+			})
+			.catch((err) => {
+				doesSupportK8sUpdate = false;
+				return Promise.reject(err);
+			});
 		eventStream.connect(logsUrl, {
 			onMessage: (data) => {
 				messages = [...messages, data];
@@ -438,83 +454,122 @@
 	</div>
 
 	<div class="flex gap-2">
-		{#if showDeleteServerButton}
-			<button
-				onclick={() => {
-					if (deleting) return;
-					if (mcpServerType === 'single-user' && !mcpServer) return;
-
-					showDeleteServerConfirm = true;
-				}}
-				class="button-destructive flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap disabled:opacity-50"
-				disabled={deleting}
-			>
-				<Trash2 class="size-3" />
-				Delete Server
-			</button>
-		{/if}
-
-		{#if mcpServerType === 'multi-user'}
-			<button
-				onclick={() => {
-					if (deleting) return;
-
-					let user: (typeof connectedUsers)[number] | undefined;
-
-					if (mcpServerType === 'multi-user') {
-						user = visibleConnectedUsers.find((user) => user.id === profile.current.id);
-					} else if (profile.current?.hasAdminAccess?.() && mcpServer) {
-						user = visibleConnectedUsers.find((user) => user.id === mcpServer.userID);
-					}
-
-					if (!user) {
-						console.error('Unable to determine user for deletion');
-						return;
-					}
-
-					showDeleteInstanceConfirm = user;
-				}}
-				class="button-destructive flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap disabled:opacity-50"
-				disabled={deleting}
-			>
-				<Unplug class="size-3" />
-				Disconnect from Server
-			</button>
-		{/if}
-
-		<button
-			onclick={() => {
-				if (restarting) return;
-
-				showRestartConfirm = true;
-			}}
-			class="button-primary flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap text-white disabled:opacity-50"
-			disabled={restarting}
+		<div
+			class="button-primary flex items-center gap-0 rounded-md p-0 text-xs font-medium whitespace-nowrap text-white disabled:opacity-50"
 		>
-			<RotateCcw class="size-3" />
-			Restart
-		</button>
+			<button
+				onclick={() => {
+					if (restarting) return;
 
-		{#await listK8sSettingsStatus}
-			<div class="flex w-full justify-center">
-				<LoaderCircle class="size-6 animate-spin" />
+					showRestartConfirm = true;
+				}}
+				class="flex items-center gap-1 rounded-l-md px-5 py-1.5 transition-colors hover:bg-black/10 active:bg-black/20 dark:hover:bg-white/10 dark:active:bg-white/20"
+				disabled={restarting}
+			>
+				<RotateCcw class="size-3" />
+				Restart
+			</button>
+
+			<div class="h-full py-1.5">
+				<div class="h-full w-[1px] bg-white"></div>
 			</div>
-		{:then k8sSettingsStatus}
-			{#if k8sSettingsStatus?.needsK8sUpdate}
-				<button
-					class="flex items-center gap-2 rounded-md bg-yellow-500/75 px-3 py-1.5 text-xs font-medium text-white hover:bg-yellow-500 disabled:opacity-50"
-					disabled={restartingK8s}
-					onclick={() => {
-						if (restartingK8s) return;
 
-						showUpdateK8sSettingsConfirm = true;
-					}}
-				>
-					<CircleFadingArrowUp class="size-3" />
-					Redeploy with Latest Settings
-				</button>
-			{/if}
-		{/await}
+			<DotDotDot
+				class="h-full rounded-r-md p-1.5 transition-colors hover:bg-black/10 active:bg-black/20 dark:hover:bg-white/10 dark:active:bg-white/20"
+				classes={{ menu: 'p-0' }}
+			>
+				{#snippet icon()}
+					<Ellipsis class="size-4 text-white" />
+				{/snippet}
+
+				{#snippet children({ toggle })}
+					<div class="flex flex-col gap-1 p-2">
+						<button
+							onclick={() => {
+								goto(`/admin/mcp-servers/s/${mcpServerId}?view=overview`);
+							}}
+							class="menu-button flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap disabled:opacity-50"
+							disabled={deleting}
+						>
+							<ExternalLink class="size-3" />
+							Goto Server Definition
+						</button>
+
+						<button
+							class={twMerge(
+								'menu-button flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium disabled:opacity-50',
+								needsK8sUpdate && 'bg-yellow-500/75 text-white hover:bg-yellow-500'
+							)}
+							disabled={restartingK8s || !doesSupportK8sUpdate}
+							onclick={() => {
+								if (!doesSupportK8sUpdate) return;
+								if (restartingK8s) return;
+
+								showUpdateK8sSettingsConfirm = true;
+							}}
+						>
+							{#await listK8sSettingsStatus}
+								<LoaderCircle class="size-3 animate-spin" />
+								Loading Settings...
+							{:then _}
+								{#if needsK8sUpdate}
+									<CircleFadingArrowUp class="size-3" />
+									Redeploy with Latest Settings
+								{:else}
+									<CircleFadingArrowUp class="size-3" />
+									Deployment is Up to Date
+								{/if}
+							{:catch}
+								<CircleFadingArrowUp class="size-3" />
+								Deployment is Not Supported
+							{/await}
+						</button>
+
+						{#if mcpServerType === 'multi-user'}
+							<button
+								onclick={() => {
+									if (deleting) return;
+
+									let user: (typeof connectedUsers)[number] | undefined;
+
+									if (mcpServerType === 'multi-user') {
+										user = visibleConnectedUsers.find((user) => user.id === profile.current.id);
+									} else if (profile.current?.hasAdminAccess?.() && mcpServer) {
+										user = visibleConnectedUsers.find((user) => user.id === mcpServer.userID);
+									}
+
+									if (!user) {
+										console.error('Unable to determine user for deletion');
+										return;
+									}
+
+									showDeleteInstanceConfirm = user;
+								}}
+								class="menu-button-destructive flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap disabled:opacity-50"
+								disabled={deleting}
+							>
+								<Unplug class="size-3" />
+								Disconnect from Server
+							</button>
+						{/if}
+
+						<button
+							onclick={() => {
+								if (deleting) return;
+								if (mcpServerType === 'single-user' && !mcpServer) return;
+
+								showDeleteServerConfirm = true;
+							}}
+							class="menu-button-destructive flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap disabled:opacity-50"
+							disabled={deleting}
+						>
+							<Trash2 class="size-3" />
+							Delete Server
+						</button>
+					</div>
+				{/snippet}
+			</DotDotDot>
+		</div>
 	</div>
 </div>
 
