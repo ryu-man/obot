@@ -54,6 +54,7 @@
 		readonly?: boolean;
 		compositeParentName?: string;
 		usedAs?: 'page' | 'tab';
+		onUpdateConnectedUsers?: () => void;
 	}
 	const {
 		id: entityId,
@@ -68,7 +69,8 @@
 		compositeParentName,
 		entity = 'catalog',
 		readonly,
-		usedAs = 'page'
+		usedAs = 'page',
+		onUpdateConnectedUsers
 	}: Props = $props();
 
 	let listK8sInfo = $state<Promise<K8sServerDetail>>();
@@ -110,6 +112,8 @@
 
 		return 'multi-user';
 	});
+
+	const isCurrentUserAdmin = $derived(profile.current.isAdmin?.() ?? false);
 
 	const showDeleteServerButton = $derived(usedAs === 'page');
 	const showDefinitionNavButton = $derived(usedAs === 'page');
@@ -246,11 +250,9 @@
 			if (!user.mcpInstanceId) return;
 			await ChatService.deleteMcpServerInstance(user.mcpInstanceId);
 
-			// Immediately remove from UI
-			deletedUserIds.add(user.mcpInstanceId);
-			deletedUserIds = new Set(deletedUserIds); // Trigger reactivity
-			// Small delay to allow backend to process the deletion
+			onUpdateConnectedUsers?.();
 
+			// Small delay to allow backend to process the deletion
 			await delay(500);
 
 			// Refresh the k8s info after deletion
@@ -486,7 +488,15 @@
 					<div class="flex flex-col gap-1 p-2">
 						<button
 							onclick={() => {
-								goto(`/admin/mcp-servers/s/${mcpServerId}?view=overview`);
+								const url =
+									entity === 'workspace'
+										? catalogEntry?.id
+											? `/admin/mcp-servers/w/${entityId}/c/${catalogEntry.id}?view=overview`
+											: `/admin/mcp-servers/w/${entityId}/s/${encodeURIComponent(mcpServerId)}?view=overview`
+										: catalogEntry?.id
+											? `/admin/mcp-servers/c/${catalogEntry.id}?view=overview`
+											: `/admin/mcp-servers/s/${encodeURIComponent(mcpServerId)}?view=overview`;
+								goto(url);
 							}}
 							class="menu-button flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap disabled:opacity-50"
 							disabled={deleting}
@@ -552,16 +562,17 @@
 								Disconnect from Server
 							</button>
 						{/if}
-
 						<button
 							onclick={() => {
+								if (!isCurrentUserAdmin) return;
 								if (deleting) return;
 								if (mcpServerType === 'single-user' && !mcpServer) return;
 
 								showDeleteServerConfirm = true;
 							}}
 							class="menu-button-destructive flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap disabled:opacity-50"
-							disabled={deleting}
+							disabled={deleting || !isCurrentUserAdmin}
+							use:tooltip={{ text: isCurrentUserAdmin ? '' : 'Admin access required' }}
 						>
 							<Trash2 class="size-3" />
 							Delete Server
