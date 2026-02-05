@@ -65,6 +65,7 @@
 		hasExistingConfigured?: boolean;
 		isDialogView?: boolean;
 		limitViews?: string[];
+		usedAs?: 'page' | 'tab';
 	}
 
 	let {
@@ -78,7 +79,8 @@
 		onSubmit,
 		hasExistingConfigured,
 		isDialogView,
-		limitViews
+		limitViews,
+		usedAs = 'page'
 	}: Props = $props();
 	let isAtLeastPowerUserPlus = $derived(profile.current?.groups.includes(Group.POWERUSER_PLUS));
 	let belongsToUser = $derived(
@@ -699,6 +701,7 @@
 				entry={entry && 'isCatalogEntry' in entry && server ? server : entry}
 				{users}
 				{type}
+				{usedAs}
 			/>
 		{:else if selected === 'filters'}
 			{@render filtersView()}

@@ -42,6 +42,7 @@
 				goto('/admin/mcp-servers');
 			}}
 			readonly={profile.current.isAdminReadonly?.()}
+			usedAs="tab"
 		/>
 	</div>
 </Layout>

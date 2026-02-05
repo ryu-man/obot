@@ -42,9 +42,10 @@
 		entry?: MCPCatalogEntry | MCPCatalogServer;
 		users?: OrgUser[];
 		type?: LaunchServerType;
+		usedAs?: 'page' | 'tab';
 	}
 
-	let { id, entity = 'catalog', entry, users = [], type }: Props = $props();
+	let { id, entity = 'catalog', entry, users = [], type, usedAs = 'page' }: Props = $props();
 
 	let listServerInstances = $state<Promise<MCPServerInstance[]>>();
 	let listEntryServers = $state<Promise<MCPCatalogServer[]>>();
@@ -246,6 +247,7 @@
 						title: 'text-lg font-semibold'
 					}}
 					readonly={profile.current.isAdminReadonly?.()}
+					{usedAs}
 				/>
 			</div>
 		{:else}
