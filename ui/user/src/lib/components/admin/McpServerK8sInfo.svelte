@@ -18,8 +18,6 @@
 		RotateCcw,
 		RefreshCw,
 		CircleFadingArrowUp,
-		Captions,
-		Ellipsis,
 		Trash2,
 		Unplug
 	} from 'lucide-svelte';
@@ -34,8 +32,8 @@
 	import SensitiveInput from '../SensitiveInput.svelte';
 	import { resolve } from '$app/paths';
 	import { DEFAULT_MCP_CATALOG_ID } from '$lib/constants';
-	import DotDotDot from '../DotDotDot.svelte';
 	import { delay } from '$lib/utils';
+	import { goto } from '$lib/url';
 
 	interface Props {
 		id?: string;
@@ -222,32 +220,33 @@
 	}
 
 	async function handleDeleteInstance(user: (typeof connectedUsers)[number]) {
-		if (!user.mcpInstanceId) return;
-
 		deleting = true;
 		try {
 			if (mcpServerType === 'multi-user') {
+				if (!user.mcpInstanceId) return;
 				await ChatService.deleteMcpServerInstance(user.mcpInstanceId);
+
+				// Immediately remove from UI
+				deletedUserIds.add(user.mcpInstanceId);
+				deletedUserIds = new Set(deletedUserIds); // Trigger reactivity
+				// Small delay to allow backend to process the deletion
+
+				if (visibleConnectedUsers.length === 0) {
+					goto('/admin/mcp-servers');
+				} else {
+					await delay(500);
+
+					// Refresh the k8s info after deletion
+					listK8sInfo = getK8sInfo();
+				}
 			} else {
-				await ChatService.deleteSingleOrRemoteMcpServer(user.mcpInstanceId);
+				if (!mcpServer?.id) return;
+				await ChatService.deleteSingleOrRemoteMcpServer(mcpServer.id!);
+
+				goto('/admin/mcp-servers');
 			}
-
-			// Immediately remove from UI
-			deletedUserIds.add(user.mcpInstanceId);
-			deletedUserIds = new Set(deletedUserIds); // Trigger reactivity
-
-			// Small delay to allow backend to process the deletion
-			await delay(500);
-
-			// Refresh the k8s info after deletion
-			listK8sInfo = getK8sInfo();
 		} catch (err) {
 			console.error('Failed to delete instance:', err);
-			// Remove from deleted set if deletion failed
-			if (user.mcpInstanceId) {
-				deletedUserIds.delete(user.mcpInstanceId);
-				deletedUserIds = new Set(deletedUserIds);
-			}
 		} finally {
 			deleting = false;
 			showDeleteInstanceConfirm = undefined;
@@ -676,53 +675,7 @@
 		{#snippet actions(d)}
 			{@const auditLogsUrl = getAuditLogUrl(d)}
 
-			{#if mcpServerType === 'multi-user'}
-				<!-- Check for permissions -->
-				{@const isInstanceOwner = d.id === profile.current.id}
-				{@const hasAdminAccess = profile.current.hasAdminAccess?.()}
-				{@const hasAuditorAccess = profile.current.isAdminReadonly?.()}
-				{@const canDelete = isInstanceOwner || (hasAdminAccess && !hasAuditorAccess)}
-
-				<DotDotDot class="icon-button hover:dark:bg-background/50" classes={{ menu: 'gap-1' }}>
-					{#snippet icon()}
-						<Ellipsis class="size-4" />
-					{/snippet}
-
-					{#snippet children({ toggle })}
-						{#if auditLogsUrl}
-							<a class="menu-button" href={resolve(auditLogsUrl as `/${string}`)}>
-								<Captions class="size-4" /> View Audit Logs
-							</a>
-						{/if}
-
-						{#if d.mcpInstanceId}
-							<button
-								class="menu-button"
-								disabled={deleting || !canDelete}
-								onclick={(e) => {
-									if (deleting || !canDelete) return;
-
-									e.stopPropagation();
-									showDeleteInstanceConfirm = d;
-									toggle(false);
-								}}
-							>
-								{#if deleting}
-									<LoaderCircle class="size-4 animate-spin" />
-								{:else}
-									<Unplug class="size-4" />
-								{/if}
-
-								{#if isInstanceOwner}
-									Disconnect from Server
-								{:else}
-									Remove User from Server
-								{/if}
-							</button>
-						{/if}
-					{/snippet}
-				</DotDotDot>
-			{:else if auditLogsUrl}
+			{#if auditLogsUrl}
 				<a href={resolve(auditLogsUrl as `/${string}`)} class="button-text"> View Audit Logs </a>
 			{/if}
 		{/snippet}
@@ -800,8 +753,7 @@
 	<Confirm
 		show={!!showDeleteInstanceConfirm}
 		onsuccess={async () => {
-			if (!showDeleteInstanceConfirm) return;
-			await handleDeleteInstance(showDeleteInstanceConfirm);
+			await handleDeleteInstance(showDeleteInstanceConfirm!);
 		}}
 		oncancel={() => {
 			showDeleteInstanceConfirm = undefined;
@@ -831,8 +783,7 @@
 	<Confirm
 		show={!!showDeleteInstanceConfirm}
 		onsuccess={async () => {
-			if (!showDeleteInstanceConfirm) return;
-			await handleDeleteInstance(showDeleteInstanceConfirm);
+			await handleDeleteInstance(showDeleteInstanceConfirm!);
 		}}
 		oncancel={() => {
 			showDeleteInstanceConfirm = undefined;
