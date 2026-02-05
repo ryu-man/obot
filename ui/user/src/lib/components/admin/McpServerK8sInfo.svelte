@@ -50,6 +50,7 @@
 		mcpServer?: MCPCatalogServer;
 		readonly?: boolean;
 		compositeParentName?: string;
+		usedAs?: 'page' | 'tab';
 	}
 	const {
 		id: entityId,
@@ -63,7 +64,8 @@
 		mcpServer,
 		compositeParentName,
 		entity = 'catalog',
-		readonly
+		readonly,
+		usedAs = 'page'
 	}: Props = $props();
 
 	let listK8sInfo = $state<Promise<K8sServerDetail>>();
@@ -73,6 +75,7 @@
 	let error = $state<string>();
 	let logsContainer: HTMLDivElement;
 	let showRestartConfirm = $state(false);
+	let showDeleteServerConfirm = $state(false);
 	let showDeleteInstanceConfirm = $state<(typeof connectedUsers)[number] | undefined>();
 	let deletedUserIds = $state<Set<string>>(new Set());
 	let restarting = $state(false);
@@ -101,6 +104,8 @@
 
 		return 'multi-user';
 	});
+
+	const showDeleteServerButton = $derived(usedAs === 'page');
 
 	let logsUrl = $derived.by(() => {
 		if (entity === 'workspace') {
@@ -219,34 +224,37 @@
 		}
 	}
 
-	async function handleDeleteInstance(user: (typeof connectedUsers)[number]) {
+	async function handleDisconnectFromServer(user: (typeof connectedUsers)[number]) {
 		deleting = true;
 		try {
-			if (mcpServerType === 'multi-user') {
-				if (!user.mcpInstanceId) return;
-				await ChatService.deleteMcpServerInstance(user.mcpInstanceId);
+			if (!user.mcpInstanceId) return;
+			await ChatService.deleteMcpServerInstance(user.mcpInstanceId);
 
-				// Immediately remove from UI
-				deletedUserIds.add(user.mcpInstanceId);
-				deletedUserIds = new Set(deletedUserIds); // Trigger reactivity
-				// Small delay to allow backend to process the deletion
+			// Immediately remove from UI
+			deletedUserIds.add(user.mcpInstanceId);
+			deletedUserIds = new Set(deletedUserIds); // Trigger reactivity
+			// Small delay to allow backend to process the deletion
 
-				if (visibleConnectedUsers.length === 0) {
-					goto('/admin/mcp-servers');
-				} else {
-					await delay(500);
+			await delay(500);
 
-					// Refresh the k8s info after deletion
-					listK8sInfo = getK8sInfo();
-				}
-			} else {
-				if (!mcpServer?.id) return;
-				await ChatService.deleteSingleOrRemoteMcpServer(mcpServer.id!);
-
-				goto('/admin/mcp-servers');
-			}
+			// Refresh the k8s info after deletion
+			listK8sInfo = getK8sInfo();
 		} catch (err) {
-			console.error('Failed to delete instance:', err);
+			console.error('Failed to disconnect from server:', err);
+		} finally {
+			deleting = false;
+			showDeleteInstanceConfirm = undefined;
+		}
+	}
+
+	async function handleDeleteServer(serverId: string) {
+		deleting = true;
+		try {
+			await ChatService.deleteSingleOrRemoteMcpServer(serverId);
+
+			goto('/admin/mcp-servers?view=deployments');
+		} catch (err) {
+			console.error('Failed to delete server:', err);
 		} finally {
 			deleting = false;
 			showDeleteInstanceConfirm = undefined;
@@ -430,11 +438,26 @@
 	</div>
 
 	<div class="flex gap-2">
-		{#if isCurrentUserConnected || mcpServerType !== 'multi-user'}
+		{#if showDeleteServerButton}
 			<button
 				onclick={() => {
 					if (deleting) return;
 					if (mcpServerType === 'single-user' && !mcpServer) return;
+
+					showDeleteServerConfirm = true;
+				}}
+				class="button-destructive flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap disabled:opacity-50"
+				disabled={deleting}
+			>
+				<Trash2 class="size-3" />
+				Delete Server
+			</button>
+		{/if}
+
+		{#if mcpServerType === 'multi-user'}
+			<button
+				onclick={() => {
+					if (deleting) return;
 
 					let user: (typeof connectedUsers)[number] | undefined;
 
@@ -454,13 +477,8 @@
 				class="button-destructive flex items-center gap-2 rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap disabled:opacity-50"
 				disabled={deleting}
 			>
-				{#if mcpServerType === 'multi-user'}
-					<Unplug class="size-3" />
-					Disconnect from Server
-				{:else}
-					<Trash2 class="size-3" />
-					Delete Server
-				{/if}
+				<Unplug class="size-3" />
+				Disconnect from Server
 			</button>
 		{/if}
 
@@ -727,6 +745,7 @@
 		Are you sure you want to restart this deployment? This will cause a brief service interruption.
 	{/snippet}
 </Confirm>
+
 <Confirm
 	show={showUpdateK8sSettingsConfirm}
 	msg={`Redeploy ${title || name}?`}
@@ -743,8 +762,48 @@
 	{/snippet}
 </Confirm>
 
+{#if true}
+	<!-- Delete Server Confirmation -->
+	{@const ServerOwner = mcpServer
+		? visibleConnectedUsers.find((user) => user.id === mcpServer.userID)
+		: visibleConnectedUsers?.at(0)}
+	{@const serverOwnerName = ServerOwner?.email ?? ServerOwner?.username ?? 'Unknown'}
+	{@const isDeletingOwnServer = ServerOwner?.id === profile.current.id}
+
+	<Confirm
+		show={showDeleteServerConfirm}
+		onsuccess={async () => {
+			await handleDeleteServer(mcpServerId);
+		}}
+		oncancel={() => {
+			showDeleteServerConfirm = false;
+			deleting = false;
+		}}
+		loading={deleting}
+		msg={isDeletingOwnServer ? 'Delete your MCP server?' : 'Delete MCP server?'}
+		type="delete"
+		title={isDeletingOwnServer ? 'Delete My Server' : 'Delete Server'}
+	>
+		{#snippet note()}
+			{#if isDeletingOwnServer}
+				<p class="text-sm">
+					You are about to permanently delete <span class="font-semibold">your own MCP server</span
+					>. All configurations, connections, and data will be permanently removed.
+				</p>
+			{:else}
+				<p class="text-sm">
+					You are about to permanently delete an MCP server owned by <span class="font-semibold"
+						>{serverOwnerName}</span
+					>. All configurations, connections, and data will be permanently removed.
+				</p>
+			{/if}
+			<p class="mt-4 text-sm font-semibold text-red-500">This action cannot be undone.</p>
+		{/snippet}
+	</Confirm>
+{/if}
+
+<!-- Disconnect from Server Confirmation (Multi-user only) -->
 {#if mcpServerType === 'multi-user'}
-	<!-- Multi-user server disconnect confirmation -->
 	{@const isDisconnectingSelf = showDeleteInstanceConfirm?.id === profile.current.id}
 	{@const serverOwner = showDeleteInstanceConfirm
 		? showDeleteInstanceConfirm.email || showDeleteInstanceConfirm.username || 'Unknown'
@@ -753,14 +812,14 @@
 	<Confirm
 		show={!!showDeleteInstanceConfirm}
 		onsuccess={async () => {
-			await handleDeleteInstance(showDeleteInstanceConfirm!);
+			await handleDisconnectFromServer(showDeleteInstanceConfirm!);
 		}}
 		oncancel={() => {
 			showDeleteInstanceConfirm = undefined;
 			deleting = false;
 		}}
 		loading={deleting}
-		msg={isDisconnectingSelf ? 'Disconnect Yourself from server?' : `Disconnect User from server?`}
+		msg={isDisconnectingSelf ? 'Disconnect yourself from server?' : `Disconnect user from server?`}
 		type="delete"
 		title="Confirm Disconnect"
 	>
@@ -768,47 +827,9 @@
 			<p class="text-sm">
 				You are about to disconnect <span class="font-semibold"
 					>{isDisconnectingSelf ? 'yourself' : `${serverOwner}`}</span
-				> from this server. All configurations and connections will be permanently removed.
+				> from this server. Your connection and instance-specific configurations will be removed.
 			</p>
 			<p class="mt-4 text-sm font-semibold text-red-500">This action cannot be undone.</p>
-		{/snippet}
-	</Confirm>
-{:else if mcpServer}
-	<!-- Single-user server delete confirmation -->
-	{@const isDeletingOwnServer = showDeleteInstanceConfirm?.id === profile.current.id}
-	{@const serverOwner = showDeleteInstanceConfirm
-		? showDeleteInstanceConfirm.email || showDeleteInstanceConfirm.username || 'Unknown'
-		: 'Unknown'}
-
-	<Confirm
-		show={!!showDeleteInstanceConfirm}
-		onsuccess={async () => {
-			await handleDeleteInstance(showDeleteInstanceConfirm!);
-		}}
-		oncancel={() => {
-			showDeleteInstanceConfirm = undefined;
-			deleting = false;
-		}}
-		loading={deleting}
-		msg={isDeletingOwnServer ? 'Delete your MCP server?' : `Delete MCP server?`}
-		type="delete"
-		title={isDeletingOwnServer ? 'Delete My Server' : "Delete User's Server"}
-	>
-		{#snippet note()}
-			{#if isDeletingOwnServer}
-				<p class="text-sm">
-					You are about to delete <span class="font-semibold">your own MCP server</span>. All
-					configurations and connections will be permanently removed.
-				</p>
-				<p class="mt-4 text-sm font-semibold text-red-500">This action cannot be undone.</p>
-			{:else}
-				<p class="text-sm">
-					You are about to delete an MCP server owned by <span class="font-semibold"
-						>{serverOwner}</span
-					>. All configurations and connections will be permanently removed.
-				</p>
-				<p class="mt-4 text-sm font-semibold text-red-500">This action cannot be undone.</p>
-			{/if}
 		{/snippet}
 	</Confirm>
 {/if}
