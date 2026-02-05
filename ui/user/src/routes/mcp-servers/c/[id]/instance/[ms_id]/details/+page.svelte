@@ -46,6 +46,15 @@
 </script>
 
 <Layout {title} showBackButton>
+	{#snippet rightNavActions()}
+		<McpServerActions
+			server={mcpServer}
+			primaryButtonText="Get Connection Info"
+			showPrimaryButton={connectedUsers.some((u) => u.id === profile.current.id)}
+			hasActions={false}
+		/>
+	{/snippet}
+
 	<div class="flex flex-col gap-6 pb-8" in:fly={{ x: 100, delay: duration, duration }}>
 		{#if mcpServerId}
 			{#if catalogEntry?.manifest.runtime === 'composite'}

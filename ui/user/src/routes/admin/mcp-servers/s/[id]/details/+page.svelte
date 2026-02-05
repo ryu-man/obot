@@ -27,9 +27,28 @@
 		loading = false;
 	});
 	let title = $derived(mcpServer?.manifest.name);
+
+	const connectedUsers = $derived(
+		(instances ?? []).map((instance) => {
+			const user = usersMap.get(instance.userID)!;
+			return {
+				...user,
+				mcpInstanceId: instance.id
+			};
+		})
+	);
 </script>
 
 <Layout {title} showBackButton>
+	{#snippet rightNavActions()}
+		<McpServerActions
+			server={mcpServer}
+			primaryButtonText="Get Connection Info"
+			showPrimaryButton={connectedUsers.some((u) => u.id === profile.current.id)}
+			hasActions={false}
+		/>
+	{/snippet}
+
 	<div class="flex flex-col gap-6 pb-8" in:fly={{ x: 100, delay: PAGE_TRANSITION_DURATION }}>
 		{#if loading}
 			<div class="flex w-full justify-center">
@@ -43,15 +62,15 @@
 						entity="catalog"
 						mcpServerId={mcpServer.id}
 						name={mcpServer.manifest.name || ''}
-						connectedUsers={(instances ?? []).map((instance) => {
-							const user = usersMap.get(instance.userID)!;
-							return {
-								...user,
-								mcpInstanceId: instance.id
-							};
-						})}
+						{connectedUsers}
 						title={mcpServer.manifest.name}
 						readonly={profile.current.isAdminReadonly?.()}
+						onUpdateConnectedUsers={async () => {
+							instances = await AdminService.listMcpCatalogServerInstances(
+								DEFAULT_MCP_CATALOG_ID,
+								mcpServer.id
+							);
+						}}
 					/>
 				{/if}
 			</div>
