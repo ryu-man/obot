@@ -455,7 +455,7 @@
 
 	<div class="flex gap-2">
 		<div
-			class="button-primary flex items-center gap-0 rounded-md p-0 text-xs font-medium whitespace-nowrap text-white disabled:opacity-50"
+			class="button-primary flex items-center gap-0 p-0 text-xs font-medium whitespace-nowrap text-white disabled:opacity-50"
 		>
 			<button
 				onclick={() => {
