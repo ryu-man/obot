@@ -43,6 +43,9 @@
 		promptOAuthConfig?: boolean;
 		connectOnly?: boolean;
 		isProjectMcp?: boolean;
+		primaryButtonText?: string;
+		showPrimaryButton?: boolean;
+		hasActions?: boolean;
 	}
 
 	let {
@@ -54,7 +57,10 @@
 		promptInitialLaunch,
 		isProjectMcp,
 		promptOAuthConfig,
-		connectOnly
+		connectOnly,
+		primaryButtonText = 'Connect To Server',
+		hasActions = true,
+		showPrimaryButton = true
 	}: Props = $props();
 	let connectToServerDialog = $state<ReturnType<typeof ConnectToServer>>();
 	let editExistingDialog = $state<ReturnType<typeof EditExistingDeployment>>();
@@ -90,7 +96,7 @@
 	);
 	let belongsToComposite = $derived(Boolean(server && server.compositeName));
 	let showServerDetails = $derived(entry && !server && configuredServers.length > 0);
-	let hasActions = $derived.by(() => {
+	let internalHasActions = $derived.by(() => {
 		if (isProjectMcp) {
 			return server && entry && hasEditableConfiguration(entry);
 		}
@@ -172,54 +178,59 @@
 
 <!-- Use class:hidden to avoid Svelte 5 production build with conditional DOM cleanup -->
 <div class="contents" class:hidden={belongsToComposite}>
-	<button
-		class="button-primary flex w-full items-center gap-1 text-sm disabled:cursor-not-allowed disabled:opacity-50 md:w-fit"
-		class:hidden={!(
-			(entry && !server) ||
-			(server &&
-				(!server.catalogEntryID || (server.catalogEntryID && server.userID === profile.current.id)))
-		)}
-		use:tooltip={{
-			text: canConnect ? '' : 'See MCP Registries to grant connect access to this server'
-		}}
-		onclick={() => {
-			if (entry && !server && configuredServers.length > 0) {
-				if (configuredServers.length === 1) {
+	{#if showPrimaryButton}
+		<button
+			class="button-primary flex w-full items-center gap-1 text-sm disabled:cursor-not-allowed disabled:opacity-50 md:w-fit"
+			class:hidden={!(
+				(entry && !server) ||
+				(server &&
+					(!server.catalogEntryID ||
+						(server.catalogEntryID && server.userID === profile.current.id)))
+			)}
+			use:tooltip={{
+				text: canConnect ? '' : 'See MCP Registries to grant connect access to this server'
+			}}
+			onclick={() => {
+				if (entry && !server && configuredServers.length > 0) {
+					if (configuredServers.length === 1) {
+						connectToServerDialog?.open({
+							entry,
+							server: configuredServers[0]
+						});
+					} else {
+						handleShowSelectServerDialog();
+					}
+				} else {
 					connectToServerDialog?.open({
 						entry,
-						server: configuredServers[0]
+						server,
+						instance
 					});
-				} else {
-					handleShowSelectServerDialog();
 				}
-			} else {
-				connectToServerDialog?.open({
-					entry,
-					server,
-					instance
-				});
-			}
-		}}
-		disabled={loading || !canConnect || (requiresStaticOAuth && oauthConfigured === false)}
-	>
-		{#if loading}
-			<LoaderCircle class="size-4 animate-spin" />
-		{:else}
-			Connect To Server
-		{/if}
-	</button>
-
-	<div class:hidden={loading || !hasActions}>
-		<DotDotDot
-			class="icon-button hover:bg-surface1 dark:hover:bg-surface2 hover:text-primary flex-shrink-0"
-			disablePortal={connectOnly}
-			classes={{ menu: 'min-w-48 p-0', popover: 'z-60' }}
+			}}
+			disabled={loading || !canConnect || (requiresStaticOAuth && oauthConfigured === false)}
 		>
-			{#snippet children({ toggle })}
-				{@render serverActions(toggle)}
-			{/snippet}
-		</DotDotDot>
-	</div>
+			{#if loading}
+				<LoaderCircle class="size-4 animate-spin" />
+			{:else}
+				{primaryButtonText}
+			{/if}
+		</button>
+	{/if}
+
+	{#if hasActions}
+		<div class:hidden={loading || !internalHasActions}>
+			<DotDotDot
+				class="icon-button hover:bg-surface1 dark:hover:bg-surface2 hover:text-primary flex-shrink-0"
+				disablePortal={connectOnly}
+				classes={{ menu: 'min-w-48 p-0', popover: 'z-60' }}
+			>
+				{#snippet children({ toggle })}
+					{@render serverActions(toggle)}
+				{/snippet}
+			</DotDotDot>
+		</div>
+	{/if}
 </div>
 
 <ConnectToServer
