@@ -33,6 +33,7 @@
 		CircleAlert,
 		CircleFadingArrowUp,
 		Ellipsis,
+		ExternalLink,
 		GitCompare,
 		LoaderCircle,
 		MessageCircle,
@@ -48,6 +49,7 @@
 	import { twMerge } from 'tailwind-merge';
 	import EditExistingDeployment from './EditExistingDeployment.svelte';
 	import CapacityBanner from './CapacityBanner.svelte';
+	import { resolve } from '$app/paths';
 
 	interface Props {
 		usersMap?: Map<string, OrgUser>;
@@ -489,6 +491,46 @@
 				? `/admin/audit-logs?mcp_id=${d.id}`
 				: `/audit-logs?mcp_id=${d.id}`;
 	}
+
+	function getMcpCatalogUrl(d: MCPCatalogServer) {
+		// If this is a component of a composite server, link to the parent composite server
+		if (d.compositeName) {
+			const parent = compositeMapping[d.compositeName];
+			if (parent) {
+				// Recursively get the parent's catalog URL
+				return getMcpCatalogUrl(parent);
+			}
+		}
+
+		// Workspace-specific server (power user workspace)
+		if (d.powerUserWorkspaceID) {
+			// Workspace catalog entry deployment
+			if (d.catalogEntryID) {
+				return resolve('/admin/mcp-servers/w/[wid]/c/[id]', {
+					id: d.catalogEntryID,
+					wid: d.powerUserWorkspaceID
+				});
+			}
+
+			// Workspace multi-user server
+			return resolve('/admin/mcp-servers/w/[wid]/s/[id]', {
+				id: d.id,
+				wid: d.powerUserWorkspaceID
+			});
+		}
+
+		// Global catalog entry deployment
+		if (d.catalogEntryID) {
+			return resolve('/admin/mcp-servers/c/[id]', {
+				id: d.catalogEntryID
+			});
+		}
+
+		// Global multi-user server
+		return resolve('/admin/mcp-servers/s/[id]', {
+			id: d.id
+		});
+	}
 </script>
 
 <div class="flex flex-col gap-2">
@@ -656,6 +698,20 @@
 							</div>
 						{/if}
 						<div class="flex flex-col gap-1 p-2">
+							<a
+								class="menu-button"
+								href={getMcpCatalogUrl(d)}
+								onclick={(ev) => {
+									const hasAdminAccess = profile.current.hasAdminAccess?.();
+									if (!hasAdminAccess) {
+										ev.preventDefault();
+									}
+								}}
+							>
+								<ExternalLink class="size-4" />
+								<span>View Catalog Entry</span>
+							</a>
+
 							{#if d.needsUpdate && (d.isMyServer || profile.current?.hasAdminAccess?.())}
 								{#if !readonly && isAtLeastPowerUser}
 									<button
