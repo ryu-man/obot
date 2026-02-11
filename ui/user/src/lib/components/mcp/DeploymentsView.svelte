@@ -715,7 +715,13 @@
 									}}
 								>
 									<ExternalLink class="size-4" />
-									<span>View Catalog Entry</span>
+									<span>
+										{#if d.catalogEntryID}
+											View Catalog Entry
+										{:else}
+											View Server
+										{/if}
+									</span>
 								</a>
 
 								{#if d.needsUpdate && (d.isMyServer || profile.current?.hasAdminAccess?.())}
