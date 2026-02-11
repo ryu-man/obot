@@ -67,7 +67,7 @@
 	$effect(() => {
 		if (query) {
 			// Use a small delay to ensure DOM is updated
-			setTimeout(() => scrollToMatch(currentMatchIndex), 100);
+			setTimeout(() => scrollToMatch(Math.min(currentMatchIndex, matchingIndices.length - 1)), 100);
 		} else {
 			currentMatchIndex = 0;
 		}
@@ -139,7 +139,7 @@
 	}
 
 	function isCurrentMatch(index: number): boolean {
-		return query && hasMatches && matchingIndices[currentMatchIndex] === index;
+		return !!query && hasMatches && matchingIndices[currentMatchIndex] === index;
 	}
 
 	function navigateToNextMatch() {
