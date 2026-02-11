@@ -724,38 +724,36 @@
 									</span>
 								</a>
 
-								{#if d.needsUpdate && (d.isMyServer || profile.current?.hasAdminAccess?.())}
-									{#if !readonly && isAtLeastPowerUser}
-										<button
-											class="menu-button-primary"
-											disabled={updating[d.id]?.inProgress || readonly || !!d.compositeName}
-											onclick={(e) => {
-												e.stopPropagation();
-												if (!d) return;
-												showUpgradeConfirm = {
-													type: 'single',
-													server: d,
-													onConfirm: async () => {
-														reload();
-													}
-												};
-											}}
-											use:tooltip={d.compositeName
-												? {
-														text: 'This is a component of a composite server and cannot be updated independently; update the composite MCP server instead',
-														classes: ['w-md'],
-														disablePortal: true
-													}
-												: undefined}
-										>
-											{#if updating[d.id]?.inProgress}
-												<LoaderCircle class="size-4 animate-spin" />
-											{:else}
-												<CircleFadingArrowUp class="size-4" />
-											{/if}
-											Update Server
-										</button>
-									{/if}
+								{#if d.needsUpdate && (d.isMyServer || profile.current?.hasAdminAccess?.()) && !readonly && isAtLeastPowerUser}
+									<button
+										class="menu-button-primary"
+										disabled={updating[d.id]?.inProgress || readonly || !!d.compositeName}
+										onclick={(e) => {
+											e.stopPropagation();
+											if (!d) return;
+											showUpgradeConfirm = {
+												type: 'single',
+												server: d,
+												onConfirm: async () => {
+													reload();
+												}
+											};
+										}}
+										use:tooltip={d.compositeName
+											? {
+													text: 'This is a component of a composite server and cannot be updated independently; update the composite MCP server instead',
+													classes: ['w-md'],
+													disablePortal: true
+												}
+											: undefined}
+									>
+										{#if updating[d.id]?.inProgress}
+											<LoaderCircle class="size-4 animate-spin" />
+										{:else}
+											<CircleFadingArrowUp class="size-4" />
+										{/if}
+										Update Server
+									</button>
 								{/if}
 
 								<button
@@ -795,36 +793,34 @@
 									</button>
 								{/if}
 
-								{#if d.isMyServer || profile.current?.hasAdminAccess?.()}
-									{#if !readonly && isAtLeastPowerUser}
-										<button
-											class="menu-button"
-											disabled={restarting}
-											onclick={async (e) => {
-												e.stopPropagation();
-												restarting = true;
-												if (d.powerUserWorkspaceID) {
-													await ChatService.restartWorkspaceK8sServerDeployment(
-														d.powerUserWorkspaceID,
-														d.id
-													);
-												} else {
-													await AdminService.restartK8sDeployment(d.id);
-												}
+								{#if (d.isMyServer || profile.current?.hasAdminAccess?.()) && !readonly && isAtLeastPowerUser}
+									<button
+										class="menu-button"
+										disabled={restarting}
+										onclick={async (e) => {
+											e.stopPropagation();
+											restarting = true;
+											if (d.powerUserWorkspaceID) {
+												await ChatService.restartWorkspaceK8sServerDeployment(
+													d.powerUserWorkspaceID,
+													d.id
+												);
+											} else {
+												await AdminService.restartK8sDeployment(d.id);
+											}
 
-												await delay(1000);
+											await delay(1000);
 
-												toggle((restarting = false));
-											}}
-										>
-											{#if restarting}
-												<LoaderCircle class="size-4 animate-spin" /> Restarting...
-											{:else}
-												<Power class="size-4" />
-												Restart Server
-											{/if}
-										</button>
-									{/if}
+											toggle((restarting = false));
+										}}
+									>
+										{#if restarting}
+											<LoaderCircle class="size-4 animate-spin" /> Restarting...
+										{:else}
+											<Power class="size-4" />
+											Restart Server
+										{/if}
+									</button>
 								{/if}
 
 								<button
