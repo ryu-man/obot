@@ -68,7 +68,7 @@
 		if (query) {
 			// Use a small delay to ensure DOM is updated
 			setTimeout(() => scrollToMatch(currentMatchIndex), 100);
-		}else {
+		} else {
 			currentMatchIndex = 0;
 		}
 	});
