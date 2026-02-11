@@ -708,6 +708,7 @@
 									class="menu-button"
 									href={getMcpCatalogUrl(d)}
 									onclick={(ev) => {
+										ev.stopPropagation();
 										const hasAdminAccess = profile.current.hasAdminAccess?.();
 										if (!hasAdminAccess) {
 											ev.preventDefault();
