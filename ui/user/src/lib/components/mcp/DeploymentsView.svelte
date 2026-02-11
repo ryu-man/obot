@@ -756,20 +756,22 @@
 									</button>
 								{/if}
 
-								<button
-									class="menu-button-primary"
-									disabled={updating[d.id]?.inProgress || readonly || !!d.compositeName}
-									onclick={(e) => {
-										e.stopPropagation();
-										if (!d.catalogEntryID) return;
+								{#if d.catalogEntryID}
+									<button
+										class="menu-button-primary"
+										disabled={updating[d.id]?.inProgress || readonly || !!d.compositeName}
+										onclick={(e) => {
+											e.stopPropagation();
+											if (!d.catalogEntryID) return;
 
-										existingServer = d;
-										updatedServer = entriesMap[d.catalogEntryID];
-										diffDialog?.open();
-									}}
-								>
-									<GitCompare class="size-4" /> View Diff
-								</button>
+											existingServer = d;
+											updatedServer = entriesMap[d.catalogEntryID];
+											diffDialog?.open();
+										}}
+									>
+										<GitCompare class="size-4" /> View Diff
+									</button>
+								{/if}
 
 								{#if (d.isMyServer || profile.current?.hasAdminAccess?.()) && !readonly && isAtLeastPowerUser && d.needsK8sUpdate}
 									<button
