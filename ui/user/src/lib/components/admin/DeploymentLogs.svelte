@@ -1,5 +1,14 @@
 <script lang="ts">
-	import { AlertTriangle, Maximize, Minimize, RefreshCw, Search, X } from 'lucide-svelte';
+	import {
+		AlertTriangle,
+		ChevronDown,
+		ChevronUp,
+		Maximize,
+		Minimize,
+		RefreshCw,
+		Search,
+		X
+	} from 'lucide-svelte';
 	import { fade } from 'svelte/transition';
 	import { tooltip } from '$lib/actions/tooltip.svelte';
 	import { twMerge } from 'tailwind-merge';
@@ -30,14 +39,18 @@
 	let query = $state('');
 	let userScrolledUp = $state(false);
 	let searchInput = $state<HTMLInputElement>();
+	let currentMatchIndex = $state(0);
 
-	let filteredMessages = $derived.by(() => {
-		if (!query) return messages;
-		return messages.filter((msg) => msg.toLowerCase().includes(query.toLowerCase()));
+	// Find all matching indices
+	let matchingIndices = $derived.by(() => {
+		if (!query) return [];
+		return messages
+			.map((msg, idx) => (msg.toLowerCase().includes(query.toLowerCase()) ? idx : -1))
+			.filter((idx) => idx !== -1);
 	});
 
 	const hasMessages = $derived(messages.length > 0);
-	const hasResults = $derived(filteredMessages.length > 0);
+	const hasMatches = $derived(matchingIndices.length > 0);
 
 	$effect(() => {
 		if (!messages.length) return;
@@ -47,6 +60,16 @@
 			setTimeout(() => {
 				if (!userScrolledUp) scrollToBottom(logsContainer);
 			}, 50);
+		}
+	});
+
+	// Reset current match index when query changes or matches update
+	$effect(() => {
+		if (query) {
+			// Use a small delay to ensure DOM is updated
+			setTimeout(() => scrollToMatch(currentMatchIndex), 100);
+		}else {
+			currentMatchIndex = 0;
 		}
 	});
 
@@ -82,6 +105,23 @@
 		}
 	}
 
+	function handleSearchKeydown(e: KeyboardEvent) {
+		if (e.key === 'Enter' && query) {
+			e.preventDefault();
+			if (e.shiftKey) {
+				navigateToPreviousMatch();
+			} else {
+				navigateToNextMatch();
+			}
+		} else if (e.key === 'ArrowDown' && query) {
+			e.preventDefault();
+			navigateToNextMatch();
+		} else if (e.key === 'ArrowUp' && query) {
+			e.preventDefault();
+			navigateToPreviousMatch();
+		}
+	}
+
 	function handleModalClick(e: MouseEvent) {
 		if (e.target === modalContainer) {
 			isMaximized = false;
@@ -92,6 +132,35 @@
 		if (!search) return text;
 		const regex = new RegExp(`(${search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
 		return text.replace(regex, '<mark class="bg-yellow-300 dark:bg-yellow-600">$1</mark>');
+	}
+
+	function isMatch(index: number): boolean {
+		return matchingIndices.includes(index);
+	}
+
+	function isCurrentMatch(index: number): boolean {
+		return query && hasMatches && matchingIndices[currentMatchIndex] === index;
+	}
+
+	function navigateToNextMatch() {
+		if (!hasMatches) return;
+		currentMatchIndex = (currentMatchIndex + 1) % matchingIndices.length;
+		scrollToMatch(currentMatchIndex);
+	}
+
+	function navigateToPreviousMatch() {
+		if (!hasMatches) return;
+		currentMatchIndex = (currentMatchIndex - 1 + matchingIndices.length) % matchingIndices.length;
+		scrollToMatch(currentMatchIndex);
+	}
+
+	function scrollToMatch(matchIdx: number) {
+		if (!hasMatches || !logsContainer) return;
+		const messageIndex = matchingIndices[matchIdx];
+		const element = logsContainer.querySelector(`[data-message-index="${messageIndex}"]`);
+		if (element) {
+			element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		}
 	}
 
 	export function scroll() {
@@ -189,14 +258,37 @@
 							type="text"
 							placeholder="Search logs... (Ctrl+F)"
 							bind:value={query}
+							onkeydown={handleSearchKeydown}
 							aria-label="Search logs"
 						/>
 
 						<div class="flex h-full items-center gap-1 p-0.5">
 							{#if query}
 								<span class="text-xs text-gray-500 dark:text-gray-400">
-									{filteredMessages.length} / {messages.length}
+									{#if hasMatches}
+										{currentMatchIndex + 1} / {matchingIndices.length}
+									{:else}
+										0 / 0
+									{/if}
 								</span>
+								<button
+									class="hover:bg-surface2/80 active:bg-surface2/100 flex h-full max-h-8 items-center justify-center rounded-md p-1.5 opacity-30 hover:opacity-60 disabled:opacity-20"
+									onclick={navigateToPreviousMatch}
+									disabled={!hasMatches}
+									use:tooltip={'Previous match (↑ or Shift+Enter)'}
+									aria-label="Previous match"
+								>
+									<ChevronUp class="size-full text-current" />
+								</button>
+								<button
+									class="hover:bg-surface2/80 active:bg-surface2/100 flex h-full max-h-8 items-center justify-center rounded-md p-1.5 opacity-30 hover:opacity-60 disabled:opacity-20"
+									onclick={navigateToNextMatch}
+									disabled={!hasMatches}
+									use:tooltip={'Next match (↓ or Enter)'}
+									aria-label="Next match"
+								>
+									<ChevronDown class="size-full text-current" />
+								</button>
 								<button
 									class="hover:bg-surface2/80 active:bg-surface2/100 flex h-full max-h-8 items-center justify-center rounded-md p-1.5 opacity-30 hover:opacity-60"
 									onclick={() => {
@@ -225,13 +317,19 @@
 				</div>
 			{/if}
 
-			{#if hasResults}
+			{#if hasMessages}
 				<div class="messages-grid space-y-1 p-4">
-					{#each filteredMessages as message, i (i)}
+					{#each messages as message, i (i)}
+						{@const isMatchingLine = query ? isMatch(i) : true}
+						{@const isCurrentMatchLine = isCurrentMatch(i)}
 						<div
+							data-message-index={i}
 							class={twMerge(
-								'group col-span-full grid grid-cols-subgrid gap-2 rounded px-2 py-1 font-mono text-sm hover:bg-gray-50 dark:hover:bg-gray-800',
-								isMaximized && 'text-base'
+								'group col-span-full grid grid-cols-subgrid gap-2 rounded px-2 py-1 font-mono text-sm transition-all',
+								isMaximized && 'text-base',
+								!isMatchingLine && 'opacity-50',
+								isMatchingLine && 'hover:bg-gray-50 dark:hover:bg-gray-800',
+								isCurrentMatchLine && 'outline-2 outline-offset-2 outline-blue-500'
 							)}
 							in:fade
 						>
@@ -243,13 +341,6 @@
 							</span>
 						</div>
 					{/each}
-				</div>
-			{:else if hasMessages && query}
-				<div class="flex w-full flex-1 items-center justify-center p-6">
-					<div class="text-center">
-						<div class="text-on-surface1/80 font-medium">No matches found</div>
-						<p class="text-on-surface1/60 mt-1 text-sm">Try a different search term</p>
-					</div>
 				</div>
 			{:else}
 				<div class="flex w-full flex-1 items-center justify-center p-6">
