@@ -48,6 +48,7 @@
 			.map((msg, idx) => (msg.toLowerCase().includes(query.toLowerCase()) ? idx : -1))
 			.filter((idx) => idx !== -1);
 	});
+	let matchingIndexSet = $derived(new Set(matchingIndices));
 
 	const hasMessages = $derived(messages.length > 0);
 	const hasMatches = $derived(matchingIndices.length > 0);
@@ -135,7 +136,7 @@
 	}
 
 	function isMatch(index: number): boolean {
-		return matchingIndices.includes(index);
+		return matchingIndexSet.has(index);
 	}
 
 	function isCurrentMatch(index: number): boolean {
