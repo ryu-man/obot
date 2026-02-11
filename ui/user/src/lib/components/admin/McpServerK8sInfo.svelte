@@ -487,6 +487,7 @@
 	{error}
 	refreshing={refreshingLogs}
 	onRefresh={handleRefreshLogs}
+	onClear={() => (messages = [])}
 />
 
 <div>

@@ -30,23 +30,13 @@
 	let query = $state('');
 	let userScrolledUp = $state(false);
 	let searchInput = $state<HTMLInputElement>();
-	let clearedAt = $state(0); // Track when logs were cleared
-
-	// Only show messages that came after the clear timestamp
-	let visibleMessages = $derived.by(() => {
-		if (clearedAt === 0) return messages;
-		// Messages are assumed to be in chronological order
-		// After clear, show only new messages (assumes messages array grows)
-		const clearIndex = clearedAt;
-		return messages.slice(clearIndex);
-	});
 
 	let filteredMessages = $derived.by(() => {
-		if (!query) return visibleMessages;
-		return visibleMessages.filter((msg) => msg.toLowerCase().includes(query.toLowerCase()));
+		if (!query) return messages;
+		return messages.filter((msg) => msg.toLowerCase().includes(query.toLowerCase()));
 	});
 
-	const hasMessages = $derived(visibleMessages.length > 0);
+	const hasMessages = $derived(messages.length > 0);
 	const hasResults = $derived(filteredMessages.length > 0);
 
 	$effect(() => {
@@ -76,7 +66,6 @@
 
 	function clearLogs() {
 		// Mark the current position - future messages after this will be shown
-		clearedAt = messages.length;
 		query = ''; // Also clear search
 		userScrolledUp = false; // Reset scroll tracking
 
@@ -206,7 +195,7 @@
 						<div class="flex h-full items-center gap-1 p-0.5">
 							{#if query}
 								<span class="text-xs text-gray-500 dark:text-gray-400">
-									{filteredMessages.length} / {visibleMessages.length}
+									{filteredMessages.length} / {messages.length}
 								</span>
 								<button
 									class="hover:bg-surface2/80 active:bg-surface2/100 flex h-full max-h-8 items-center justify-center rounded-md p-1.5 opacity-30 hover:opacity-60"
