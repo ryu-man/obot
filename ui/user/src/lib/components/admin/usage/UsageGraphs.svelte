@@ -30,7 +30,7 @@
 	import type { DateRange } from '$lib/components/Calendar.svelte';
 	import AuditLogCalendar from '../audit-logs/AuditLogCalendar.svelte';
 	import Loading from '$lib/icons/Loading.svelte';
-	import BarChartHorizontal from '$lib/components/charts/bar-chart-horizontal.svelte';
+	import BarChartHorizontal from '$lib/components/charts/barChartHorizontal.svelte';
 
 	type Props = {
 		mcpId?: string | null;
