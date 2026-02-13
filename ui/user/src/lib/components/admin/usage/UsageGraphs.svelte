@@ -1,5 +1,12 @@
 <script lang="ts">
-	import { ChevronsLeft, ChevronsRight, Funnel, ChartBarDecreasing, X } from 'lucide-svelte';
+	import {
+		ChevronsLeft,
+		ChevronsRight,
+		Funnel,
+		ChartBarDecreasing,
+		X,
+		BarChart
+	} from 'lucide-svelte';
 	import {
 		AdminService,
 		type AuditLogURLFilters,
@@ -23,6 +30,7 @@
 	import type { DateRange } from '$lib/components/Calendar.svelte';
 	import AuditLogCalendar from '../audit-logs/AuditLogCalendar.svelte';
 	import Loading from '$lib/icons/Loading.svelte';
+	import BarChartHorizontal from '$lib/components/charts/bar-chart-horizontal.svelte';
 
 	type Props = {
 		mcpId?: string | null;
@@ -35,9 +43,12 @@
 		label: string;
 		xKey: string;
 		yKey: string;
-		tooltip: string;
-		formatXLabel?: (x: string | number) => string;
-		formatTooltipText?: (data: Record<string, string | number>) => string;
+		formatXLabel?: (
+			d: Record<string, string | number>[keyof Record<string, string | number>]
+		) => string;
+		formatYLabel?: (d: Record<string, string | number>) => string;
+		formatTooltipValue?: (data: Record<string, string | number>) => string;
+		formatTooltipTitle?: (d: Record<string, string | number>) => string;
 		transform: (stats?: AuditLogUsageStats) => Array<Record<string, string | number>>;
 	};
 
@@ -215,9 +226,12 @@
 			label: 'Most Frequent Tool Calls',
 			xKey: 'toolName',
 			yKey: 'count',
-			tooltip: 'calls',
-			formatXLabel: (d) => String(d).split('.').slice(1).join('.'),
-			formatTooltipText: (data) => `${data.count} calls • ${data.serverDisplayName}`,
+			formatYLabel: (d) => d['toolName'].split('.').slice(1).join('.'),
+			formatTooltipValue: (d) => {
+				const name = d['toolName'].split('.').slice(1).join('.');
+				return `${d.count} calls • ${name}`;
+			},
+			formatTooltipTitle: (data) => data.serverDisplayName,
 			transform: (stats) => {
 				// eslint-disable-next-line svelte/prefer-svelte-reactivity
 				const counts = new Map<string, { count: number; serverDisplayName: string }>();
@@ -246,7 +260,8 @@
 			label: 'Most Frequently Used Servers',
 			xKey: 'serverName',
 			yKey: 'count',
-			tooltip: 'calls',
+			formatTooltipValue: (data) => `${data.count} calls`,
+			formatTooltipTitle: (data) => data.serverName as string,
 			transform: (stats) => {
 				// eslint-disable-next-line svelte/prefer-svelte-reactivity
 				const counts = new Map<string, number>();
@@ -266,10 +281,8 @@
 			label: 'Tool Call Average Response Time',
 			xKey: 'toolName',
 			yKey: 'averageResponseTimeMs',
-			tooltip: 'ms',
-			formatXLabel: (d) => String(d).split('.').slice(1).join('.'),
-			formatTooltipText: (data) =>
-				`${(data.averageResponseTimeMs as number).toFixed(2)}ms avg • ${data.serverDisplayName}`,
+			formatYLabel: (d) => d['toolName'].split('.').slice(1).join('.'),
+			formatTooltipValue: (data) => `${(data.averageResponseTimeMs as number).toFixed(2)}ms avg`,
 			transform: (stats) => {
 				// eslint-disable-next-line svelte/prefer-svelte-reactivity
 				const responseTimes = new Map<
@@ -307,13 +320,8 @@
 			label: 'Tool Call Individual Response Time',
 			xKey: 'toolName',
 			yKey: 'processingTimeMs',
-			tooltip: 'ms',
-			formatXLabel: (d) => {
-				const parts = String(d).split('.');
-				return parts[parts.length - 1];
-			},
-			formatTooltipText: (data) =>
-				`${(data.processingTimeMs as number).toFixed(2)}ms • ${data.serverDisplayName}`,
+			formatYLabel: (d) => d['toolName'].split('.').slice(1).join('.'),
+			formatTooltipValue: (data) => `${(data.processingTimeMs as number).toFixed(2)}ms`,
 			transform: (stats) => {
 				const rows = [];
 				for (const s of stats?.items ?? []) {
@@ -335,13 +343,13 @@
 			label: 'Tool Call Errors',
 			xKey: 'toolName',
 			yKey: 'errorCount',
-			tooltip: 'errors',
-			formatXLabel: (d) => {
+			formatYLabel: (d) => {
 				// Just grab the tool name
-				const parts = String(d).split('.');
+				const parts = String(d['toolName']).split('.');
 				return parts[parts.length - 1];
 			},
-			formatTooltipText: (data) => `${data.errorCount} errors • ${data.serverDisplayName}`,
+			formatTooltipValue: (data) => `${data.errorCount} errors`,
+			formatTooltipTitle: (data) => data['toolName'] as string,
 			transform: (stats) => {
 				// eslint-disable-next-line svelte/prefer-svelte-reactivity
 				const errorCounts = new Map<string, { errorCount: number; serverDisplayName: string }>();
@@ -377,8 +385,8 @@
 			label: 'Tool Call Errors by Server',
 			xKey: 'serverName',
 			yKey: 'errorCount',
-			tooltip: 'errors',
-			formatXLabel: (d) => String(d),
+			formatTooltipValue: (data) => `${data.errorCount} errors`,
+			formatTooltipTitle: (data) => data.serverName as string,
 			transform: (stats) => {
 				// eslint-disable-next-line svelte/prefer-svelte-reactivity
 				const errorCounts = new Map<string, number>();
@@ -406,12 +414,14 @@
 			label: 'Most Active Users',
 			xKey: 'userId',
 			yKey: 'callCount',
-			tooltip: 'calls',
-			formatTooltipText: (data) => {
-				const user = usersAsArray.find((u) => u.id === data.userId);
-				return `${data.callCount} calls • ${userDisplayName(user)}`;
+			formatTooltipValue: (data) => `${data.callCount} calls`,
+			formatTooltipTitle: (d) => {
+				const userId = d['userId'];
+				const user = usersAsArray.find((u) => u.id === userId);
+				return userDisplayName(user);
 			},
-			formatXLabel: (userId) => {
+			formatYLabel: (d) => {
+				const userId = d['userId'];
 				const user = usersAsArray.find((u) => u.id === userId);
 				return userDisplayName(user);
 			},
@@ -657,6 +667,8 @@
 				{@const maxPage = Math.max(0, Math.ceil(total / graphPageSize) - 1)}
 				{@const paginated = full.slice(page * graphPageSize, (page + 1) * graphPageSize)}
 
+				{@const xAccessor = (d: Record<string, string | number>) => parseInt(d[cfg.yKey])}
+				{@const yAccessor = (d: Record<string, string | number>) => d[cfg.xKey]}
 				<div
 					class="dark:bg-surface1 dark:border-surface3 bg-background rounded-md border border-transparent p-6 shadow-sm"
 				>
@@ -664,7 +676,7 @@
 
 					<div class="h-[300px] min-h-[300h]">
 						{#if paginated.length > 0}
-							<HorizontalBarGraph
+							<!-- <HorizontalBarGraph
 								data={paginated}
 								x={cfg.xKey}
 								y={cfg.yKey}
@@ -672,6 +684,15 @@
 								formatTooltipText={cfg.formatTooltipText ||
 									((d) => `${d[cfg.yKey]} ${cfg.tooltip}`)}
 								formatXLabel={cfg.formatXLabel}
+							/> -->
+
+							<BarChartHorizontal
+								data={paginated}
+								xGet={xAccessor}
+								yGet={yAccessor}
+								formatTooltipValue={cfg.formatTooltipValue}
+								formatTooltipTitle={cfg.formatTooltipTitle}
+								formatYLabel={cfg.formatYLabel}
 							/>
 						{:else if !showLoadingSpinner}
 							<div
@@ -684,7 +705,7 @@
 
 					{#if maxPage > 0}
 						<div
-							class="mt-4 flex items-center justify-center gap-4 border-t border-gray-200 p-4 dark:border-gray-700"
+							class="mt-4 flex items-center justify-center gap-4 border-t border-gray-200 p-4 pb-0 dark:border-gray-700"
 						>
 							<button
 								class="icon-button"
